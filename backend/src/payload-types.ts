@@ -69,6 +69,19 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    'coach-profiles': CoachProfile;
+    'subscriber-profiles': SubscriberProfile;
+    categories: Category;
+    tags: Tag;
+    posts: Post;
+    pages: Page;
+    courses: Course;
+    modules: Module;
+    lessons: Lesson;
+    quizzes: Quiz;
+    enrollments: Enrollment;
+    progress: Progress;
+    'quiz-attempts': QuizAttempt;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +91,19 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'coach-profiles': CoachProfilesSelect<false> | CoachProfilesSelect<true>;
+    'subscriber-profiles': SubscriberProfilesSelect<false> | SubscriberProfilesSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
+    courses: CoursesSelect<false> | CoursesSelect<true>;
+    modules: ModulesSelect<false> | ModulesSelect<true>;
+    lessons: LessonsSelect<false> | LessonsSelect<true>;
+    quizzes: QuizzesSelect<false> | QuizzesSelect<true>;
+    enrollments: EnrollmentsSelect<false> | EnrollmentsSelect<true>;
+    progress: ProgressSelect<false> | ProgressSelect<true>;
+    'quiz-attempts': QuizAttemptsSelect<false> | QuizAttemptsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -117,11 +143,16 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * User accounts for authentication and authorization
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  /**
+   * User role determines permissions
+   */
   role: 'subscriber' | 'creator' | 'coach' | 'admin';
   updatedAt: string;
   createdAt: string;
@@ -142,12 +173,21 @@ export interface User {
   password?: string | null;
 }
 /**
+ * Media library for images, videos, and documents
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: number;
+  /**
+   * Alt text for accessibility
+   */
   alt: string;
+  /**
+   * User who uploaded this media
+   */
+  createdBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -159,6 +199,1125 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * Public and professional coach information for content authoring and LMS
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coach-profiles".
+ */
+export interface CoachProfile {
+  id: number;
+  /**
+   * The user account associated with this coach profile (one-to-one)
+   */
+  user?: (number | null) | User;
+  /**
+   * Public name shown on content and courses
+   */
+  displayName: string;
+  /**
+   * Public bio shown on profile and authored content
+   */
+  bio?: string | null;
+  /**
+   * Coach profile photo for public display
+   */
+  profilePhoto?: (number | null) | Media;
+  /**
+   * Areas of expertise and specialization
+   */
+  expertise?:
+    | {
+        area: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Professional experience details
+   */
+  experience?: {
+    yearsOfExperience?: number | null;
+    /**
+     * Certifications, qualifications, and credentials
+     */
+    credentials?: string | null;
+    /**
+     * Notable previous work or achievements
+     */
+    previousWork?: string | null;
+  };
+  /**
+   * Whether this coach profile is currently active
+   */
+  isActive?: boolean | null;
+  /**
+   * Public social media and contact links
+   */
+  socialLinks?: {
+    website?: string | null;
+    linkedin?: string | null;
+    twitter?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Learner-specific profile information for subscribers
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscriber-profiles".
+ */
+export interface SubscriberProfile {
+  id: number;
+  /**
+   * The user account associated with this subscriber profile (one-to-one)
+   */
+  user: number | User;
+  /**
+   * Display name shown in comments, forums, and community features
+   */
+  displayName: string;
+  /**
+   * Subscriber avatar for community features
+   */
+  avatar?: (number | null) | Media;
+  /**
+   * If enabled, this subscriber prefers anonymous participation
+   */
+  isAnonymous?: boolean | null;
+  /**
+   * Topics and subjects the subscriber is interested in
+   */
+  interests?:
+    | {
+        topic: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Additional subscriber metadata
+   */
+  metadata?: {
+    /**
+     * Preferred timezone for scheduling and notifications
+     */
+    timezone?: string | null;
+    /**
+     * Preferred language code
+     */
+    language?: string | null;
+    /**
+     * Date when subscriber profile was created
+     */
+    joinedAt?: string | null;
+  };
+  /**
+   * Learning style and delivery preferences
+   */
+  learningPreferences?: {
+    preferredFormat?: ('video' | 'text' | 'audio' | 'interactive') | null;
+    pace?: ('self-paced' | 'scheduled' | 'intensive') | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Content categories for blogs and articles
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  /**
+   * URL-friendly identifier for the category
+   */
+  slug: string;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Tags for content classification and discovery
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  name: string;
+  /**
+   * URL-friendly identifier for the tag
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Blog posts and articles
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  /**
+   * URL-friendly identifier for the post
+   */
+  slug: string;
+  /**
+   * The coach who authored this post
+   */
+  author: number | CoachProfile;
+  /**
+   * Featured image for the post
+   */
+  featuredImage?: (number | null) | Media;
+  /**
+   * Short summary shown in post listings
+   */
+  excerpt?: string | null;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  category?: (number | null) | Category;
+  tags?: (number | Tag)[] | null;
+  /**
+   * Who can view this content
+   */
+  accessLevel: 'public' | 'subscribers';
+  /**
+   * Publication date for the post
+   */
+  publishedAt?: string | null;
+  status?: ('draft' | 'published' | 'archived') | null;
+  /**
+   * Search engine optimization settings
+   */
+  seo?: {
+    /**
+     * Title for search engines (defaults to post title)
+     */
+    metaTitle?: string | null;
+    /**
+     * Description for search engines
+     */
+    metaDescription?: string | null;
+    /**
+     * Open Graph image for social sharing
+     */
+    ogImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Static pages for the website
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * URL-friendly identifier for the page
+   */
+  slug: string;
+  /**
+   * The coach who authored/maintains this page
+   */
+  author?: (number | null) | CoachProfile;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  status?: ('draft' | 'published' | 'archived') | null;
+  /**
+   * Publication date
+   */
+  publishedAt?: string | null;
+  /**
+   * Search engine optimization settings
+   */
+  seo?: {
+    /**
+     * Title for search engines (defaults to page title)
+     */
+    metaTitle?: string | null;
+    /**
+     * Description for search engines
+     */
+    metaDescription?: string | null;
+    /**
+     * Open Graph image for social sharing
+     */
+    ogImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Online courses and learning programs
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses".
+ */
+export interface Course {
+  id: number;
+  /**
+   * Course title displayed to learners
+   */
+  title: string;
+  /**
+   * URL-friendly identifier for the course
+   */
+  slug: string;
+  /**
+   * Detailed course description and overview
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Brief summary for course listings and cards
+   */
+  shortDescription?: string | null;
+  /**
+   * Primary instructor for this course
+   */
+  instructor: number | CoachProfile;
+  /**
+   * Co-instructors or guest lecturers
+   */
+  additionalInstructors?: (number | CoachProfile)[] | null;
+  /**
+   * Course thumbnail image for listings
+   */
+  thumbnail?: (number | null) | Media;
+  /**
+   * Large cover image for course landing page
+   */
+  coverImage?: (number | null) | Media;
+  /**
+   * URL to preview/intro video (YouTube, Vimeo, etc.)
+   */
+  previewVideo?: string | null;
+  /**
+   * Ordered list of modules in this course
+   */
+  modules?: (number | Module)[] | null;
+  difficulty?: ('beginner' | 'intermediate' | 'advanced' | 'all-levels') | null;
+  /**
+   * Estimated course duration
+   */
+  duration?: {
+    hours?: number | null;
+    minutes?: number | null;
+  };
+  /**
+   * Key topics covered in this course
+   */
+  topics?:
+    | {
+        topic: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * What learners will achieve after completing the course
+   */
+  learningOutcomes?:
+    | {
+        outcome: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Required knowledge or courses before starting
+   */
+  prerequisites?:
+    | {
+        prerequisite: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Who can access this course
+   */
+  accessLevel: 'public' | 'subscribers';
+  /**
+   * Enrollment configuration
+   */
+  enrollment?: {
+    /**
+     * Whether new enrollments are accepted
+     */
+    isOpen?: boolean | null;
+    /**
+     * Maximum number of enrollments (0 = unlimited)
+     */
+    maxEnrollments?: number | null;
+    /**
+     * When the course becomes available
+     */
+    startDate?: string | null;
+    /**
+     * When the course closes (optional)
+     */
+    endDate?: string | null;
+  };
+  status?: ('draft' | 'published' | 'archived') | null;
+  /**
+   * Publication date
+   */
+  publishedAt?: string | null;
+  /**
+   * Primary course category
+   */
+  category?: (number | null) | Category;
+  tags?: (number | Tag)[] | null;
+  /**
+   * Search engine optimization
+   */
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogImage?: (number | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Course modules - organized sections within a course
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "modules".
+ */
+export interface Module {
+  id: number;
+  /**
+   * Module title
+   */
+  title: string;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Brief description of what this module covers
+   */
+  description?: string | null;
+  /**
+   * Display order within the course (lower = earlier)
+   */
+  order: number;
+  /**
+   * Ordered list of lessons in this module
+   */
+  lessons?: (number | Lesson)[] | null;
+  /**
+   * Requirements to mark this module as complete
+   */
+  completionRequirements?: {
+    /**
+     * Must complete all lessons to finish module
+     */
+    requireAllLessons?: boolean | null;
+    /**
+     * Minimum number of lessons to complete (if not all required)
+     */
+    minimumLessons?: number | null;
+    /**
+     * Must pass module quiz to complete
+     */
+    requireQuizPass?: boolean | null;
+  };
+  /**
+   * Estimated time to complete this module
+   */
+  estimatedDuration?: {
+    hours?: number | null;
+    minutes?: number | null;
+  };
+  /**
+   * Learning objectives for this module
+   */
+  objectives?:
+    | {
+        objective: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional quiz to assess module understanding
+   */
+  quiz?: (number | null) | Quiz;
+  /**
+   * Whether this module is visible to learners
+   */
+  isPublished?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Individual lessons with learning content
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lessons".
+ */
+export interface Lesson {
+  id: number;
+  /**
+   * Lesson title
+   */
+  title: string;
+  /**
+   * URL-friendly identifier
+   */
+  slug: string;
+  /**
+   * Brief description of the lesson
+   */
+  description?: string | null;
+  /**
+   * Display order within the module (lower = earlier)
+   */
+  order: number;
+  /**
+   * Primary content type for this lesson
+   */
+  type: 'video' | 'text' | 'audio' | 'interactive' | 'assignment' | 'quiz' | 'live' | 'download';
+  /**
+   * Video lesson content
+   */
+  videoContent?: {
+    /**
+     * External video URL (YouTube, Vimeo, etc.)
+     */
+    videoUrl?: string | null;
+    /**
+     * Uploaded video file
+     */
+    videoFile?: (number | null) | Media;
+    /**
+     * Video transcript for accessibility
+     */
+    transcript?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    /**
+     * Captions/subtitles file (VTT format)
+     */
+    captions?: (number | null) | Media;
+  };
+  /**
+   * Text-based lesson content
+   */
+  textContent?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Audio lesson content
+   */
+  audioContent?: {
+    audioFile?: (number | null) | Media;
+    /**
+     * Audio transcript for accessibility
+     */
+    transcript?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
+  /**
+   * Assignment details
+   */
+  assignmentContent?: {
+    /**
+     * Assignment instructions and requirements
+     */
+    instructions?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    /**
+     * Days allowed to complete after starting
+     */
+    dueInDays?: number | null;
+    submissionType?: ('file' | 'text' | 'link') | null;
+    /**
+     * Maximum points for this assignment
+     */
+    maxPoints?: number | null;
+  };
+  /**
+   * Associated quiz for this lesson
+   */
+  quiz?: (number | null) | Quiz;
+  /**
+   * Live session details
+   */
+  liveSession?: {
+    /**
+     * Scheduled date and time
+     */
+    scheduledAt?: string | null;
+    /**
+     * Meeting/webinar URL
+     */
+    meetingUrl?: string | null;
+    /**
+     * Recording URL (after session)
+     */
+    recordingUrl?: string | null;
+  };
+  /**
+   * Downloadable resources and materials
+   */
+  resources?:
+    | {
+        title: string;
+        file: number | Media;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Estimated time to complete
+   */
+  duration?: {
+    hours?: number | null;
+    minutes?: number | null;
+  };
+  /**
+   * Make this lesson available as a free preview
+   */
+  isFree?: boolean | null;
+  /**
+   * How is this lesson marked as complete
+   */
+  completionCriteria?: ('view' | 'video-complete' | 'quiz-pass' | 'assignment-submit' | 'manual') | null;
+  /**
+   * Whether this lesson is visible to learners
+   */
+  isPublished?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Quizzes and assessments for lessons and modules
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quizzes".
+ */
+export interface Quiz {
+  id: number;
+  /**
+   * Quiz title
+   */
+  title: string;
+  /**
+   * Instructions or description for the quiz
+   */
+  description?: string | null;
+  /**
+   * Quiz configuration
+   */
+  settings?: {
+    /**
+     * Time limit in minutes (0 = no limit)
+     */
+    timeLimit?: number | null;
+    /**
+     * Minimum percentage to pass
+     */
+    passingScore?: number | null;
+    /**
+     * Maximum attempts allowed (0 = unlimited)
+     */
+    maxAttempts?: number | null;
+    /**
+     * Randomize question order for each attempt
+     */
+    shuffleQuestions?: boolean | null;
+    /**
+     * When to show correct answers
+     */
+    showCorrectAnswers?: ('never' | 'after-submit' | 'after-pass' | 'after-attempts') | null;
+    /**
+     * Allow learners to review their answers
+     */
+    allowReview?: boolean | null;
+  };
+  /**
+   * Quiz questions (contains answers - only visible to coaches/admins)
+   */
+  questions: {
+    questionType: 'multiple-choice' | 'multiple-select' | 'true-false' | 'short-answer' | 'essay' | 'fill-blank';
+    /**
+     * The question text
+     */
+    question: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    };
+    /**
+     * Points for this question
+     */
+    points?: number | null;
+    /**
+     * Answer options (for multiple choice/select)
+     */
+    options?:
+      | {
+          text: string;
+          /**
+           * ⚠️ SENSITIVE: Marks this as the correct answer
+           */
+          isCorrect?: boolean | null;
+          /**
+           * Feedback shown when this option is selected
+           */
+          feedback?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * ⚠️ SENSITIVE: The correct answer (True or False)
+     */
+    correctAnswer?: boolean | null;
+    /**
+     * ⚠️ SENSITIVE: Accepted answers (case-insensitive matching)
+     */
+    acceptedAnswers?:
+      | {
+          answer: string;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Essay question settings
+     */
+    essaySettings?: {
+      /**
+       * Minimum word count
+       */
+      minWords?: number | null;
+      /**
+       * Maximum word count
+       */
+      maxWords?: number | null;
+      /**
+       * Grading rubric for instructors
+       */
+      rubric?: string | null;
+    };
+    /**
+     * Explanation shown after answering (for learning)
+     */
+    explanation?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    id?: string | null;
+  }[];
+  /**
+   * Whether this quiz is available to learners
+   */
+  isPublished?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Student enrollments in courses
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enrollments".
+ */
+export interface Enrollment {
+  id: number;
+  /**
+   * The subscriber enrolled in the course
+   */
+  subscriber: number | SubscriberProfile;
+  /**
+   * The course the subscriber is enrolled in
+   */
+  course: number | Course;
+  status: 'active' | 'completed' | 'paused' | 'expired' | 'cancelled';
+  /**
+   * Date and time of enrollment
+   */
+  enrolledAt: string;
+  /**
+   * When the learner first accessed the course
+   */
+  startedAt?: string | null;
+  /**
+   * When the learner completed the course
+   */
+  completedAt?: string | null;
+  /**
+   * When enrollment access expires (if applicable)
+   */
+  expiresAt?: string | null;
+  /**
+   * Overall course progress
+   */
+  progress?: {
+    /**
+     * Overall completion percentage
+     */
+    percentComplete?: number | null;
+    lessonsCompleted?: number | null;
+    totalLessons?: number | null;
+    modulesCompleted?: number | null;
+    totalModules?: number | null;
+    /**
+     * Last time the learner accessed the course
+     */
+    lastAccessedAt?: string | null;
+    /**
+     * Total time spent in minutes
+     */
+    timeSpent?: number | null;
+  };
+  /**
+   * Completion certificate details
+   */
+  certificate?: {
+    issued?: boolean | null;
+    issuedAt?: string | null;
+    /**
+     * Unique certificate identifier
+     */
+    certificateId?: string | null;
+    /**
+     * URL to view/download certificate
+     */
+    certificateUrl?: string | null;
+  };
+  /**
+   * Admin notes about this enrollment
+   */
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Individual lesson and quiz progress tracking
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "progress".
+ */
+export interface Progress {
+  id: number;
+  /**
+   * The enrollment this progress belongs to
+   */
+  enrollment: number | Enrollment;
+  /**
+   * The lesson being tracked
+   */
+  lesson: number | Lesson;
+  status: 'not-started' | 'in-progress' | 'completed' | 'skipped';
+  /**
+   * When the learner first accessed this lesson
+   */
+  startedAt?: string | null;
+  /**
+   * When the learner completed this lesson
+   */
+  completedAt?: string | null;
+  /**
+   * Last time the learner accessed this lesson
+   */
+  lastAccessedAt?: string | null;
+  /**
+   * Video-specific progress tracking
+   */
+  videoProgress?: {
+    /**
+     * Seconds of video watched
+     */
+    watchedSeconds?: number | null;
+    /**
+     * Total video duration in seconds
+     */
+    totalSeconds?: number | null;
+    percentWatched?: number | null;
+    /**
+     * Last playback position to resume from
+     */
+    lastPosition?: number | null;
+  };
+  /**
+   * Total time spent on this lesson (in seconds)
+   */
+  timeSpent?: number | null;
+  /**
+   * Learner notes for this lesson
+   */
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Video/content bookmarks
+   */
+  bookmarks?:
+    | {
+        /**
+         * Position in seconds (for video/audio)
+         */
+        timestamp?: number | null;
+        note?: string | null;
+        createdAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Quiz attempt records and answers
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quiz-attempts".
+ */
+export interface QuizAttempt {
+  id: number;
+  /**
+   * The enrollment this attempt belongs to
+   */
+  enrollment: number | Enrollment;
+  /**
+   * The quiz being attempted
+   */
+  quiz: number | Quiz;
+  /**
+   * Which attempt this is (1st, 2nd, etc.)
+   */
+  attemptNumber: number;
+  status: 'in-progress' | 'submitted' | 'graded' | 'expired';
+  startedAt: string;
+  submittedAt?: string | null;
+  gradedAt?: string | null;
+  /**
+   * Time spent in seconds
+   */
+  timeSpent?: number | null;
+  /**
+   * Submitted answers for each question
+   */
+  answers?:
+    | {
+        /**
+         * Index of the question in the quiz
+         */
+        questionIndex: number;
+        /**
+         * Type of question for reference
+         */
+        questionType?: string | null;
+        /**
+         * Selected option indices
+         */
+        selectedOptions?:
+          | {
+              optionIndex?: number | null;
+              id?: string | null;
+            }[]
+          | null;
+        textAnswer?: string | null;
+        essayAnswer?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        /**
+         * Whether the answer is correct
+         */
+        isCorrect?: boolean | null;
+        /**
+         * Points awarded for this answer
+         */
+        pointsAwarded?: number | null;
+        /**
+         * Instructor feedback for this answer
+         */
+        feedback?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Quiz score
+   */
+  score?: {
+    pointsEarned?: number | null;
+    pointsPossible?: number | null;
+    percentage?: number | null;
+  };
+  /**
+   * Whether the learner passed the quiz
+   */
+  passed?: boolean | null;
+  /**
+   * Overall feedback from the instructor
+   */
+  instructorFeedback?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Instructor who graded this attempt (for essay questions)
+   */
+  gradedBy?: (number | null) | CoachProfile;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -191,6 +1350,58 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'coach-profiles';
+        value: number | CoachProfile;
+      } | null)
+    | ({
+        relationTo: 'subscriber-profiles';
+        value: number | SubscriberProfile;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
+      } | null)
+    | ({
+        relationTo: 'posts';
+        value: number | Post;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'courses';
+        value: number | Course;
+      } | null)
+    | ({
+        relationTo: 'modules';
+        value: number | Module;
+      } | null)
+    | ({
+        relationTo: 'lessons';
+        value: number | Lesson;
+      } | null)
+    | ({
+        relationTo: 'quizzes';
+        value: number | Quiz;
+      } | null)
+    | ({
+        relationTo: 'enrollments';
+        value: number | Enrollment;
+      } | null)
+    | ({
+        relationTo: 'progress';
+        value: number | Progress;
+      } | null)
+    | ({
+        relationTo: 'quiz-attempts';
+        value: number | QuizAttempt;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -263,6 +1474,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -274,6 +1486,463 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coach-profiles_select".
+ */
+export interface CoachProfilesSelect<T extends boolean = true> {
+  user?: T;
+  displayName?: T;
+  bio?: T;
+  profilePhoto?: T;
+  expertise?:
+    | T
+    | {
+        area?: T;
+        id?: T;
+      };
+  experience?:
+    | T
+    | {
+        yearsOfExperience?: T;
+        credentials?: T;
+        previousWork?: T;
+      };
+  isActive?: T;
+  socialLinks?:
+    | T
+    | {
+        website?: T;
+        linkedin?: T;
+        twitter?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscriber-profiles_select".
+ */
+export interface SubscriberProfilesSelect<T extends boolean = true> {
+  user?: T;
+  displayName?: T;
+  avatar?: T;
+  isAnonymous?: T;
+  interests?:
+    | T
+    | {
+        topic?: T;
+        id?: T;
+      };
+  metadata?:
+    | T
+    | {
+        timezone?: T;
+        language?: T;
+        joinedAt?: T;
+      };
+  learningPreferences?:
+    | T
+    | {
+        preferredFormat?: T;
+        pace?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts_select".
+ */
+export interface PostsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  author?: T;
+  featuredImage?: T;
+  excerpt?: T;
+  content?: T;
+  category?: T;
+  tags?: T;
+  accessLevel?: T;
+  publishedAt?: T;
+  status?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  author?: T;
+  content?: T;
+  status?: T;
+  publishedAt?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses_select".
+ */
+export interface CoursesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  description?: T;
+  shortDescription?: T;
+  instructor?: T;
+  additionalInstructors?: T;
+  thumbnail?: T;
+  coverImage?: T;
+  previewVideo?: T;
+  modules?: T;
+  difficulty?: T;
+  duration?:
+    | T
+    | {
+        hours?: T;
+        minutes?: T;
+      };
+  topics?:
+    | T
+    | {
+        topic?: T;
+        id?: T;
+      };
+  learningOutcomes?:
+    | T
+    | {
+        outcome?: T;
+        id?: T;
+      };
+  prerequisites?:
+    | T
+    | {
+        prerequisite?: T;
+        id?: T;
+      };
+  accessLevel?: T;
+  enrollment?:
+    | T
+    | {
+        isOpen?: T;
+        maxEnrollments?: T;
+        startDate?: T;
+        endDate?: T;
+      };
+  status?: T;
+  publishedAt?: T;
+  category?: T;
+  tags?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        ogImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "modules_select".
+ */
+export interface ModulesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  description?: T;
+  order?: T;
+  lessons?: T;
+  completionRequirements?:
+    | T
+    | {
+        requireAllLessons?: T;
+        minimumLessons?: T;
+        requireQuizPass?: T;
+      };
+  estimatedDuration?:
+    | T
+    | {
+        hours?: T;
+        minutes?: T;
+      };
+  objectives?:
+    | T
+    | {
+        objective?: T;
+        id?: T;
+      };
+  quiz?: T;
+  isPublished?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lessons_select".
+ */
+export interface LessonsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  description?: T;
+  order?: T;
+  type?: T;
+  videoContent?:
+    | T
+    | {
+        videoUrl?: T;
+        videoFile?: T;
+        transcript?: T;
+        captions?: T;
+      };
+  textContent?: T;
+  audioContent?:
+    | T
+    | {
+        audioFile?: T;
+        transcript?: T;
+      };
+  assignmentContent?:
+    | T
+    | {
+        instructions?: T;
+        dueInDays?: T;
+        submissionType?: T;
+        maxPoints?: T;
+      };
+  quiz?: T;
+  liveSession?:
+    | T
+    | {
+        scheduledAt?: T;
+        meetingUrl?: T;
+        recordingUrl?: T;
+      };
+  resources?:
+    | T
+    | {
+        title?: T;
+        file?: T;
+        description?: T;
+        id?: T;
+      };
+  duration?:
+    | T
+    | {
+        hours?: T;
+        minutes?: T;
+      };
+  isFree?: T;
+  completionCriteria?: T;
+  isPublished?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quizzes_select".
+ */
+export interface QuizzesSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  settings?:
+    | T
+    | {
+        timeLimit?: T;
+        passingScore?: T;
+        maxAttempts?: T;
+        shuffleQuestions?: T;
+        showCorrectAnswers?: T;
+        allowReview?: T;
+      };
+  questions?:
+    | T
+    | {
+        questionType?: T;
+        question?: T;
+        points?: T;
+        options?:
+          | T
+          | {
+              text?: T;
+              isCorrect?: T;
+              feedback?: T;
+              id?: T;
+            };
+        correctAnswer?: T;
+        acceptedAnswers?:
+          | T
+          | {
+              answer?: T;
+              id?: T;
+            };
+        essaySettings?:
+          | T
+          | {
+              minWords?: T;
+              maxWords?: T;
+              rubric?: T;
+            };
+        explanation?: T;
+        id?: T;
+      };
+  isPublished?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enrollments_select".
+ */
+export interface EnrollmentsSelect<T extends boolean = true> {
+  subscriber?: T;
+  course?: T;
+  status?: T;
+  enrolledAt?: T;
+  startedAt?: T;
+  completedAt?: T;
+  expiresAt?: T;
+  progress?:
+    | T
+    | {
+        percentComplete?: T;
+        lessonsCompleted?: T;
+        totalLessons?: T;
+        modulesCompleted?: T;
+        totalModules?: T;
+        lastAccessedAt?: T;
+        timeSpent?: T;
+      };
+  certificate?:
+    | T
+    | {
+        issued?: T;
+        issuedAt?: T;
+        certificateId?: T;
+        certificateUrl?: T;
+      };
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "progress_select".
+ */
+export interface ProgressSelect<T extends boolean = true> {
+  enrollment?: T;
+  lesson?: T;
+  status?: T;
+  startedAt?: T;
+  completedAt?: T;
+  lastAccessedAt?: T;
+  videoProgress?:
+    | T
+    | {
+        watchedSeconds?: T;
+        totalSeconds?: T;
+        percentWatched?: T;
+        lastPosition?: T;
+      };
+  timeSpent?: T;
+  notes?: T;
+  bookmarks?:
+    | T
+    | {
+        timestamp?: T;
+        note?: T;
+        createdAt?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quiz-attempts_select".
+ */
+export interface QuizAttemptsSelect<T extends boolean = true> {
+  enrollment?: T;
+  quiz?: T;
+  attemptNumber?: T;
+  status?: T;
+  startedAt?: T;
+  submittedAt?: T;
+  gradedAt?: T;
+  timeSpent?: T;
+  answers?:
+    | T
+    | {
+        questionIndex?: T;
+        questionType?: T;
+        selectedOptions?:
+          | T
+          | {
+              optionIndex?: T;
+              id?: T;
+            };
+        textAnswer?: T;
+        essayAnswer?: T;
+        isCorrect?: T;
+        pointsAwarded?: T;
+        feedback?: T;
+        id?: T;
+      };
+  score?:
+    | T
+    | {
+        pointsEarned?: T;
+        pointsPossible?: T;
+        percentage?: T;
+      };
+  passed?: T;
+  instructorFeedback?: T;
+  gradedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

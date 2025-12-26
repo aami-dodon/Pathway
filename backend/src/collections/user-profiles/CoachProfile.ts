@@ -1,0 +1,145 @@
+import type { CollectionConfig } from 'payload'
+import { anyone, isAdmin, isAdminOrCoach, isAdminOrOwner } from '../../access'
+import { enforceUserOwnership, preventUserChange } from '../../hooks'
+
+export const CoachProfile: CollectionConfig = {
+    slug: 'coach-profiles',
+    admin: {
+        group: 'User Profiles',
+        useAsTitle: 'displayName',
+        description: 'Public and professional coach information for content authoring and LMS',
+    },
+    access: {
+        // Read: Public - coach profiles are publicly visible
+        read: anyone,
+        // Create: Only admins and coaches can create coach profiles
+        create: isAdminOrCoach,
+        // Update: Owner (via user field) or admin
+        update: isAdminOrOwner('user'),
+        // Delete: Admin only
+        delete: isAdmin,
+    },
+    hooks: {
+        beforeChange: [enforceUserOwnership, preventUserChange],
+    },
+    fields: [
+        // Required one-to-one relationship with Users
+        {
+            name: 'user',
+            type: 'relationship',
+            relationTo: 'users',
+            required: true,
+            unique: true,
+            hasMany: false,
+            admin: {
+                description: 'The user account associated with this coach profile (one-to-one)',
+                // Make it visible but not editable after creation
+                condition: (data, siblingData, { user }) => {
+                    // Admins can always see/edit
+                    if (user?.role === 'admin') return true
+                    // For others, it's auto-set
+                    return true
+                },
+            },
+        },
+        // Public Profile Information
+        {
+            name: 'displayName',
+            type: 'text',
+            required: true,
+            admin: {
+                description: 'Public name shown on content and courses',
+            },
+        },
+        {
+            name: 'bio',
+            type: 'textarea',
+            admin: {
+                description: 'Public bio shown on profile and authored content',
+            },
+        },
+        {
+            name: 'profilePhoto',
+            type: 'upload',
+            relationTo: 'media',
+            admin: {
+                description: 'Coach profile photo for public display',
+            },
+        },
+        // Professional Information
+        {
+            name: 'expertise',
+            type: 'array',
+            admin: {
+                description: 'Areas of expertise and specialization',
+            },
+            fields: [
+                {
+                    name: 'area',
+                    type: 'text',
+                    required: true,
+                },
+            ],
+        },
+        {
+            name: 'experience',
+            type: 'group',
+            admin: {
+                description: 'Professional experience details',
+            },
+            fields: [
+                {
+                    name: 'yearsOfExperience',
+                    type: 'number',
+                    min: 0,
+                },
+                {
+                    name: 'credentials',
+                    type: 'textarea',
+                    admin: {
+                        description: 'Certifications, qualifications, and credentials',
+                    },
+                },
+                {
+                    name: 'previousWork',
+                    type: 'textarea',
+                    admin: {
+                        description: 'Notable previous work or achievements',
+                    },
+                },
+            ],
+        },
+        // Status
+        {
+            name: 'isActive',
+            type: 'checkbox',
+            defaultValue: true,
+            admin: {
+                position: 'sidebar',
+                description: 'Whether this coach profile is currently active',
+            },
+        },
+        // Social Links (useful for public profiles)
+        {
+            name: 'socialLinks',
+            type: 'group',
+            admin: {
+                description: 'Public social media and contact links',
+            },
+            fields: [
+                {
+                    name: 'website',
+                    type: 'text',
+                },
+                {
+                    name: 'linkedin',
+                    type: 'text',
+                },
+                {
+                    name: 'twitter',
+                    type: 'text',
+                },
+            ],
+        },
+    ],
+}
