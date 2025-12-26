@@ -47,6 +47,7 @@ const usersData: { email: string; password: string; role: UserRole }[] = [
 const coachProfilesData = [
     {
         displayName: 'Sarah Johnson',
+        slug: 'sarah-johnson',
         bio: 'Leadership coach with 15+ years experience helping executives and teams reach their full potential. Former Fortune 500 executive turned coach.',
         expertise: ['Leadership Development', 'Executive Coaching', 'Team Building', 'Strategic Planning'],
         experience: { yearsOfExperience: 15, credentials: 'ICF PCC, MBA Harvard Business School', previousWork: 'VP of Operations at TechCorp, Director at GlobalFinance' },
@@ -62,6 +63,7 @@ const coachProfilesData = [
     },
     {
         displayName: 'Michael Chen',
+        slug: 'michael-chen',
         bio: 'Technology and career transition coach specializing in helping tech professionals navigate their career paths. Former Google engineer.',
         expertise: ['Career Transition', 'Tech Leadership', 'Interview Preparation', 'Personal Branding'],
         experience: { yearsOfExperience: 12, credentials: 'ACC ICF, CS Stanford University', previousWork: 'Senior Engineer at Google, Team Lead at Meta' },
@@ -76,6 +78,7 @@ const coachProfilesData = [
     },
     {
         displayName: 'Emily Williams',
+        slug: 'emily-williams',
         bio: 'Wellness and mindfulness coach focused on work-life balance, stress management, and holistic well-being for busy professionals.',
         expertise: ['Mindfulness', 'Stress Management', 'Work-Life Balance', 'Wellness Coaching'],
         experience: { yearsOfExperience: 8, credentials: 'Certified Mindfulness Teacher, Health Coach Certification', previousWork: 'Corporate Wellness Director at WellnessCo' },
@@ -89,6 +92,7 @@ const coachProfilesData = [
     },
     {
         displayName: 'David Kumar',
+        slug: 'david-kumar',
         bio: 'Entrepreneurship and business strategy coach. Serial entrepreneur who has built and sold 3 successful startups.',
         expertise: ['Entrepreneurship', 'Business Strategy', 'Fundraising', 'Product Development', 'Startup Growth'],
         experience: { yearsOfExperience: 18, credentials: 'MBA Wharton, YC Alumni', previousWork: 'Founder & CEO of TechStartup (Acquired), Partner at VentureCapital' },
@@ -103,6 +107,7 @@ const coachProfilesData = [
     },
     {
         displayName: 'Lisa Martinez',
+        slug: 'lisa-martinez',
         bio: 'Communication and public speaking coach helping professionals become confident, impactful speakers and leaders.',
         expertise: ['Public Speaking', 'Communication Skills', 'Presentation Design', 'Executive Presence'],
         experience: { yearsOfExperience: 10, credentials: 'Toastmasters DTM, Communications MA Columbia', previousWork: 'Head of Communications at MediaCorp, TEDx Speaker Coach' },
@@ -142,8 +147,51 @@ const subscriberProfilesData: { displayName: string; interests: string[]; learni
     { displayName: 'Rachel Young', interests: ['Career Growth', 'Personal Development'], learningPreferences: { preferredFormat: 'audio', pace: 'self-paced' } },
 ]
 
+export async function upsertAdmin(payload: Payload) {
+    const adminEmail = process.env.ADMIN_EMAIL
+    const adminPassword = process.env.ADMIN_PASSWORD
+
+    if (!adminEmail || !adminPassword) {
+        console.log('   ⚠️ Skipping admin creation: ADMIN_EMAIL or ADMIN_PASSWORD not set')
+        return null
+    }
+
+    console.log(`   Upserting admin: ${adminEmail}...`)
+
+    const existingAdmin = await payload.find({
+        collection: 'users',
+        where: { email: { equals: adminEmail } },
+        limit: 1,
+    })
+
+    if (existingAdmin.docs.length === 0) {
+        const admin = await payload.create({
+            collection: 'users',
+            data: {
+                email: adminEmail,
+                password: adminPassword,
+                role: 'admin',
+            },
+        })
+        console.log('   ✅ Admin user created')
+        return admin
+    } else {
+        const admin = await payload.update({
+            collection: 'users',
+            id: existingAdmin.docs[0].id,
+            data: {
+                role: 'admin',
+                // We update password as well to ensure it matches .env
+                password: adminPassword,
+            },
+        })
+        console.log('   ✅ Admin user updated (role forced to admin)')
+        return admin
+    }
+}
+
 export async function seedUsers(payload: Payload) {
-    console.log('   Creating users...')
+    console.log('   Creating/Updating users...')
     const created: any[] = []
 
     for (const userData of usersData) {
@@ -161,19 +209,24 @@ export async function seedUsers(payload: Payload) {
                 })
                 created.push(user)
             } else {
-                created.push(existing.docs[0])
+                const user = await payload.update({
+                    collection: 'users',
+                    id: existing.docs[0].id,
+                    data: userData,
+                })
+                created.push(user)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping user ${userData.email}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding user ${userData.email}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} users`)
+    console.log(`   Processed ${created.length} users`)
     return created
 }
 
 export async function seedCoachProfiles(payload: Payload, users: any[]) {
-    console.log('   Creating coach profiles...')
+    console.log('   Creating/Updating coach profiles...')
     const created: any[] = []
     const coachUsers = users.filter(u => u.role === 'coach')
 
@@ -188,36 +241,44 @@ export async function seedCoachProfiles(payload: Payload, users: any[]) {
                 limit: 1,
             })
 
+            const data = {
+                user: user.id,
+                displayName: profileData.displayName,
+                slug: profileData.slug,
+                bio: profileData.bio,
+                expertise: profileData.expertise.map(area => ({ area })),
+                experience: profileData.experience,
+                timezone: profileData.timezone,
+                availability: profileData.availability,
+                socialLinks: profileData.socialLinks,
+                isActive: true,
+            }
+
             if (existing.docs.length === 0) {
                 const profile = await payload.create({
                     collection: 'coach-profiles',
-                    data: {
-                        user: user.id,
-                        displayName: profileData.displayName,
-                        bio: profileData.bio,
-                        expertise: profileData.expertise.map(area => ({ area })),
-                        experience: profileData.experience,
-                        timezone: profileData.timezone,
-                        availability: profileData.availability,
-                        socialLinks: profileData.socialLinks,
-                        isActive: true,
-                    },
+                    data,
                 })
                 created.push(profile)
             } else {
-                created.push(existing.docs[0])
+                const profile = await payload.update({
+                    collection: 'coach-profiles',
+                    id: existing.docs[0].id,
+                    data,
+                })
+                created.push(profile)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping coach profile for ${user.email}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding coach profile for ${user.email}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} coach profiles`)
+    console.log(`   Processed ${created.length} coach profiles`)
     return created
 }
 
 export async function seedSubscriberProfiles(payload: Payload, users: any[]) {
-    console.log('   Creating subscriber profiles...')
+    console.log('   Creating/Updating subscriber profiles...')
     const created: any[] = []
     const subscriberUsers = users.filter(u => u.role === 'subscriber')
 
@@ -232,30 +293,37 @@ export async function seedSubscriberProfiles(payload: Payload, users: any[]) {
                 limit: 1,
             })
 
+            const data = {
+                user: user.id,
+                displayName: profileData.displayName,
+                interests: profileData.interests.map(topic => ({ topic })),
+                learningPreferences: profileData.learningPreferences,
+                metadata: {
+                    timezone: 'UTC',
+                    language: 'en',
+                    joinedAt: existing.docs.length > 0 ? (existing.docs[0] as any).metadata?.joinedAt : new Date().toISOString(),
+                },
+            }
+
             if (existing.docs.length === 0) {
                 const profile = await payload.create({
                     collection: 'subscriber-profiles',
-                    data: {
-                        user: user.id,
-                        displayName: profileData.displayName,
-                        interests: profileData.interests.map(topic => ({ topic })),
-                        learningPreferences: profileData.learningPreferences,
-                        metadata: {
-                            timezone: 'UTC',
-                            language: 'en',
-                            joinedAt: new Date().toISOString(),
-                        },
-                    },
+                    data,
                 })
                 created.push(profile)
             } else {
-                created.push(existing.docs[0])
+                const profile = await payload.update({
+                    collection: 'subscriber-profiles',
+                    id: existing.docs[0].id,
+                    data,
+                })
+                created.push(profile)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping subscriber profile for ${user.email}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding subscriber profile for ${user.email}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} subscriber profiles`)
+    console.log(`   Processed ${created.length} subscriber profiles`)
     return created
 }

@@ -249,6 +249,10 @@ export interface CoachProfile {
    */
   displayName: string;
   /**
+   * Will be automatically generated from display name if left empty.
+   */
+  slug?: string | null;
+  /**
    * Public bio shown on profile and authored content
    */
   bio?: string | null;
@@ -379,9 +383,9 @@ export interface Category {
   id: number;
   name: string;
   /**
-   * URL-friendly identifier for the category
+   * Will be automatically generated from name if left empty.
    */
-  slug: string;
+  slug?: string | null;
   description?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -396,9 +400,9 @@ export interface Tag {
   id: number;
   name: string;
   /**
-   * URL-friendly identifier for the tag
+   * Will be automatically generated from name if left empty.
    */
-  slug: string;
+  slug?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -412,9 +416,9 @@ export interface Post {
   id: number;
   title: string;
   /**
-   * URL-friendly identifier for the post
+   * Will be automatically generated from title if left empty.
    */
-  slug: string;
+  slug?: string | null;
   /**
    * The coach who authored this post
    */
@@ -492,9 +496,9 @@ export interface Page {
   id: number;
   title: string;
   /**
-   * URL-friendly identifier for the page
+   * Will be automatically generated from title if left empty.
    */
-  slug: string;
+  slug?: string | null;
   /**
    * The coach who authored/maintains this page
    */
@@ -553,9 +557,9 @@ export interface Course {
    */
   title: string;
   /**
-   * URL-friendly identifier for the course
+   * Will be automatically generated from title if left empty.
    */
-  slug: string;
+  slug?: string | null;
   /**
    * Detailed course description and overview
    */
@@ -696,9 +700,9 @@ export interface Module {
    */
   title: string;
   /**
-   * URL-friendly identifier
+   * Will be automatically generated from title if left empty.
    */
-  slug: string;
+  slug?: string | null;
   /**
    * Brief description of what this module covers
    */
@@ -768,9 +772,9 @@ export interface Lesson {
    */
   title: string;
   /**
-   * URL-friendly identifier
+   * Will be automatically generated from title if left empty.
    */
-  slug: string;
+  slug?: string | null;
   /**
    * Brief description of the lesson
    */
@@ -1674,6 +1678,7 @@ export interface MediaPrivateSelect<T extends boolean = true> {
 export interface CoachProfilesSelect<T extends boolean = true> {
   user?: T;
   displayName?: T;
+  slug?: T;
   bio?: T;
   profilePhoto?: T;
   expertise?:

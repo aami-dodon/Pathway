@@ -310,7 +310,7 @@ const coursesData = [
 ]
 
 export async function seedQuizzes(payload: Payload) {
-    console.log('   Creating quizzes...')
+    console.log('   Creating/Updating quizzes...')
     const created: any[] = []
 
     for (const quizData of quizzesData) {
@@ -321,32 +321,39 @@ export async function seedQuizzes(payload: Payload) {
                 limit: 1,
             })
 
+            const data = {
+                title: quizData.title,
+                description: quizData.description,
+                settings: quizData.settings,
+                questions: quizData.questions,
+                isPublished: true,
+            }
+
             if (existing.docs.length === 0) {
                 const quiz = await payload.create({
                     collection: 'quizzes',
-                    data: {
-                        title: quizData.title,
-                        description: quizData.description,
-                        settings: quizData.settings,
-                        questions: quizData.questions,
-                        isPublished: true,
-                    },
+                    data,
                 })
                 created.push(quiz)
             } else {
-                created.push(existing.docs[0])
+                const quiz = await payload.update({
+                    collection: 'quizzes',
+                    id: existing.docs[0].id,
+                    data,
+                })
+                created.push(quiz)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping quiz ${quizData.title}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding quiz ${quizData.title}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} quizzes`)
+    console.log(`   Processed ${created.length} quizzes`)
     return created
 }
 
 export async function seedLessons(payload: Payload, quizzes: any[]) {
-    console.log('   Creating lessons...')
+    console.log('   Creating/Updating lessons...')
     const created: any[] = []
 
     for (const lessonData of lessonsData) {
@@ -357,52 +364,57 @@ export async function seedLessons(payload: Payload, quizzes: any[]) {
                 limit: 1,
             })
 
+            const data: any = {
+                title: lessonData.title,
+                slug: lessonData.slug,
+                description: `Learn about ${lessonData.title.toLowerCase()} in this comprehensive lesson.`,
+                type: lessonData.type,
+                order: lessonData.order,
+                duration: lessonData.duration,
+                isFree: lessonData.isFree || false,
+                isPublished: true,
+                completionCriteria: lessonData.type === 'quiz' ? 'quiz-pass' : lessonData.type === 'assignment' ? 'assignment-submit' : 'view',
+            }
+
+            // Add type-specific content
+            if (lessonData.type === 'text') {
+                data.textContent = createRichText(`This is the content for the lesson "${lessonData.title}". It provides comprehensive coverage of the topic with practical examples and exercises.`)
+            }
+
+            if (lessonData.type === 'assignment') {
+                data.assignmentContent = {
+                    instructions: createRichText(`Complete this assignment demonstrating your understanding of ${lessonData.title}.`),
+                    dueInDays: 7,
+                    submissionType: 'text',
+                    maxPoints: 100,
+                }
+            }
+
             if (existing.docs.length === 0) {
-                const data: any = {
-                    title: lessonData.title,
-                    slug: lessonData.slug,
-                    description: `Learn about ${lessonData.title.toLowerCase()} in this comprehensive lesson.`,
-                    type: lessonData.type,
-                    order: lessonData.order,
-                    duration: lessonData.duration,
-                    isFree: lessonData.isFree || false,
-                    isPublished: true,
-                    completionCriteria: lessonData.type === 'quiz' ? 'quiz-pass' : lessonData.type === 'assignment' ? 'assignment-submit' : 'view',
-                }
-
-                // Add type-specific content
-                if (lessonData.type === 'text') {
-                    data.textContent = createRichText(`This is the content for the lesson "${lessonData.title}". It provides comprehensive coverage of the topic with practical examples and exercises.`)
-                }
-
-                if (lessonData.type === 'assignment') {
-                    data.assignmentContent = {
-                        instructions: createRichText(`Complete this assignment demonstrating your understanding of ${lessonData.title}.`),
-                        dueInDays: 7,
-                        submissionType: 'text',
-                        maxPoints: 100,
-                    }
-                }
-
                 const lesson = await payload.create({
                     collection: 'lessons',
                     data,
                 })
                 created.push(lesson)
             } else {
-                created.push(existing.docs[0])
+                const lesson = await payload.update({
+                    collection: 'lessons',
+                    id: existing.docs[0].id,
+                    data,
+                })
+                created.push(lesson)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping lesson ${lessonData.slug}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding lesson ${lessonData.slug}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} lessons`)
+    console.log(`   Processed ${created.length} lessons`)
     return created
 }
 
 export async function seedModules(payload: Payload, lessons: any[], quizzes: any[]) {
-    console.log('   Creating modules...')
+    console.log('   Creating/Updating modules...')
     const created: any[] = []
 
     for (const modData of modulesData) {
@@ -413,42 +425,49 @@ export async function seedModules(payload: Payload, lessons: any[], quizzes: any
                 limit: 1,
             })
 
-            if (existing.docs.length === 0) {
-                const moduleLessons = lessons.slice(modData.lessonRange[0], modData.lessonRange[1])
-                const moduleQuiz = modData.quizIndex !== undefined ? quizzes[modData.quizIndex] : null
+            const moduleLessons = lessons.slice(modData.lessonRange[0], modData.lessonRange[1])
+            const moduleQuiz = modData.quizIndex !== undefined ? quizzes[modData.quizIndex] : null
 
+            const data = {
+                title: modData.title,
+                slug: modData.slug,
+                description: `This module covers ${modData.title.toLowerCase()}.`,
+                order: modData.order,
+                lessons: moduleLessons.map(l => l.id),
+                quiz: moduleQuiz?.id,
+                completionRequirements: {
+                    requireAllLessons: true,
+                    requireQuizPass: !!moduleQuiz,
+                },
+                objectives: [{ objective: `Master the concepts covered in ${modData.title}` }],
+                isPublished: true,
+            }
+
+            if (existing.docs.length === 0) {
                 const module = await payload.create({
                     collection: 'modules',
-                    data: {
-                        title: modData.title,
-                        slug: modData.slug,
-                        description: `This module covers ${modData.title.toLowerCase()}.`,
-                        order: modData.order,
-                        lessons: moduleLessons.map(l => l.id),
-                        quiz: moduleQuiz?.id,
-                        completionRequirements: {
-                            requireAllLessons: true,
-                            requireQuizPass: !!moduleQuiz,
-                        },
-                        objectives: [{ objective: `Master the concepts covered in ${modData.title}` }],
-                        isPublished: true,
-                    },
+                    data,
                 })
                 created.push(module)
             } else {
-                created.push(existing.docs[0])
+                const module = await payload.update({
+                    collection: 'modules',
+                    id: existing.docs[0].id,
+                    data,
+                })
+                created.push(module)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping module ${modData.slug}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding module ${modData.slug}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} modules`)
+    console.log(`   Processed ${created.length} modules`)
     return created
 }
 
 export async function seedCourses(payload: Payload, coachProfiles: any[], modules: any[], categories: any[], tags: any[]) {
-    console.log('   Creating courses...')
+    console.log('   Creating/Updating courses...')
     const created: any[] = []
 
     for (let i = 0; i < coursesData.length; i++) {
@@ -465,41 +484,48 @@ export async function seedCourses(payload: Payload, coachProfiles: any[], module
                 limit: 1,
             })
 
+            const data = {
+                title: courseData.title,
+                slug: courseData.slug,
+                description: createRichText(`${courseData.shortDescription}\n\nThis comprehensive course will take you through all the essential concepts and practical applications.`),
+                shortDescription: courseData.shortDescription,
+                instructor: instructor.id,
+                modules: courseModules.map(m => m.id),
+                difficulty: courseData.difficulty,
+                duration: courseData.duration,
+                topics: courseData.topics.map(topic => ({ topic })),
+                learningOutcomes: courseData.learningOutcomes.map(outcome => ({ outcome })),
+                prerequisites: courseData.prerequisites.map(prerequisite => ({ prerequisite })),
+                enrollment: { isOpen: true, maxEnrollments: 0 },
+                status: 'published' as const,
+                publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date().toISOString(),
+                category: category?.id,
+                tags: courseTags.map(t => t.id),
+                seo: {
+                    metaTitle: courseData.title,
+                    metaDescription: courseData.shortDescription,
+                },
+            }
+
             if (existing.docs.length === 0) {
                 const course = await payload.create({
                     collection: 'courses',
-                    data: {
-                        title: courseData.title,
-                        slug: courseData.slug,
-                        description: createRichText(`${courseData.shortDescription}\n\nThis comprehensive course will take you through all the essential concepts and practical applications.`),
-                        shortDescription: courseData.shortDescription,
-                        instructor: instructor.id,
-                        modules: courseModules.map(m => m.id),
-                        difficulty: courseData.difficulty,
-                        duration: courseData.duration,
-                        topics: courseData.topics.map(topic => ({ topic })),
-                        learningOutcomes: courseData.learningOutcomes.map(outcome => ({ outcome })),
-                        prerequisites: courseData.prerequisites.map(prerequisite => ({ prerequisite })),
-                        enrollment: { isOpen: true, maxEnrollments: 0 },
-                        status: 'published',
-                        publishedAt: new Date().toISOString(),
-                        category: category?.id,
-                        tags: courseTags.map(t => t.id),
-                        seo: {
-                            metaTitle: courseData.title,
-                            metaDescription: courseData.shortDescription,
-                        },
-                    },
+                    data,
                 })
                 created.push(course)
             } else {
-                created.push(existing.docs[0])
+                const course = await payload.update({
+                    collection: 'courses',
+                    id: existing.docs[0].id,
+                    data,
+                })
+                created.push(course)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping course ${courseData.slug}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding course ${courseData.slug}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} courses`)
+    console.log(`   Processed ${created.length} courses`)
     return created
 }

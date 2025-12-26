@@ -256,7 +256,7 @@ function createRichText(text: string) {
 }
 
 export async function seedCategories(payload: Payload) {
-    console.log('   Creating categories...')
+    console.log('   Creating/Updating categories...')
     const created: any[] = []
 
     for (const catData of categoriesData) {
@@ -274,19 +274,24 @@ export async function seedCategories(payload: Payload) {
                 })
                 created.push(cat)
             } else {
-                created.push(existing.docs[0])
+                const cat = await payload.update({
+                    collection: 'categories',
+                    id: existing.docs[0].id,
+                    data: catData,
+                })
+                created.push(cat)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping category ${catData.slug}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding category ${catData.slug}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} categories`)
+    console.log(`   Processed ${created.length} categories`)
     return created
 }
 
 export async function seedTags(payload: Payload) {
-    console.log('   Creating tags...')
+    console.log('   Creating/Updating tags...')
     const created: any[] = []
 
     for (const tagData of tagsData) {
@@ -304,19 +309,24 @@ export async function seedTags(payload: Payload) {
                 })
                 created.push(tag)
             } else {
-                created.push(existing.docs[0])
+                const tag = await payload.update({
+                    collection: 'tags',
+                    id: existing.docs[0].id,
+                    data: tagData,
+                })
+                created.push(tag)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping tag ${tagData.slug}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding tag ${tagData.slug}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} tags`)
+    console.log(`   Processed ${created.length} tags`)
     return created
 }
 
 export async function seedPosts(payload: Payload, coachProfiles: any[], categories: any[], tags: any[]) {
-    console.log('   Creating posts...')
+    console.log('   Creating/Updating posts...')
     const created: any[] = []
 
     for (let i = 0; i < postsData.length; i++) {
@@ -332,41 +342,48 @@ export async function seedPosts(payload: Payload, coachProfiles: any[], categori
                 limit: 1,
             })
 
+            const data = {
+                title: postData.title,
+                slug: postData.slug,
+                author: author.id,
+                excerpt: postData.excerpt,
+                content: createRichText(`${postData.excerpt}\n\nThis is comprehensive content for the article "${postData.title}". It covers key concepts, practical examples, and actionable takeaways for readers looking to improve in this area.`),
+                category: category?.id,
+                tags: postTags.map(t => t.id),
+                accessLevel: postData.accessLevel,
+                status: 'published' as const,
+                publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+                seo: {
+                    metaTitle: postData.title,
+                    metaDescription: postData.excerpt,
+                },
+            }
+
             if (existing.docs.length === 0) {
                 const post = await payload.create({
                     collection: 'posts',
-                    data: {
-                        title: postData.title,
-                        slug: postData.slug,
-                        author: author.id,
-                        excerpt: postData.excerpt,
-                        content: createRichText(`${postData.excerpt}\n\nThis is comprehensive content for the article "${postData.title}". It covers key concepts, practical examples, and actionable takeaways for readers looking to improve in this area.`),
-                        category: category?.id,
-                        tags: postTags.map(t => t.id),
-                        accessLevel: postData.accessLevel,
-                        status: 'published',
-                        publishedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                        seo: {
-                            metaTitle: postData.title,
-                            metaDescription: postData.excerpt,
-                        },
-                    },
+                    data,
                 })
                 created.push(post)
             } else {
-                created.push(existing.docs[0])
+                const post = await payload.update({
+                    collection: 'posts',
+                    id: existing.docs[0].id,
+                    data,
+                })
+                created.push(post)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping post ${postData.slug}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding post ${postData.slug}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} posts`)
+    console.log(`   Processed ${created.length} posts`)
     return created
 }
 
 export async function seedPages(payload: Payload, coachProfiles: any[]) {
-    console.log('   Creating pages...')
+    console.log('   Creating/Updating pages...')
     const created: any[] = []
     const author = coachProfiles[0]
 
@@ -378,31 +395,38 @@ export async function seedPages(payload: Payload, coachProfiles: any[]) {
                 limit: 1,
             })
 
+            const data = {
+                title: pageData.title,
+                slug: pageData.slug,
+                author: author?.id,
+                content: createRichText(pageData.content),
+                status: 'published' as const,
+                publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date().toISOString(),
+                seo: {
+                    metaTitle: `${pageData.title} | Pathway`,
+                    metaDescription: pageData.content.substring(0, 160),
+                },
+            }
+
             if (existing.docs.length === 0) {
                 const page = await payload.create({
                     collection: 'pages',
-                    data: {
-                        title: pageData.title,
-                        slug: pageData.slug,
-                        author: author?.id,
-                        content: createRichText(pageData.content),
-                        status: 'published',
-                        publishedAt: new Date().toISOString(),
-                        seo: {
-                            metaTitle: `${pageData.title} | Pathway`,
-                            metaDescription: pageData.content.substring(0, 160),
-                        },
-                    },
+                    data,
                 })
                 created.push(page)
             } else {
-                created.push(existing.docs[0])
+                const page = await payload.update({
+                    collection: 'pages',
+                    id: existing.docs[0].id,
+                    data,
+                })
+                created.push(page)
             }
         } catch (e) {
-            console.log(`   ⚠️ Skipping page ${pageData.slug}: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding page ${pageData.slug}: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} pages`)
+    console.log(`   Processed ${created.length} pages`)
     return created
 }

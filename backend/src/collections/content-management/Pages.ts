@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isAdminOrCreator, isPublishedOrAdmin } from '../../access'
-import { setPublishedAt } from '../../hooks'
+import { formatSlug, setPublishedAt } from '../../hooks'
 
 export const Pages: CollectionConfig = {
     slug: 'pages',
@@ -35,11 +35,14 @@ export const Pages: CollectionConfig = {
         {
             name: 'slug',
             type: 'text',
-            required: true,
+            required: false,
             unique: true,
             index: true,
             admin: {
-                description: 'URL-friendly identifier for the page',
+                description: 'Will be automatically generated from title if left empty.',
+            },
+            hooks: {
+                beforeValidate: [formatSlug('title')],
             },
         },
         // Author references Coach Profile instead of Users

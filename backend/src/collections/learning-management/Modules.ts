@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isAdminOrCoach } from '../../access'
+import { formatSlug } from '../../hooks'
 export const Modules: CollectionConfig = {
     slug: 'modules',
     admin: {
@@ -41,10 +42,13 @@ export const Modules: CollectionConfig = {
         {
             name: 'slug',
             type: 'text',
-            required: true,
+            required: false,
             index: true,
             admin: {
-                description: 'URL-friendly identifier',
+                description: 'Will be automatically generated from title if left empty.',
+            },
+            hooks: {
+                beforeValidate: [formatSlug('title')],
             },
         },
         {

@@ -9,18 +9,38 @@ import { getPayload } from 'payload'
 import config from '../payload.config'
 
 // Import seed data modules
-import { seedUsers, seedCoachProfiles, seedSubscriberProfiles } from './users.js'
+import { upsertAdmin, seedUsers, seedCoachProfiles, seedSubscriberProfiles } from './users.js'
 import { seedCategories, seedTags, seedPosts, seedPages } from './content.js'
 import { seedCourses, seedModules, seedLessons, seedQuizzes } from './lms.js'
 import { seedEnrollments, seedProgress, seedQuizAttempts } from './enrollments.js'
 import { seedCoachingSessions } from './bookings.js'
 
 async function seed() {
-    console.log('🌱 Starting demo data seeding...\n')
+    const nodeEnv = process.env.NODE_ENV || 'development'
+    const allowSeed = process.env.ALLOW_SEED === 'true'
+
+    // Safety check: Don't seed in production unless explicitly allowed
+    if (nodeEnv === 'production' && !allowSeed) {
+        console.error('❌ Seeding is disabled in production')
+        console.error('   Set ALLOW_SEED=true to override (not recommended)')
+        console.error('   Current NODE_ENV:', nodeEnv)
+        process.exit(1)
+    }
+
+    console.log(`🌱 Starting data seeding (${nodeEnv})...`)
+    if (nodeEnv === 'production') {
+        console.log('⚠️  WARNING: Seeding in production environment!')
+    }
+    console.log('⚠️  This will create/update data in your database\n')
 
     const payload = await getPayload({ config })
 
     try {
+        // Phase 0: Admin User
+        console.log('📦 Phase 0: Seeding Admin...')
+        await upsertAdmin(payload)
+        console.log('✅ Admin seeded\n')
+
         // Phase 1: Core Users & Profiles
         console.log('📦 Phase 1: Seeding Users & Profiles...')
         const users = await seedUsers(payload)

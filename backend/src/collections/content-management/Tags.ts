@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { anyone, isAdmin, isAdminOrCreator } from '../../access'
+import { formatSlug } from '../../hooks'
 
 export const Tags: CollectionConfig = {
     slug: 'tags',
@@ -27,11 +28,14 @@ export const Tags: CollectionConfig = {
         {
             name: 'slug',
             type: 'text',
-            required: true,
+            required: false,
             unique: true,
             index: true,
             admin: {
-                description: 'URL-friendly identifier for the tag',
+                description: 'Will be automatically generated from name if left empty.',
+            },
+            hooks: {
+                beforeValidate: [formatSlug('name')],
             },
         },
     ],

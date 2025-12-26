@@ -25,7 +25,13 @@ This is the backend for the Pathway application, built with **Payload CMS 3.0** 
     ```bash
     pnpm dev
     ```
-    The server will start at `http://localhost:3000`.
+    The server will start at `http://localhost:9006`.
+
+4.  **Seed Data**:
+    Seeding is manual and idempotent. It will create or update the admin user based on your `.env` variables and then seed demo data.
+    ```bash
+    pnpm seed
+    ```
 
 ## API Documentation
 
@@ -120,6 +126,17 @@ These custom endpoints verify course enrollment before returning content:
 (If configured as Globals)
 -   `GET /api/globals/settings`
 
+## Seed Data
+
+The application uses an idempotent seeding strategy. Running `pnpm seed` will:
+1. **Upsert Admin**: Create or update the admin user using `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your `.env`.
+2. **Upsert Demo Data**: Create or update coaches, subscribers, categories, posts, courses, etc.
+
+You can safely run the seed command multiple times to ensure your database has the latest demo data.
+
+> [!WARNING]
+> Seeding is disabled in production by default. To force seeding in production, set `ALLOW_SEED=true` in your environment.
+
 ## Testing
 
 Run the API test suite to verify endpoints:
@@ -140,8 +157,18 @@ For detailed access control documentation including role hierarchy, field-level 
 
 ## Docker
 
-You can use the provided `docker-compose.yml` to spin up the application or a local database.
+You can use the provided `docker-compose.yml` to spin up the application.
 
 ```bash
 docker-compose up -d
 ```
+
+### Seeding in Docker
+
+To run the seed script inside the running backend container:
+
+```bash
+docker-compose exec backend npm run seed
+```
+
+This will use the environment variables defined in your `docker-compose.yml` or `.env` file.

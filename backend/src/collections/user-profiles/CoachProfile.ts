@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { anyone, isAdmin, isAdminOrCoach, isAdminOrOwner } from '../../access'
-import { enforceUserOwnership, preventUserChange } from '../../hooks'
+import { enforceUserOwnership, formatSlug, preventUserChange } from '../../hooks'
 
 export const CoachProfile: CollectionConfig = {
     slug: 'coach-profiles',
@@ -49,6 +49,20 @@ export const CoachProfile: CollectionConfig = {
             required: true,
             admin: {
                 description: 'Public name shown on content and courses',
+            },
+        },
+        {
+            name: 'slug',
+            type: 'text',
+            required: false,
+            unique: true,
+            index: true,
+            admin: {
+                description: 'Will be automatically generated from display name if left empty.',
+                position: 'sidebar',
+            },
+            hooks: {
+                beforeValidate: [formatSlug('displayName')],
             },
         },
         {

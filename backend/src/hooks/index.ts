@@ -7,3 +7,6 @@ export { enforceUserOwnership, preventUserChange } from './enforceUserOwnership'
 
 // Timestamp hooks
 export { setEnrolledAt, setJoinedAt } from './timestamps'
+
+// Slug hooks
+export { formatSlug } from './formatSlug'

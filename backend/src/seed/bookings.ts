@@ -69,35 +69,60 @@ export async function seedCoachingSessions(payload: Payload, coachProfiles: any[
         }
 
         try {
-            const session = await payload.create({
+            const existing = await payload.find({
                 collection: 'coaching-sessions',
-                overrideAccess: true,
-                data: {
-                    sessionTitle: sessionTitles[i % sessionTitles.length],
-                    coach: coach.id,
-                    bookerName: booker.email.split('@')[0].replace('.', ' ').split(' ').map((n: string) => n.charAt(0).toUpperCase() + n.slice(1)).join(' '),
-                    bookerEmail: booker.email,
-                    bookedByUser: booker.id,
-                    scheduledAt: scheduledDate.toISOString(),
-                    duration: 30,
-                    timezone: 'UTC',
-                    status,
-                    sessionType: 'video',
-                    topic: sessionTopics[i % sessionTopics.length],
-                    bookerNotes: i % 3 === 0 ? 'Looking forward to discussing my career goals.' : undefined,
-                    coachNotes: status === 'completed' ? 'Great session. Follow-up recommended.' : undefined,
-                    bookedAt: new Date(scheduledDate.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    confirmedAt: status !== 'pending' ? new Date(scheduledDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-                    cancelledAt: status === 'cancelled' ? new Date(scheduledDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-                    cancellationReason: status === 'cancelled' ? 'Schedule conflict - will rebook' : undefined,
+                where: {
+                    and: [
+                        { coach: { equals: coach.id } },
+                        { bookedByUser: { equals: booker.id } },
+                        { scheduledAt: { equals: scheduledDate.toISOString() } },
+                    ],
                 },
+                limit: 1,
+                overrideAccess: true,
             })
-            created.push(session)
+
+            const data = {
+                sessionTitle: sessionTitles[i % sessionTitles.length],
+                coach: coach.id,
+                bookerName: booker.email.split('@')[0].replace('.', ' ').split(' ').map((n: string) => n.charAt(0).toUpperCase() + n.slice(1)).join(' '),
+                bookerEmail: booker.email,
+                bookedByUser: booker.id,
+                scheduledAt: scheduledDate.toISOString(),
+                duration: 30,
+                timezone: 'UTC',
+                status,
+                sessionType: 'video' as const,
+                topic: sessionTopics[i % sessionTopics.length],
+                bookerNotes: i % 3 === 0 ? 'Looking forward to discussing my career goals.' : undefined,
+                coachNotes: status === 'completed' ? 'Great session. Follow-up recommended.' : undefined,
+                bookedAt: new Date(scheduledDate.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                confirmedAt: status !== 'pending' ? new Date(scheduledDate.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+                cancelledAt: status === 'cancelled' ? new Date(scheduledDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+                cancellationReason: status === 'cancelled' ? 'Schedule conflict - will rebook' : undefined,
+            }
+
+            if (existing.docs.length === 0) {
+                const session = await payload.create({
+                    collection: 'coaching-sessions',
+                    overrideAccess: true,
+                    data,
+                })
+                created.push(session)
+            } else {
+                const session = await payload.update({
+                    collection: 'coaching-sessions',
+                    id: existing.docs[0].id,
+                    overrideAccess: true,
+                    data,
+                })
+                created.push(session)
+            }
         } catch (e) {
-            console.log(`   ⚠️ Skipping session: ${(e as Error).message}`)
+            console.log(`   ⚠️ Error seeding coaching session: ${(e as Error).message}`)
         }
     }
 
-    console.log(`   Created ${created.length} coaching sessions`)
+    console.log(`   Processed ${created.length} coaching sessions`)
     return created
 }

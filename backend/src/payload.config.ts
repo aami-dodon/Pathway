@@ -158,29 +158,4 @@ export default buildConfig({
       },
     }),
   ],
-  onInit: async (payload) => {
-    const existingUsers = await payload.find({
-      collection: 'users',
-      limit: 1,
-    })
-
-    if (existingUsers.docs.length === 0) {
-      const adminEmail = process.env.ADMIN_EMAIL
-      const adminPassword = process.env.ADMIN_PASSWORD
-
-      if (adminEmail && adminPassword) {
-        await payload.create({
-          collection: 'users',
-          data: {
-            email: adminEmail,
-            password: adminPassword,
-            role: 'admin',
-          },
-        })
-        payload.logger.info(`Admin user created: ${adminEmail}`)
-      } else {
-        payload.logger.warn('ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required to seed the admin user')
-      }
-    }
-  },
 })

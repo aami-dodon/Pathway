@@ -4,7 +4,7 @@
 import type { Payload } from 'payload'
 
 export async function seedEnrollments(payload: Payload, subscriberProfiles: any[], courses: any[]) {
-    console.log('   Creating enrollments...')
+    console.log('   Creating/Updating enrollments...')
     const created: any[] = []
 
     // Each subscriber enrolls in 1-3 courses
@@ -25,6 +25,29 @@ export async function seedEnrollments(payload: Payload, subscriberProfiles: any[
             const percentComplete = status === 'completed' ? 100 : Math.floor(Math.random() * 80)
             const lessonsCompleted = Math.floor((percentComplete / 100) * 10)
 
+            const data = {
+                subscriber: subscriber.id,
+                course: course.id,
+                status,
+                enrolledAt: enrolledAt.toISOString(),
+                startedAt: new Date(enrolledAt.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+                completedAt: status === 'completed' ? new Date().toISOString() : undefined,
+                progress: {
+                    percentComplete,
+                    lessonsCompleted,
+                    totalLessons: 10,
+                    modulesCompleted: Math.floor(lessonsCompleted / 3),
+                    totalModules: 3,
+                    lastAccessedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    timeSpent: Math.floor(Math.random() * 600) + 60,
+                },
+                certificate: status === 'completed' ? {
+                    issued: true,
+                    issuedAt: new Date().toISOString(),
+                    certificateId: `CERT-${Date.now()}-${i}`,
+                } : { issued: false },
+            }
+
             try {
                 const existing = await payload.find({
                     collection: 'enrollments',
@@ -40,45 +63,29 @@ export async function seedEnrollments(payload: Payload, subscriberProfiles: any[
                 if (existing.docs.length === 0) {
                     const enrollment = await payload.create({
                         collection: 'enrollments',
-                        data: {
-                            subscriber: subscriber.id,
-                            course: course.id,
-                            status,
-                            enrolledAt: enrolledAt.toISOString(),
-                            startedAt: new Date(enrolledAt.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-                            completedAt: status === 'completed' ? new Date().toISOString() : undefined,
-                            progress: {
-                                percentComplete,
-                                lessonsCompleted,
-                                totalLessons: 10,
-                                modulesCompleted: Math.floor(lessonsCompleted / 3),
-                                totalModules: 3,
-                                lastAccessedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-                                timeSpent: Math.floor(Math.random() * 600) + 60,
-                            },
-                            certificate: status === 'completed' ? {
-                                issued: true,
-                                issuedAt: new Date().toISOString(),
-                                certificateId: `CERT-${Date.now()}-${i}`,
-                            } : { issued: false },
-                        },
+                        data,
                     })
                     created.push(enrollment)
                 } else {
-                    created.push(existing.docs[0])
+                    const enrollment = await payload.update({
+                        collection: 'enrollments',
+                        id: existing.docs[0].id,
+                        data,
+                    })
+                    created.push(enrollment)
                 }
             } catch (e) {
-                console.log(`   ⚠️ Skipping enrollment: ${(e as Error).message}`)
+                console.log(`   ⚠️ Error seeding enrollment: ${(e as Error).message}`)
             }
         }
     }
 
-    console.log(`   Created ${created.length} enrollments`)
+    console.log(`   Processed ${created.length} enrollments`)
     return created
 }
 
 export async function seedProgress(payload: Payload, enrollments: any[], lessons: any[]) {
-    console.log('   Creating progress records...')
+    console.log('   Creating/Updating progress records...')
     const created: any[] = []
 
     // Create progress for first few lessons for each enrollment
@@ -100,27 +107,36 @@ export async function seedProgress(payload: Payload, enrollments: any[], lessons
                     limit: 1,
                 })
 
-                if (existing.docs.length === 0) {
-                    const startedAt = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-                    const isComplete = Math.random() > 0.2
+                const startedAt = existing.docs.length > 0 ? new Date((existing.docs[0] as any).startedAt) : new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
+                const isComplete = Math.random() > 0.2
 
+                const data = {
+                    enrollment: enrollment.id,
+                    lesson: lesson.id,
+                    status: (isComplete ? 'completed' : 'in-progress') as 'completed' | 'in-progress',
+                    startedAt: startedAt.toISOString(),
+                    completedAt: isComplete ? new Date(startedAt.getTime() + 30 * 60 * 1000).toISOString() : undefined,
+                    lastAccessedAt: new Date().toISOString(),
+                    videoProgress: {
+                        watchedSeconds: isComplete ? 1200 : Math.floor(Math.random() * 1000),
+                        totalSeconds: 1200,
+                        percentWatched: isComplete ? 100 : Math.floor(Math.random() * 80),
+                        lastPosition: isComplete ? 0 : Math.floor(Math.random() * 1000),
+                    },
+                    timeSpent: Math.floor(Math.random() * 3600) + 300,
+                }
+
+                if (existing.docs.length === 0) {
                     const progress = await payload.create({
                         collection: 'progress',
-                        data: {
-                            enrollment: enrollment.id,
-                            lesson: lesson.id,
-                            status: isComplete ? 'completed' : 'in-progress',
-                            startedAt: startedAt.toISOString(),
-                            completedAt: isComplete ? new Date(startedAt.getTime() + 30 * 60 * 1000).toISOString() : undefined,
-                            lastAccessedAt: new Date().toISOString(),
-                            videoProgress: {
-                                watchedSeconds: isComplete ? 1200 : Math.floor(Math.random() * 1000),
-                                totalSeconds: 1200,
-                                percentWatched: isComplete ? 100 : Math.floor(Math.random() * 80),
-                                lastPosition: isComplete ? 0 : Math.floor(Math.random() * 1000),
-                            },
-                            timeSpent: Math.floor(Math.random() * 3600) + 300,
-                        },
+                        data,
+                    })
+                    created.push(progress)
+                } else {
+                    const progress = await payload.update({
+                        collection: 'progress',
+                        id: existing.docs[0].id,
+                        data,
                     })
                     created.push(progress)
                 }
@@ -130,12 +146,12 @@ export async function seedProgress(payload: Payload, enrollments: any[], lessons
         }
     }
 
-    console.log(`   Created ${created.length} progress records`)
+    console.log(`   Processed ${created.length} progress records`)
     return created
 }
 
 export async function seedQuizAttempts(payload: Payload, enrollments: any[], quizzes: any[]) {
-    console.log('   Creating quiz attempts...')
+    console.log('   Creating/Updating quiz attempts...')
     const created: any[] = []
 
     // Create quiz attempts for some enrollments
@@ -158,32 +174,41 @@ export async function seedQuizAttempts(payload: Payload, enrollments: any[], qui
                     limit: 1,
                 })
 
-                if (existing.docs.length === 0) {
-                    const passed = Math.random() > 0.3
-                    const percentage = passed ? 70 + Math.floor(Math.random() * 30) : 40 + Math.floor(Math.random() * 30)
+                const passed = Math.random() > 0.3
+                const percentage = passed ? 70 + Math.floor(Math.random() * 30) : 40 + Math.floor(Math.random() * 30)
 
+                const data = {
+                    enrollment: enrollment.id,
+                    quiz: quiz.id,
+                    attemptNumber: 1,
+                    status: 'graded' as 'graded',
+                    startedAt: existing.docs.length > 0 ? (existing.docs[0] as any).startedAt : new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
+                    submittedAt: existing.docs.length > 0 ? (existing.docs[0] as any).submittedAt : new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    gradedAt: new Date().toISOString(),
+                    timeSpent: Math.floor(Math.random() * 1200) + 300,
+                    answers: [
+                        { questionIndex: 0, questionType: 'multiple-choice' as const, selectedOptions: [{ optionIndex: 0 }], isCorrect: passed, pointsAwarded: passed ? 2 : 0 },
+                        { questionIndex: 1, questionType: 'true-false' as const, selectedOptions: [{ optionIndex: passed ? 1 : 0 }], isCorrect: passed, pointsAwarded: passed ? 1 : 0 },
+                    ],
+                    score: {
+                        pointsEarned: Math.floor((percentage / 100) * 6),
+                        pointsPossible: 6,
+                        percentage,
+                    },
+                    passed,
+                }
+
+                if (existing.docs.length === 0) {
                     const attempt = await payload.create({
                         collection: 'quiz-attempts',
-                        data: {
-                            enrollment: enrollment.id,
-                            quiz: quiz.id,
-                            attemptNumber: 1,
-                            status: 'graded',
-                            startedAt: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
-                            submittedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-                            gradedAt: new Date().toISOString(),
-                            timeSpent: Math.floor(Math.random() * 1200) + 300,
-                            answers: [
-                                { questionIndex: 0, questionType: 'multiple-choice', selectedOptions: [{ optionIndex: 0 }], isCorrect: passed, pointsAwarded: passed ? 2 : 0 },
-                                { questionIndex: 1, questionType: 'true-false', selectedOptions: [{ optionIndex: passed ? 1 : 0 }], isCorrect: passed, pointsAwarded: passed ? 1 : 0 },
-                            ],
-                            score: {
-                                pointsEarned: Math.floor((percentage / 100) * 6),
-                                pointsPossible: 6,
-                                percentage,
-                            },
-                            passed,
-                        },
+                        data,
+                    })
+                    created.push(attempt)
+                } else {
+                    const attempt = await payload.update({
+                        collection: 'quiz-attempts',
+                        id: existing.docs[0].id,
+                        data,
                     })
                     created.push(attempt)
                 }
@@ -193,6 +218,6 @@ export async function seedQuizAttempts(payload: Payload, enrollments: any[], qui
         }
     }
 
-    console.log(`   Created ${created.length} quiz attempts`)
+    console.log(`   Processed ${created.length} quiz attempts`)
     return created
 }
