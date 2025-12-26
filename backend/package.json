@@ -13,6 +13,7 @@
     "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "start": "node -r dotenv/config scripts/start_wrapper.cjs",
+    "seed": "npx tsx -r dotenv/config src/seed/index.ts",
     "test": "pnpm run test:api",
     "test:api": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts tests/api"
   },
