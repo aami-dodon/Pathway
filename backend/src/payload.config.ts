@@ -58,6 +58,9 @@ export default buildConfig({
   cookiePrefix: 'pathway',
   cors: corsOrigins,
   csrf: corsOrigins,
+  routes: {
+    admin: '/',
+  },
   admin: {
     user: Users.slug,
     importMap: {
