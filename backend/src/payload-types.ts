@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    'media-private': MediaPrivate;
     'coach-profiles': CoachProfile;
     'subscriber-profiles': SubscriberProfile;
     categories: Category;
@@ -92,6 +93,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'media-private': MediaPrivateSelect<false> | MediaPrivateSelect<true>;
     'coach-profiles': CoachProfilesSelect<false> | CoachProfilesSelect<true>;
     'subscriber-profiles': SubscriberProfilesSelect<false> | SubscriberProfilesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
@@ -181,6 +183,34 @@ export interface User {
  * via the `definition` "media".
  */
 export interface Media {
+  id: number;
+  /**
+   * Alt text for accessibility
+   */
+  alt: string;
+  /**
+   * User who uploaded this media
+   */
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Private media library served via signed URLs
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-private".
+ */
+export interface MediaPrivate {
   id: number;
   /**
    * Alt text for accessibility
@@ -1468,6 +1498,10 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
+        relationTo: 'media-private';
+        value: number | MediaPrivate;
+      } | null)
+    | ({
         relationTo: 'coach-profiles';
         value: number | CoachProfile;
       } | null)
@@ -1593,6 +1627,25 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media-private_select".
+ */
+export interface MediaPrivateSelect<T extends boolean = true> {
   alt?: T;
   createdBy?: T;
   updatedAt?: T;

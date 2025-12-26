@@ -1,12 +1,14 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import { s3Storage } from '@payloadcms/storage-s3'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 // Administration collections
-import { Users, Media } from './collections/administration'
+import { Users, Media, MediaPrivate } from './collections/administration'
 
 // User Profiles - separate from CMS for LMS reuse
 import { CoachProfile, SubscriberProfile } from './collections/user-profiles'
@@ -31,6 +33,21 @@ import { CoachingSessions } from './collections/booking-management'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+const s3BaseConfig = {
+  endpoint: process.env.S3_ENDPOINT,
+  forcePathStyle: true,
+  region: process.env.S3_REGION,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY || '',
+    secretAccessKey: process.env.S3_SECRET_KEY || '',
+  },
+}
+
+const publicFileURL = (process.env.S3_FILE_URL || '').replace(/\/$/, '')
+const serverBaseURL = (process.env.BASE_URL || '').replace(/\/$/, '')
+const hasPublicBucket = Boolean(process.env.S3_BUCKET)
+const hasPrivateBucket = Boolean(process.env.S3_PRIVATE_BUCKET)
+
 export default buildConfig({
   routes: {
     admin: '/',
@@ -41,10 +58,24 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
+  email: nodemailerAdapter({
+    defaultFromAddress: process.env.EMAIL_FROM || '',
+    defaultFromName: process.env.EMAIL_FROM || '',
+    transportOptions: {
+      host: process.env.EMAIL_SMTP_HOST,
+      port: Number(process.env.EMAIL_SMTP_PORT) || 465,
+      secure: ['true', '1'].includes((process.env.EMAIL_SMTP_SECURE || '').toLowerCase()),
+      auth: {
+        user: process.env.EMAIL_SMTP_USER,
+        pass: process.env.EMAIL_SMTP_PASS,
+      },
+    },
+  }),
   collections: [
     // Administration
     Users,
     Media,
+    MediaPrivate,
     // User Profiles
     CoachProfile,
     SubscriberProfile,
@@ -75,7 +106,38 @@ export default buildConfig({
     },
   }),
   sharp,
-  plugins: [],
+  plugins: [
+    s3Storage({
+      enabled: hasPublicBucket,
+      acl: 'public-read',
+      bucket: process.env.S3_BUCKET || '',
+      config: s3BaseConfig,
+      collections: {
+        media: {
+          generateFileURL: ({ filename, prefix }) => {
+            const fileKey = [prefix, filename].filter(Boolean).join('/')
+            return publicFileURL && fileKey ? `${publicFileURL}/${fileKey}` : fileKey
+          },
+        },
+      },
+    }),
+    s3Storage({
+      enabled: hasPrivateBucket,
+      bucket: process.env.S3_PRIVATE_BUCKET || '',
+      config: s3BaseConfig,
+      signedDownloads: true,
+      collections: {
+        'media-private': {
+          signedDownloads: true,
+          generateFileURL: ({ filename, prefix }) => {
+            const fileKey = ['media-private', prefix, filename].filter(Boolean).join('/')
+            if (!fileKey) return fileKey
+            return serverBaseURL ? `${serverBaseURL}/${fileKey}` : `/${fileKey}`
+          },
+        },
+      },
+    }),
+  ],
   onInit: async (payload) => {
     const existingUsers = await payload.find({
       collection: 'users',

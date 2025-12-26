@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest'
-
-const BASE_URL = 'http://localhost:3000'
+import { apiFetch } from './helpers'
 
 describe('LMS API', () => {
     it('should fetch courses', async () => {
-        const response = await fetch(`${BASE_URL}/api/courses`)
+        const response = await apiFetch('/api/courses')
         // Depending on access control, this might differ. 
         // Assuming public access or at least reachable endpoint.
         expect(response.ok).toBe(true)

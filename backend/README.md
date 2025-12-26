@@ -16,7 +16,7 @@ This is the backend for the Pathway application, built with **Payload CMS 3.0** 
     ```
 
 2.  **Setup Environment**:
-    Copy `.env.example` to `.env` and configure your database URL and Payload secret.
+    Copy `.env.example` to `.env` and configure your database URL, Payload secret, and S3 settings (public bucket `S3_BUCKET` + CDN `S3_FILE_URL`, private bucket `S3_PRIVATE_BUCKET`, and `S3_ENDPOINT`/`S3_ACCESS_KEY`/`S3_SECRET_KEY`/`S3_REGION` for MinIO/S3 access).
     ```bash
     cp .env.example .env
     ```

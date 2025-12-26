@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest'
-
-const BASE_URL = 'http://localhost:3000'
+import { apiFetch } from './helpers'
 
 describe('Content API', () => {
     it('should fetch posts publicly', async () => {
-        const response = await fetch(`${BASE_URL}/api/posts`)
+        const response = await apiFetch('/api/posts')
         expect(response.status).toBe(200)
         const data = await response.json()
         expect(data).toHaveProperty('docs')
@@ -12,7 +11,7 @@ describe('Content API', () => {
     })
 
     it('should fetch pages publicly', async () => {
-        const response = await fetch(`${BASE_URL}/api/pages`)
+        const response = await apiFetch('/api/pages')
         expect(response.status).toBe(200)
         const data = await response.json()
         expect(data).toHaveProperty('docs')
