@@ -14,12 +14,20 @@ export const Lessons: CollectionConfig = {
         drafts: true,
     },
     access: {
-        // Read: Coaches see all, others see published OR free preview lessons
+        // Read: Coaches/admins see all, authenticated users see published/free only
+        // Enrollment verification is enforced at the /:id/content endpoint level
+        // Unauthenticated users cannot access lessons at all
         read: ({ req: { user } }) => {
-            if (user && ['admin', 'coach'].includes(user.role as string)) {
+            // Unauthenticated users cannot access any lessons
+            if (!user) return false
+
+            // Admins and coaches see all lessons (including unpublished)
+            if (['admin', 'coach'].includes(user.role as string)) {
                 return true
             }
-            // Show published lessons or free preview lessons
+
+            // Authenticated users see published lessons or free preview lessons
+            // Note: Actual content access requires enrollment via /:id/content endpoint
             const where: Where = {
                 or: [
                     { isPublished: { equals: true } },

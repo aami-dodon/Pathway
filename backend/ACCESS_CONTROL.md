@@ -2,6 +2,15 @@
 
 This document outlines the access control rules, field-level security, and critical business constraints for all Payload CMS collections.
 
+## Quick Reference
+
+### Core Principles
+1. **Users exist only after registration** - Anonymous users are unauthenticated requests, never stored as users.
+2. **Default role is `subscriber`** - Admin can additionally assign `coach` or `creator` roles.
+3. **Roles are additive** - `subscriber` + optional elevated roles.
+4. **All access rules are backend-enforced** - No frontend-only access control.
+5. **No payment/subscription tier logic** - Access is role and enrollment based only.
+
 ## Role Hierarchy
 
 | Role | Description | Admin Panel Access |
@@ -53,16 +62,18 @@ This document outlines the access control rules, field-level security, and criti
 
 | Collection | Read | Create | Update | Delete |
 |------------|------|--------|--------|--------|
-| **Courses** | Published + Access Level* | Coach+ | Coach+ | Admin |
-| **Modules** | Published | Coach+ | Coach+ | Admin |
-| **Lessons** | Published/Free | Coach+ | Coach+ | Admin |
+| **Courses** | Published (metadata) | Coach+ | Coach+ | Admin |
+| **Modules** | Auth + Published | Coach+ | Coach+ | Admin |
+| **Lessons** | Auth + Published/Free | Coach+ | Coach+ | Admin |
 | **Quizzes** | ⚠️ **Coach+ ONLY** | Coach+ | Coach+ | Admin |
 | **Enrollments** | Own + Admin | Auth (self only) | Coach+ | Admin |
 | **Progress** | Own + Coach+ | Own | Own | Admin |
 | **QuizAttempts** | Own + Coach+ | Own | Own* | Admin |
 
 > *QuizAttempts: Users can update their answers, but scoring/grading fields are staff-only.
-> *Courses: See "Access Level Content Gating" below.
+> *Courses: Public metadata for discovery; content access requires enrollment.
+> *Modules/Lessons: Require authentication. Enrollment verification enforced at custom API endpoints.
+> *Quizzes: Direct collection access is staff-only. Learners access via `/api/quizzes/:id/take` endpoint.
 
 ### Booking
 
@@ -82,9 +93,11 @@ Posts and Courses support specific visibility rules based on the `accessLevel` f
 
 | Access Level | Status | Anonymous User | Authenticated User | Admin/Creator/Coach |
 |--------------|--------|----------------|--------------------|---------------------|
-| `public` | `published` | ✅ View | ✅ View | ✅ View |
-| `subscribers` | `published` | ❌ Hidden | ✅ View | ✅ View |
+| `public` | `published` | ✅ View (full) | ✅ View (full) | ✅ View (full) |
+| `subscribers` | `published` | ⚠️ View (title, excerpt, featuredImage only) | ✅ View (full) | ✅ View (full) |
 | Any | `draft` | ❌ Hidden | ❌ Hidden | ✅ View |
+
+> **Note**: For subscriber-only content, the `content` field has field-level access control that returns `null` for unauthenticated users.
 
 ## Field-Level Security
 
@@ -102,6 +115,24 @@ Specific fields satisfy stricter access control than their parent collection.
 | `meetingLink` | **Coach+ Only** (Update) | Prevents link injection tampering. |
 | `coachNotes` | **Coach+ Only** (Read/Update) | Private notes for the coach, hidden from the booker. |
 | `confirmedAt` | **Coach+ Only** (Update) | System managed timestamp for confirmation. |
+
+### Posts Collection
+| Field | Access Rule | Rationale |
+|-------|-------------|-----------|
+| `content` | **Auth Required** (for `subscribers` accessLevel) | Subscriber-only post body hidden from anonymous users. |
+
+### Lessons Collection
+| Field | Access Rule | Rationale |
+|-------|-------------|-----------|
+| `videoContent` | **Coach+ Only** (Read) | Lesson video content requires enrollment verification via custom endpoint. |
+| `textContent` | **Coach+ Only** (Read) | Lesson text content requires enrollment verification via custom endpoint. |
+| `audioContent` | **Coach+ Only** (Read) | Lesson audio content requires enrollment verification via custom endpoint. |
+| `assignmentContent` | **Coach+ Only** (Read) | Assignment content requires enrollment verification via custom endpoint. |
+| `quiz` | **Coach+ Only** (Read) | Quiz reference requires enrollment verification via custom endpoint. |
+| `liveSession` | **Coach+ Only** (Read) | Live session details require enrollment verification via custom endpoint. |
+| `resources` | **Coach+ Only** (Read) | Downloadable resources require enrollment verification via custom endpoint. |
+
+> **Note**: Lesson content fields are protected at field-level. Enrolled users access content via the `GET /api/lessons/:id/content` custom endpoint which performs enrollment verification.
 
 ## Business Logic Constraints (Validation & Hooks)
 
@@ -132,9 +163,13 @@ These constraints act as functional access controls, preventing invalid state tr
 - Correct answers (`isCorrect`, `correctAnswer`, `acceptedAnswers`) are stored in the collection.
 - **Requirement**: A custom API endpoint must be used to serve quizzes to learners with answers stripped.
 
-### 2. Enrollment Verification
-- Access to `Lessons` and `Modules` content should functionally depend on an active `Enrollment`.
-- While basic read access is open to authenticated users for discovery, the actual content delivery (e.g., video URL) should be gated by an enrollment check.
+### 2. Enrollment Verification at API Level
+- **Modules and Lessons** are **not accessible to unauthenticated users**.
+- Direct API access (`/api/modules`, `/api/lessons`) returns metadata only.
+- **Content delivery** requires authenticated enrollment via custom endpoints:
+  - `GET /api/lessons/:id/content` - Returns full lesson content only if enrolled
+  - `GET /api/quizzes/:id/take` - Returns quiz questions (answers stripped) only if enrolled
+- **All access rules are backend-enforced** - no frontend-only gating.
 
 ## Centralized Access Functions
 

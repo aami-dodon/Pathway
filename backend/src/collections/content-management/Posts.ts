@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isAdminOrCreator, contentAccess } from '../../access'
+import { isAdmin, isAdminOrCreator } from '../../access'
 import { setPublishedAt } from '../../hooks'
 
 export const Posts: CollectionConfig = {
@@ -39,13 +39,9 @@ export const Posts: CollectionConfig = {
                 }
             }
 
-            // Anonymous see only public published content
-            return {
-                and: [
-                    baseQuery,
-                    { accessLevel: { equals: 'public' } },
-                ],
-            }
+            // Anonymous users see all published content (both public and subscribers)
+            // BUT: The content field has field-level access that restricts body for subscriber posts
+            return baseQuery
         },
         // Create: Admin or creator roles
         create: isAdminOrCreator,
@@ -114,6 +110,21 @@ export const Posts: CollectionConfig = {
             name: 'content',
             type: 'richText',
             required: true,
+            // Field-level access: Subscriber-only content body is hidden from unauthenticated users
+            access: {
+                read: ({ req: { user }, doc }) => {
+                    // Staff can always read
+                    if (user && ['admin', 'coach', 'creator'].includes(user.role as string)) {
+                        return true
+                    }
+                    // For subscriber content, require authentication
+                    if (doc?.accessLevel === 'subscribers') {
+                        return Boolean(user)
+                    }
+                    // Public content is readable by everyone
+                    return true
+                },
+            },
         },
         // Categorization
         {

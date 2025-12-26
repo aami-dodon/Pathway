@@ -65,12 +65,24 @@ export const lessonContentHandler: PayloadHandler = async (req) => {
 
         const course = coursesWithModule.docs[0]
 
-        // Check for active enrollment
+        // Check for active enrollment via subscriber profile
+        // First, find the user's subscriber profile
+        const subscriberProfile = await payload.find({
+            collection: 'subscriber-profiles',
+            where: { user: { equals: user.id } },
+            limit: 1,
+            overrideAccess: true,
+        })
+
+        if (subscriberProfile.docs.length === 0) {
+            return Response.json({ error: 'Enrollment required' }, { status: 403 })
+        }
+
         const enrollments = await payload.find({
             collection: 'enrollments',
             where: {
                 and: [
-                    { student: { equals: user.id } },
+                    { subscriber: { equals: subscriberProfile.docs[0].id } },
                     { course: { equals: course.id } },
                     { status: { equals: 'active' } },
                 ],

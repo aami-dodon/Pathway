@@ -27,6 +27,103 @@ export const quizDeliveryHandler: PayloadHandler = async (req) => {
             return Response.json({ error: 'Quiz not found' }, { status: 404 })
         }
 
+        // Staff can access without enrollment check
+        if (!isStaff) {
+            // Find which module contains this quiz
+            const modulesWithQuiz = await payload.find({
+                collection: 'modules',
+                where: {
+                    quiz: { equals: quiz.id },
+                },
+                limit: 1,
+                overrideAccess: true,
+            })
+
+            // Also check if quiz is linked via a lesson
+            const lessonsWithQuiz = await payload.find({
+                collection: 'lessons',
+                where: {
+                    quiz: { equals: quiz.id },
+                },
+                limit: 1,
+                overrideAccess: true,
+            })
+
+            let courseId: string | number | null = null
+
+            if (modulesWithQuiz.docs.length > 0) {
+                // Find course containing this module
+                const coursesWithModule = await payload.find({
+                    collection: 'courses',
+                    where: {
+                        modules: { equals: modulesWithQuiz.docs[0].id },
+                    },
+                    limit: 1,
+                    overrideAccess: true,
+                })
+                if (coursesWithModule.docs.length > 0) {
+                    courseId = coursesWithModule.docs[0].id
+                }
+            } else if (lessonsWithQuiz.docs.length > 0) {
+                // Find module containing this lesson, then course
+                const modulesWithLesson = await payload.find({
+                    collection: 'modules',
+                    where: {
+                        lessons: { equals: lessonsWithQuiz.docs[0].id },
+                    },
+                    limit: 1,
+                    overrideAccess: true,
+                })
+                if (modulesWithLesson.docs.length > 0) {
+                    const coursesWithModule = await payload.find({
+                        collection: 'courses',
+                        where: {
+                            modules: { equals: modulesWithLesson.docs[0].id },
+                        },
+                        limit: 1,
+                        overrideAccess: true,
+                    })
+                    if (coursesWithModule.docs.length > 0) {
+                        courseId = coursesWithModule.docs[0].id
+                    }
+                }
+            }
+
+            if (!courseId) {
+                return Response.json({ error: 'Quiz configuration error' }, { status: 500 })
+            }
+
+            // Get user's subscriber profile
+            const subscriberProfile = await payload.find({
+                collection: 'subscriber-profiles',
+                where: { user: { equals: user.id } },
+                limit: 1,
+                overrideAccess: true,
+            })
+
+            if (subscriberProfile.docs.length === 0) {
+                return Response.json({ error: 'Enrollment required' }, { status: 403 })
+            }
+
+            // Check for active enrollment
+            const enrollments = await payload.find({
+                collection: 'enrollments',
+                where: {
+                    and: [
+                        { subscriber: { equals: subscriberProfile.docs[0].id } },
+                        { course: { equals: courseId } },
+                        { status: { equals: 'active' } },
+                    ],
+                },
+                limit: 1,
+                overrideAccess: true,
+            })
+
+            if (enrollments.docs.length === 0) {
+                return Response.json({ error: 'Enrollment required' }, { status: 403 })
+            }
+        }
+
         // Sanitize Quiz Data
         const sanitizedQuiz = {
             ...quiz,
