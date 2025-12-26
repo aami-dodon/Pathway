@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 import { isAdmin, isAdminOrCoach } from '../../access'
 
 export const Lessons: CollectionConfig = {
@@ -19,12 +19,13 @@ export const Lessons: CollectionConfig = {
                 return true
             }
             // Show published lessons or free preview lessons
-            return {
+            const where: Where = {
                 or: [
                     { isPublished: { equals: true } },
                     { isFree: { equals: true } },
                 ],
             }
+            return where
         },
         // Create: Coaches and admins
         create: isAdminOrCoach,

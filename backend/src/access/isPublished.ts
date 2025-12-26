@@ -1,4 +1,4 @@
-import type { Access } from 'payload'
+import type { Access, Where } from 'payload'
 
 /**
  * Returns published content only for public access, all content for admins/coaches
@@ -11,9 +11,10 @@ export const isPublishedOrAdmin: Access = ({ req: { user } }) => {
     }
 
     // Public users only see published content
-    return {
+    const where: Where = {
         status: { equals: 'published' },
     }
+    return where
 }
 
 /**
@@ -27,17 +28,19 @@ export const isPublishedOrOwner = (authorField = 'author'): Access => {
 
         // If user is coach/creator, show their own content + published
         if (user && ['coach', 'creator'].includes(user.role as string)) {
-            return {
+            const where: Where = {
                 or: [
                     { status: { equals: 'published' } },
                     { [authorField]: { equals: user.id } },
                 ],
             }
+            return where
         }
 
         // Public users only see published
-        return {
+        const where: Where = {
             status: { equals: 'published' },
         }
+        return where
     }
 }

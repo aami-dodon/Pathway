@@ -82,6 +82,7 @@ export interface Config {
     enrollments: Enrollment;
     progress: Progress;
     'quiz-attempts': QuizAttempt;
+    'coaching-sessions': CoachingSession;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -104,6 +105,7 @@ export interface Config {
     enrollments: EnrollmentsSelect<false> | EnrollmentsSelect<true>;
     progress: ProgressSelect<false> | ProgressSelect<true>;
     'quiz-attempts': QuizAttemptsSelect<false> | QuizAttemptsSelect<true>;
+    'coaching-sessions': CoachingSessionsSelect<false> | CoachingSessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1320,6 +1322,90 @@ export interface QuizAttempt {
   createdAt: string;
 }
 /**
+ * 1:1 coaching session bookings with coaches
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coaching-sessions".
+ */
+export interface CoachingSession {
+  id: number;
+  /**
+   * Title for this coaching session / type of session
+   */
+  sessionTitle: string;
+  /**
+   * The coach for this 1:1 session
+   */
+  coach: number | CoachProfile;
+  /**
+   * Name of the person booking the session
+   */
+  bookerName: string;
+  /**
+   * Email for booking confirmations and reminders
+   */
+  bookerEmail: string;
+  /**
+   * Optional phone number for contact
+   */
+  bookerPhone?: string | null;
+  /**
+   * If booked by a registered user, linked here
+   */
+  bookedByUser?: (number | null) | User;
+  /**
+   * Date and time of the scheduled session
+   */
+  scheduledAt: string;
+  /**
+   * Session duration in minutes
+   */
+  duration: number;
+  /**
+   * Timezone of the booker
+   */
+  timezone?: string | null;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show' | 'rescheduled';
+  /**
+   * How the session will be conducted
+   */
+  sessionType?: ('video' | 'phone' | 'in-person') | null;
+  /**
+   * Video call link (Zoom, Google Meet, etc.)
+   */
+  meetingLink?: string | null;
+  /**
+   * What the booker wants to discuss
+   */
+  topic?: string | null;
+  /**
+   * Additional notes from the booker
+   */
+  bookerNotes?: string | null;
+  /**
+   * Private notes from the coach
+   */
+  coachNotes?: string | null;
+  /**
+   * When the booking was created
+   */
+  bookedAt?: string | null;
+  /**
+   * When the session was confirmed
+   */
+  confirmedAt?: string | null;
+  /**
+   * When the session was cancelled (if applicable)
+   */
+  cancelledAt?: string | null;
+  /**
+   * Reason for cancellation
+   */
+  cancellationReason?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1402,6 +1488,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'quiz-attempts';
         value: number | QuizAttempt;
+      } | null)
+    | ({
+        relationTo: 'coaching-sessions';
+        value: number | CoachingSession;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1941,6 +2031,33 @@ export interface QuizAttemptsSelect<T extends boolean = true> {
   passed?: T;
   instructorFeedback?: T;
   gradedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coaching-sessions_select".
+ */
+export interface CoachingSessionsSelect<T extends boolean = true> {
+  sessionTitle?: T;
+  coach?: T;
+  bookerName?: T;
+  bookerEmail?: T;
+  bookerPhone?: T;
+  bookedByUser?: T;
+  scheduledAt?: T;
+  duration?: T;
+  timezone?: T;
+  status?: T;
+  sessionType?: T;
+  meetingLink?: T;
+  topic?: T;
+  bookerNotes?: T;
+  coachNotes?: T;
+  bookedAt?: T;
+  confirmedAt?: T;
+  cancelledAt?: T;
+  cancellationReason?: T;
   updatedAt?: T;
   createdAt?: T;
 }

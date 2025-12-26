@@ -59,6 +59,14 @@ This document outlines the access control rules for all Payload CMS collections.
 
 > *QuizAttempts: Users can update their answers, but scoring/grading fields are staff-only.
 
+### Booking
+
+| Collection | Read | Create | Update | Delete |
+|------------|------|--------|--------|--------|
+| **CoachingSessions** | Own + Coach (their sessions) + Admin | Public (anyone) | Coach+ | Admin |
+
+> *CoachingSessions: Anyone can book a 1:1 session. Bookers see their own sessions, coaches see sessions booked with them.
+
 ## Access Level Content Gating
 
 Posts and Courses support two access levels:

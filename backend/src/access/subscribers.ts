@@ -1,4 +1,4 @@
-import type { Access } from 'payload'
+import type { Access, Where } from 'payload'
 
 /**
  * Checks if user is a subscriber (or higher role)
@@ -22,18 +22,20 @@ export const contentAccess: Access = ({ req: { user } }) => {
 
     // If user is authenticated (subscriber), they can see public + subscriber content
     if (user) {
-        return {
+        const where: Where = {
             or: [
                 { accessLevel: { equals: 'public' } },
                 { accessLevel: { equals: 'subscribers' } },
             ],
         }
+        return where
     }
 
     // Anonymous users only see public content
-    return {
+    const where: Where = {
         accessLevel: { equals: 'public' },
     }
+    return where
 }
 
 /**
@@ -50,15 +52,17 @@ export const courseContentAccess: Access = ({ req: { user } }) => {
     // For now, return based on accessLevel
     // Full enrollment validation should be done in API layer
     if (user) {
-        return {
+        const where: Where = {
             or: [
                 { accessLevel: { equals: 'public' } },
                 { accessLevel: { equals: 'subscribers' } },
             ],
         }
+        return where
     }
 
-    return {
+    const where: Where = {
         accessLevel: { equals: 'public' },
     }
+    return where
 }

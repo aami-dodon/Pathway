@@ -25,6 +25,9 @@ import {
   QuizAttempts,
 } from './collections/learning-management'
 
+// Booking Management collections
+import { CoachingSessions } from './collections/booking-management'
+
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -55,6 +58,8 @@ export default buildConfig({
     Enrollments,
     Progress,
     QuizAttempts,
+    // Booking Management
+    CoachingSessions,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
