@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '../../../payload.config'
 
+// CORS origin from environment variable, defaults to '*' for development
+const corsOrigin = process.env.CORS_ORIGINS?.split(',')[0]?.trim() || '*'
+
+const corsHeaders = {
+    'Access-Control-Allow-Origin': corsOrigin,
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export const OPTIONS = async () => {
+    return NextResponse.json({}, { headers: corsHeaders })
+}
+
 export const GET = async (req: NextRequest) => {
     const payload = await getPayload({ config })
     const searchParams = req.nextUrl.searchParams
@@ -10,7 +23,7 @@ export const GET = async (req: NextRequest) => {
     const toStr = searchParams.get('to')
 
     if (!coachId || !fromStr || !toStr) {
-        return NextResponse.json({ error: 'Missing coach, from, or to parameters' }, { status: 400 })
+        return NextResponse.json({ error: 'Missing coach, from, or to parameters' }, { status: 400, headers: corsHeaders })
     }
 
     try {
@@ -24,7 +37,7 @@ export const GET = async (req: NextRequest) => {
         })
 
         if (!coachProfile || !(coachProfile as any).availability) {
-            return NextResponse.json({ slots: [] })
+            return NextResponse.json({ slots: [] }, { headers: corsHeaders })
         }
 
         const availability = (coachProfile as any).availability || []
@@ -169,10 +182,10 @@ export const GET = async (req: NextRequest) => {
             current.setDate(current.getDate() + 1)
         }
 
-        return NextResponse.json({ slots })
+        return NextResponse.json({ slots }, { headers: corsHeaders })
 
     } catch (error) {
         console.error('Availability Error:', error)
-        return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500, headers: corsHeaders })
     }
 }

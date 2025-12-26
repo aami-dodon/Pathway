@@ -14,20 +14,17 @@ export const Lessons: CollectionConfig = {
         drafts: true,
     },
     access: {
-        // Read: Coaches/admins see all, authenticated users see published/free only
-        // Enrollment verification is enforced at the /:id/content endpoint level
-        // Unauthenticated users cannot access lessons at all
+        // Read: Coaches/admins see all, everyone else sees published/free only
+        // This allows anonymous users to view lesson metadata for course discovery
+        // Actual content is protected via field-level access on content fields
         read: ({ req: { user } }) => {
-            // Unauthenticated users cannot access any lessons
-            if (!user) return false
-
             // Admins and coaches see all lessons (including unpublished)
-            if (['admin', 'coach'].includes(user.role as string)) {
+            if (user && ['admin', 'coach'].includes(user.role as string)) {
                 return true
             }
 
-            // Authenticated users see published lessons or free preview lessons
-            // Note: Actual content access requires enrollment via /:id/content endpoint
+            // Everyone else (including anonymous) sees published or free preview lessons
+            // Content fields (videoContent, textContent, etc.) are protected separately
             const where: Where = {
                 or: [
                     { isPublished: { equals: true } },

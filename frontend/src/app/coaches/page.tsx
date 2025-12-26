@@ -60,116 +60,117 @@ function CoachCard({ coach }: { coach: CoachProfile }) {
     const expertise = coach.expertise?.slice(0, 3) || [];
 
     return (
-        <Link href={`/coaches/${coach.id}`} className="group block">
-            <Card className="h-full overflow-hidden border-border/50 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group-hover:-translate-y-1">
-                <CardContent className="p-6">
-                    {/* Profile Header */}
-                    <div className="flex items-start gap-4">
-                        <Avatar className="h-16 w-16 ring-2 ring-background shadow-lg">
-                            {coach.profilePhoto ? (
-                                <AvatarImage
-                                    src={coach.profilePhoto.url}
-                                    alt={coach.displayName}
-                                />
-                            ) : null}
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-lg font-semibold">
-                                {coach.displayName
-                                    .split(" ")
-                                    .map((n) => n.charAt(0))
-                                    .join("")
-                                    .slice(0, 2)}
-                            </AvatarFallback>
-                        </Avatar>
+        <Card className="h-full overflow-hidden border-border/50 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group relative">
+            <Link href={`/coaches/${coach.id}`} className="absolute inset-0 z-10">
+                <span className="sr-only">View Profile values</span>
+            </Link>
+            <CardContent className="p-6">
+                {/* Profile Header */}
+                <div className="flex items-start gap-4">
+                    <Avatar className="h-16 w-16 ring-2 ring-background shadow-lg">
+                        {coach.profilePhoto ? (
+                            <AvatarImage
+                                src={coach.profilePhoto.url}
+                                alt={coach.displayName}
+                            />
+                        ) : null}
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-lg font-semibold">
+                            {coach.displayName
+                                .split(" ")
+                                .map((n) => n.charAt(0))
+                                .join("")
+                                .slice(0, 2)}
+                        </AvatarFallback>
+                    </Avatar>
 
-                        <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-lg truncate transition-colors group-hover:text-primary">
-                                {coach.displayName}
-                            </h3>
-                            {coach.experience?.yearsOfExperience && (
-                                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <Briefcase className="h-3 w-3" />
-                                    {coach.experience.yearsOfExperience}+ years experience
-                                </p>
-                            )}
-                            {coach.timezone && (
-                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                                    <MapPin className="h-3 w-3" />
-                                    {coach.timezone}
-                                </p>
-                            )}
-                        </div>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg truncate transition-colors group-hover:text-primary">
+                            {coach.displayName}
+                        </h3>
+                        {coach.experience?.yearsOfExperience && (
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Briefcase className="h-3 w-3" />
+                                {coach.experience.yearsOfExperience}+ years experience
+                            </p>
+                        )}
+                        {coach.timezone && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <MapPin className="h-3 w-3" />
+                                {coach.timezone}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Bio */}
+                {coach.bio && (
+                    <p className="mt-4 text-sm text-muted-foreground line-clamp-3">
+                        {coach.bio}
+                    </p>
+                )}
+
+                {/* Expertise Tags */}
+                {expertise.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {expertise.map((exp, index) => (
+                            <Badge
+                                key={index}
+                                variant="secondary"
+                                className="text-xs font-normal"
+                            >
+                                {exp.area}
+                            </Badge>
+                        ))}
+                        {coach.expertise && coach.expertise.length > 3 && (
+                            <Badge variant="outline" className="text-xs font-normal">
+                                +{coach.expertise.length - 3} more
+                            </Badge>
+                        )}
+                    </div>
+                )}
+
+                {/* Social Links & CTA */}
+                <div className="mt-6 flex items-center justify-between relative z-20">
+                    <div className="flex gap-2">
+                        {coach.socialLinks?.website && (
+                            <a
+                                href={coach.socialLinks.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <Globe className="h-4 w-4" />
+                            </a>
+                        )}
+                        {coach.socialLinks?.linkedin && (
+                            <a
+                                href={coach.socialLinks.linkedin}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <Linkedin className="h-4 w-4" />
+                            </a>
+                        )}
+                        {coach.socialLinks?.twitter && (
+                            <a
+                                href={coach.socialLinks.twitter}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <Twitter className="h-4 w-4" />
+                            </a>
+                        )}
                     </div>
 
-                    {/* Bio */}
-                    {coach.bio && (
-                        <p className="mt-4 text-sm text-muted-foreground line-clamp-3">
-                            {coach.bio}
-                        </p>
-                    )}
-
-                    {/* Expertise Tags */}
-                    {expertise.length > 0 && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            {expertise.map((exp, index) => (
-                                <Badge
-                                    key={index}
-                                    variant="secondary"
-                                    className="text-xs font-normal"
-                                >
-                                    {exp.area}
-                                </Badge>
-                            ))}
-                            {coach.expertise && coach.expertise.length > 3 && (
-                                <Badge variant="outline" className="text-xs font-normal">
-                                    +{coach.expertise.length - 3} more
-                                </Badge>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Social Links & CTA */}
-                    <div className="mt-6 flex items-center justify-between">
-                        <div className="flex gap-2">
-                            {coach.socialLinks?.website && (
-                                <a
-                                    href={coach.socialLinks.website}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Globe className="h-4 w-4" />
-                                </a>
-                            )}
-                            {coach.socialLinks?.linkedin && (
-                                <a
-                                    href={coach.socialLinks.linkedin}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Linkedin className="h-4 w-4" />
-                                </a>
-                            )}
-                            {coach.socialLinks?.twitter && (
-                                <a
-                                    href={coach.socialLinks.twitter}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Twitter className="h-4 w-4" />
-                                </a>
-                            )}
-                        </div>
-
-                        <span className="flex items-center gap-1 text-xs font-medium text-primary">
-                            View Profile
-                            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-                        </span>
-                    </div>
-                </CardContent>
-            </Card>
-        </Link>
+                    <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                        View Profile
+                        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                    </span>
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 

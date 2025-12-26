@@ -10,20 +10,17 @@ export const Modules: CollectionConfig = {
         defaultColumns: ['title', 'order', 'isPublished', 'updatedAt'],
     },
     access: {
-        // Read: Coaches/admins see all, authenticated users see published only
-        // Enrollment verification is enforced at the custom API endpoint level
-        // Unauthenticated users cannot access modules at all
+        // Read: Coaches/admins see all, everyone else sees published only
+        // This allows anonymous users to view course curriculum structure for discovery
+        // Actual lesson content is protected via field-level access on Lessons
         read: ({ req: { user } }) => {
-            // Unauthenticated users cannot access any modules
-            if (!user) return false
-
             // Admins and coaches see all modules (including unpublished)
-            if (['admin', 'coach'].includes(user.role as string)) {
+            if (user && ['admin', 'coach'].includes(user.role as string)) {
                 return true
             }
 
-            // Authenticated users see only published modules
-            // Note: Enrollment verification is done at custom endpoint level
+            // Everyone else (including anonymous) sees only published modules
+            // This enables course curriculum display for discovery/marketing
             return { isPublished: { equals: true } }
         },
         // Create: Coaches and admins

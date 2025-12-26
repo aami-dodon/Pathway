@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import React from "react";
 import {
     ArrowLeft,
     Clock,
@@ -208,6 +209,37 @@ function renderLexicalNodes(nodes: unknown[]): React.ReactNode {
     });
 }
 
+interface LearningOutcome {
+    outcome?: string;
+}
+
+function LearningOutcomesSection({ outcomes }: { outcomes: LearningOutcome[] }): React.ReactElement | null {
+    if (outcomes.length === 0) {
+        return null;
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                    What You&apos;ll Learn
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {outcomes.map((outcome, index) => (
+                        <div key={index} className="flex items-start gap-3">
+                            <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                            <span className="text-sm">{outcome.outcome ?? ""}</span>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default async function CoursePage({ params }: CoursePageProps) {
     const { slug } = await params;
     const course = await getCourseBySlug(slug);
@@ -220,6 +252,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
     const modules = (course.modules || []) as Module[];
     const category = course.category as Category | undefined;
     const tags = (course.tags || []) as Tag[];
+    const learningOutcomes = (course.learningOutcomes || []) as { outcome?: string }[];
 
     // Calculate total lessons and duration
     let totalLessons = 0;
@@ -398,29 +431,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
                         {/* Main Content */}
                         <div className="lg:col-span-2 space-y-12">
                             {/* Learning Outcomes */}
-                            {course.learningOutcomes && course.learningOutcomes.length > 0 && (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <CheckCircle2 className="h-5 w-5 text-primary" />
-                                            What You&apos;ll Learn
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            {course.learningOutcomes.map((outcome: { outcome?: string }, index: number) => (
-                                                <div key={index} className="flex items-start gap-3">
-                                                    <CheckCircle2 className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                                                    <span className="text-sm">{outcome.outcome ?? ""}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
+                            <LearningOutcomesSection outcomes={learningOutcomes} />
 
                             {/* Course Description */}
-                            {course.description && (
+                            {!!course.description && (
                                 <div>
                                     <h2 className="text-xl font-semibold mb-4">About This Course</h2>
                                     <RichTextContent content={course.description} />

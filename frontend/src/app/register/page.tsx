@@ -44,7 +44,7 @@ export default function RegisterPage() {
         try {
             // Create user via API
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/users`,
+                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:9006"}/api/users`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

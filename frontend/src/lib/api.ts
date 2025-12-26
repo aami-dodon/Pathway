@@ -184,6 +184,46 @@ export interface Lesson {
     updatedAt: string;
 }
 
+export interface CoachingSession {
+    id: string;
+    sessionTitle: string;
+    coach: CoachProfile | string;
+    bookerName: string;
+    bookerEmail: string;
+    bookerPhone?: string;
+    bookedByUser?: User | string;
+    scheduledAt: string;
+    duration: number;
+    timezone: string;
+    status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show' | 'rescheduled';
+    sessionType: 'video' | 'phone' | 'in-person';
+    meetingLink?: string;
+    zoomMeeting?: {
+        joinUrl?: string;
+        meetingId?: string;
+        password?: string;
+        createdAt?: string;
+    };
+    topic?: string;
+    bookerNotes?: string;
+    coachNotes?: string;
+    bookedAt?: string;
+    confirmedAt?: string;
+    cancelledAt?: string;
+    cancellationReason?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AvailableSlot {
+    start: string;
+    end: string;
+}
+
+export interface AvailabilityResponse {
+    slots: AvailableSlot[];
+}
+
 export interface PaginatedResponse<T> {
     docs: T[];
     totalDocs: number;
@@ -373,6 +413,45 @@ class ApiClient {
     // Tags
     async getTags(): Promise<PaginatedResponse<Tag>> {
         return this.request('/api/tags');
+    }
+
+    // Coaching Sessions
+    async getCoachingSessions(params?: { page?: number; limit?: number }): Promise<PaginatedResponse<CoachingSession>> {
+        const searchParams = new URLSearchParams();
+        if (params?.page) searchParams.set('page', params.page.toString());
+        if (params?.limit) searchParams.set('limit', params.limit.toString());
+        const query = searchParams.toString();
+        return this.request(`/api/coaching-sessions${query ? `?${query}` : ''}`);
+    }
+
+    async getCoachingSession(id: string): Promise<CoachingSession> {
+        return this.request(`/api/coaching-sessions/${id}`);
+    }
+
+    async createCoachingSession(data: Partial<CoachingSession>): Promise<CoachingSession> {
+        const response = await this.request<{ doc: CoachingSession }>('/api/coaching-sessions', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+        return response.doc;
+    }
+
+    async updateCoachingSession(id: string, data: Partial<CoachingSession>): Promise<CoachingSession> {
+        const response = await this.request<{ doc: CoachingSession }>(`/api/coaching-sessions/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        });
+        return response.doc;
+    }
+
+    // Availability
+    async getAvailability(coachId: string, from: Date, to: Date): Promise<AvailabilityResponse> {
+        const searchParams = new URLSearchParams({
+            coach: coachId,
+            from: from.toISOString(),
+            to: to.toISOString(),
+        });
+        return this.request(`/api/availability?${searchParams.toString()}`);
     }
 }
 
