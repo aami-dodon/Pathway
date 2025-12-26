@@ -14,7 +14,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CoachProfile, PaginatedResponse } from "@/lib/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9006";
+const API_BASE_URL = (typeof window === 'undefined'
+    ? (process.env.INTERNAL_API_URL || 'http://backend:9006')
+    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9006'));
+
+export const dynamic = "force-dynamic";
 
 async function getCoaches(): Promise<CoachProfile[]> {
     try {
