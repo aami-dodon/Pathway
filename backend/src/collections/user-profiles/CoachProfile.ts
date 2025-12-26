@@ -141,5 +141,65 @@ export const CoachProfile: CollectionConfig = {
                 },
             ],
         },
+        // Availability Schedule
+        {
+            name: 'timezone',
+            type: 'text',
+            required: true,
+            defaultValue: 'UTC',
+            admin: {
+                description: 'Timezone for the availability slots below',
+            },
+        },
+        {
+            name: 'availability',
+            type: 'array',
+            label: 'Weekly Availability',
+            admin: {
+                description: 'Define recurring weekly availability slots.',
+            },
+            fields: [
+                {
+                    name: 'day',
+                    type: 'select',
+                    required: true,
+                    options: [
+                        { label: 'Monday', value: 'mon' },
+                        { label: 'Tuesday', value: 'tue' },
+                        { label: 'Wednesday', value: 'wed' },
+                        { label: 'Thursday', value: 'thu' },
+                        { label: 'Friday', value: 'fri' },
+                        { label: 'Saturday', value: 'sat' },
+                        { label: 'Sunday', value: 'sun' },
+                    ],
+                },
+                {
+                    name: 'startTime',
+                    type: 'text',
+                    required: true,
+                    admin: { placeholder: '09:00' },
+                    validate: (value: string | null | undefined) => {
+                        if (!value) return 'Required'
+                        if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value)) {
+                            return 'Invalid time format (HH:mm)'
+                        }
+                        return true
+                    },
+                },
+                {
+                    name: 'endTime',
+                    type: 'text',
+                    required: true,
+                    admin: { placeholder: '17:00' },
+                    validate: (value: string | null | undefined) => {
+                        if (!value) return 'Required'
+                        if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(value)) {
+                            return 'Invalid time format (HH:mm)'
+                        }
+                        return true
+                    },
+                },
+            ],
+        },
     ],
 }

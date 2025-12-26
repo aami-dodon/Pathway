@@ -261,6 +261,21 @@ export interface CoachProfile {
     linkedin?: string | null;
     twitter?: string | null;
   };
+  /**
+   * Timezone for the availability slots below
+   */
+  timezone: string;
+  /**
+   * Define recurring weekly availability slots.
+   */
+  availability?:
+    | {
+        day: 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+        startTime: string;
+        endTime: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1358,7 +1373,7 @@ export interface CoachingSession {
    */
   scheduledAt: string;
   /**
-   * Session duration in minutes
+   * Session duration in minutes (Max 30)
    */
   duration: number;
   /**
@@ -1371,9 +1386,24 @@ export interface CoachingSession {
    */
   sessionType?: ('video' | 'phone' | 'in-person') | null;
   /**
-   * Video call link (Zoom, Google Meet, etc.)
+   * Video call link - Auto-generated using Zoom API
    */
   meetingLink?: string | null;
+  /**
+   * Zoom details (System managed)
+   */
+  zoomMeeting?: {
+    /**
+     * Zoom Join URL
+     */
+    joinUrl?: string | null;
+    /**
+     * Meeting ID
+     */
+    meetingId?: string | null;
+    password?: string | null;
+    createdAt?: string | null;
+  };
   /**
    * What the booker wants to discuss
    */
@@ -1606,6 +1636,15 @@ export interface CoachProfilesSelect<T extends boolean = true> {
         website?: T;
         linkedin?: T;
         twitter?: T;
+      };
+  timezone?: T;
+  availability?:
+    | T
+    | {
+        day?: T;
+        startTime?: T;
+        endTime?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -2051,6 +2090,14 @@ export interface CoachingSessionsSelect<T extends boolean = true> {
   status?: T;
   sessionType?: T;
   meetingLink?: T;
+  zoomMeeting?:
+    | T
+    | {
+        joinUrl?: T;
+        meetingId?: T;
+        password?: T;
+        createdAt?: T;
+      };
   topic?: T;
   bookerNotes?: T;
   coachNotes?: T;
