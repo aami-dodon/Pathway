@@ -4,11 +4,7 @@ import { ArrowRight, Calendar, User } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Post, CoachProfile, PaginatedResponse } from "@/lib/api";
-
-const API_BASE_URL = (typeof window === 'undefined'
-    ? (process.env.INTERNAL_API_URL || 'http://backend:9006')
-    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9006'));
+import { Post, CoachProfile, PaginatedResponse, API_BASE_URL } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 

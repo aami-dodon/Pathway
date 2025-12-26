@@ -22,12 +22,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { CoachProfile, PaginatedResponse, Course } from "@/lib/api";
+import { CoachProfile, PaginatedResponse, Course, API_BASE_URL } from "@/lib/api";
 import BookingCalendar from "./BookingCalendar";
 
-const API_BASE_URL = (typeof window === 'undefined'
-    ? (process.env.INTERNAL_API_URL || 'http://backend:9006')
-    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9006'));
+
 
 export const dynamic = "force-dynamic";
 

@@ -16,7 +16,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9006";
+import { API_BASE_URL } from "@/lib/api";
 
 interface AvailableSlot {
     start: string;

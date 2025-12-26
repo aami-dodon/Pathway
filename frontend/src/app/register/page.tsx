@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { api } from "@/lib/api";
+import { api, API_BASE_URL } from "@/lib/api";
 import { toast } from "sonner";
 
 const benefits = [
@@ -43,8 +43,9 @@ export default function RegisterPage() {
 
         try {
             // Create user via API
+
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:9006"}/api/users`,
+                `${API_BASE_URL}/api/users`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
