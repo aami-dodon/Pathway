@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isAdminOrCoach, courseContentAccess } from '../../access'
+import { isAdmin, isAdminOrCoach } from '../../access'
 import { setPublishedAt } from '../../hooks'
 
 export const Courses: CollectionConfig = {
@@ -8,44 +8,22 @@ export const Courses: CollectionConfig = {
         group: 'Learning Management',
         useAsTitle: 'title',
         description: 'Online courses and learning programs',
-        defaultColumns: ['title', 'instructor', 'status', 'accessLevel', 'updatedAt'],
+        defaultColumns: ['title', 'instructor', 'status', 'updatedAt'],
     },
     versions: {
         drafts: true,
     },
     access: {
-        // Read: Based on accessLevel and status
+        // Read: All published courses are publicly visible for discovery
+        // Actual content access is controlled via Enrollments
         read: ({ req: { user } }) => {
-            // Admins and coaches see all courses
+            // Admins and coaches see all courses (including drafts)
             if (user && ['admin', 'coach'].includes(user.role as string)) {
                 return true
             }
 
-            // Build query for published courses with appropriate access level
-            const baseQuery = { status: { equals: 'published' } }
-
-            if (user) {
-                // Authenticated users see published public + subscriber courses
-                return {
-                    and: [
-                        baseQuery,
-                        {
-                            or: [
-                                { accessLevel: { equals: 'public' } },
-                                { accessLevel: { equals: 'subscribers' } },
-                            ],
-                        },
-                    ],
-                }
-            }
-
-            // Anonymous see only public published courses
-            return {
-                and: [
-                    baseQuery,
-                    { accessLevel: { equals: 'public' } },
-                ],
-            }
+            // Everyone else sees only published courses
+            return { status: { equals: 'published' } }
         },
         // Create: Coaches and admins only
         create: isAdminOrCoach,
@@ -111,7 +89,7 @@ export const Courses: CollectionConfig = {
                 description: 'Co-instructors or guest lecturers',
             },
         },
-        // Media
+        // Media - course info is public for discovery/marketing
         {
             name: 'thumbnail',
             type: 'upload',
@@ -221,21 +199,7 @@ export const Courses: CollectionConfig = {
                 },
             ],
         },
-        // Access Control
-        {
-            name: 'accessLevel',
-            type: 'select',
-            required: true,
-            defaultValue: 'subscribers',
-            options: [
-                { label: 'Free / Public', value: 'public' },
-                { label: 'Subscribers Only', value: 'subscribers' },
-            ],
-            admin: {
-                position: 'sidebar',
-                description: 'Who can access this course',
-            },
-        },
+
         // Enrollment Settings
         {
             name: 'enrollment',
@@ -337,6 +301,9 @@ export const Courses: CollectionConfig = {
                     name: 'ogImage',
                     type: 'upload',
                     relationTo: 'media',
+                    admin: {
+                        description: 'Open Graph image for social sharing',
+                    },
                 },
             ],
         },

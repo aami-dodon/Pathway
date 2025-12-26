@@ -420,9 +420,13 @@ export interface Post {
    */
   author: number | CoachProfile;
   /**
-   * Featured image for the post
+   * Featured image for the post (public media)
    */
   featuredImage?: (number | null) | Media;
+  /**
+   * Featured image for the post (private media for subscribers)
+   */
+  featuredImagePrivate?: (number | null) | MediaPrivate;
   /**
    * Short summary shown in post listings
    */
@@ -466,9 +470,13 @@ export interface Post {
      */
     metaDescription?: string | null;
     /**
-     * Open Graph image for social sharing
+     * Open Graph image for social sharing (public)
      */
     ogImage?: (number | null) | Media;
+    /**
+     * Open Graph image for social sharing (private)
+     */
+    ogImagePrivate?: (number | null) | MediaPrivate;
   };
   updatedAt: string;
   createdAt: string;
@@ -630,10 +638,6 @@ export interface Course {
       }[]
     | null;
   /**
-   * Who can access this course
-   */
-  accessLevel: 'public' | 'subscribers';
-  /**
    * Enrollment configuration
    */
   enrollment?: {
@@ -670,6 +674,9 @@ export interface Course {
   seo?: {
     metaTitle?: string | null;
     metaDescription?: string | null;
+    /**
+     * Open Graph image for social sharing
+     */
     ogImage?: (number | null) | Media;
   };
   updatedAt: string;
@@ -787,7 +794,7 @@ export interface Lesson {
     /**
      * Uploaded video file
      */
-    videoFile?: (number | null) | Media;
+    videoFile?: (number | null) | MediaPrivate;
     /**
      * Video transcript for accessibility
      */
@@ -809,7 +816,7 @@ export interface Lesson {
     /**
      * Captions/subtitles file (VTT format)
      */
-    captions?: (number | null) | Media;
+    captions?: (number | null) | MediaPrivate;
   };
   /**
    * Text-based lesson content
@@ -833,7 +840,7 @@ export interface Lesson {
    * Audio lesson content
    */
   audioContent?: {
-    audioFile?: (number | null) | Media;
+    audioFile?: (number | null) | MediaPrivate;
     /**
      * Audio transcript for accessibility
      */
@@ -912,7 +919,7 @@ export interface Lesson {
   resources?:
     | {
         title: string;
-        file: number | Media;
+        file: number | MediaPrivate;
         description?: string | null;
         id?: string | null;
       }[]
@@ -1763,6 +1770,7 @@ export interface PostsSelect<T extends boolean = true> {
   slug?: T;
   author?: T;
   featuredImage?: T;
+  featuredImagePrivate?: T;
   excerpt?: T;
   content?: T;
   category?: T;
@@ -1776,6 +1784,7 @@ export interface PostsSelect<T extends boolean = true> {
         metaTitle?: T;
         metaDescription?: T;
         ogImage?: T;
+        ogImagePrivate?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1843,7 +1852,6 @@ export interface CoursesSelect<T extends boolean = true> {
         prerequisite?: T;
         id?: T;
       };
-  accessLevel?: T;
   enrollment?:
     | T
     | {

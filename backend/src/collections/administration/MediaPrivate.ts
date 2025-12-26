@@ -4,6 +4,10 @@ import { populateCreatedBy } from '../../hooks'
 
 export const MediaPrivate: CollectionConfig = {
     slug: 'media-private',
+    labels: {
+        singular: 'Media Private',
+        plural: 'Media Private',
+    },
     admin: {
         group: 'Administration',
         description: 'Private media library served via signed URLs',

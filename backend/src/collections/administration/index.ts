@@ -1,3 +1,3 @@
 export { Users } from './Users'
-export { Media } from './Media'
+export { MediaPublic } from './MediaPublic'
 export { MediaPrivate } from './MediaPrivate'

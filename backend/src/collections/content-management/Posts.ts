@@ -84,12 +84,23 @@ export const Posts: CollectionConfig = {
                 description: 'The coach who authored this post',
             },
         },
+        // Featured image - uses public or private media based on access level
         {
             name: 'featuredImage',
             type: 'upload',
             relationTo: 'media',
             admin: {
-                description: 'Featured image for the post',
+                description: 'Featured image for the post (public media)',
+                condition: (data) => data?.accessLevel !== 'subscribers',
+            },
+        },
+        {
+            name: 'featuredImagePrivate',
+            type: 'upload',
+            relationTo: 'media-private',
+            admin: {
+                description: 'Featured image for the post (private media for subscribers)',
+                condition: (data) => data?.accessLevel === 'subscribers',
             },
         },
         {
@@ -184,7 +195,17 @@ export const Posts: CollectionConfig = {
                     type: 'upload',
                     relationTo: 'media',
                     admin: {
-                        description: 'Open Graph image for social sharing',
+                        description: 'Open Graph image for social sharing (public)',
+                        condition: (data) => data?.accessLevel !== 'subscribers',
+                    },
+                },
+                {
+                    name: 'ogImagePrivate',
+                    type: 'upload',
+                    relationTo: 'media-private',
+                    admin: {
+                        description: 'Open Graph image for social sharing (private)',
+                        condition: (data) => data?.accessLevel === 'subscribers',
                     },
                 },
             ],

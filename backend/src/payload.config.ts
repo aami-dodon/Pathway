@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 // Administration collections
-import { Users, Media, MediaPrivate } from './collections/administration'
+import { Users, MediaPublic, MediaPrivate } from './collections/administration'
 
 // User Profiles - separate from CMS for LMS reuse
 import { CoachProfile, SubscriberProfile } from './collections/user-profiles'
@@ -74,7 +74,7 @@ export default buildConfig({
   collections: [
     // Administration
     Users,
-    Media,
+    MediaPublic,
     MediaPrivate,
     // User Profiles
     CoachProfile,
@@ -125,15 +125,9 @@ export default buildConfig({
       enabled: hasPrivateBucket,
       bucket: process.env.S3_PRIVATE_BUCKET || '',
       config: s3BaseConfig,
-      signedDownloads: true,
       collections: {
         'media-private': {
-          signedDownloads: true,
-          generateFileURL: ({ filename, prefix }) => {
-            const fileKey = ['media-private', prefix, filename].filter(Boolean).join('/')
-            if (!fileKey) return fileKey
-            return serverBaseURL ? `${serverBaseURL}/${fileKey}` : `/${fileKey}`
-          },
+          disableLocalStorage: true,
         },
       },
     }),

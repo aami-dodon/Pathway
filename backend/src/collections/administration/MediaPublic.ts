@@ -2,8 +2,12 @@ import type { CollectionConfig } from 'payload'
 import { anyone, isAuthenticated, isAdmin, isAdminOrOwner } from '../../access'
 import { populateCreatedBy } from '../../hooks'
 
-export const Media: CollectionConfig = {
+export const MediaPublic: CollectionConfig = {
     slug: 'media',
+    labels: {
+        singular: 'Media Public',
+        plural: 'Media Public',
+    },
     admin: {
         group: 'Administration',
         description: 'Media library for images, videos, and documents',
