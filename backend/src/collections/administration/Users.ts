@@ -9,6 +9,54 @@ export const Users: CollectionConfig = {
         description: 'User accounts for authentication and authorization',
     },
     auth: true,
+    endpoints: [
+        {
+            path: '/logout',
+            method: 'post',
+            handler: async (req) => {
+                try {
+                    // Attempt standard logout
+                    await req.payload.auth({
+                        headers: req.headers,
+                        req, // Pass the request object
+                    })
+                    // Since payload.auth() authenticates, we assume standard logout endpoint logic
+                    // Actually, we should call the auth operation directly if exposed, or just rely on cookie clearing.
+                    // But Payload endpoints are tricky. 
+                    // Let's just return success and let the browser clear the cookie via the header set by Payload response?
+                    // Wait, if we return our own response, we must handle the cookie clearing ourselves!
+                    // Payload's default logout handler does helpful things.
+
+                    // BETTER APPROACH: Just catch the error from the standard strategy?
+                    // We can't easily "wrap" the default endpoint logic because it's internal.
+                    // But we can invoke the logout operation.
+
+                    // Actually, if we just return 200 OK and clear the cookie, that's enough.
+                    const cookiePrefix = req.payload.config.cookiePrefix || 'payload'
+                    const cookieName = `${cookiePrefix}-token`
+
+                    return Response.json({ message: 'Logged out successfully' }, {
+                        status: 200,
+                        headers: {
+                            'Set-Cookie': `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
+                        }
+                    })
+
+                } catch (error) {
+                    // Fallback: clear cookie anyway
+                    const cookiePrefix = req.payload.config.cookiePrefix || 'payload'
+                    const cookieName = `${cookiePrefix}-token`
+
+                    return Response.json({ message: 'Logged out successfully (fallback)' }, {
+                        status: 200,
+                        headers: {
+                            'Set-Cookie': `${cookieName}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`,
+                        }
+                    })
+                }
+            },
+        },
+    ],
     access: {
         // Admin panel access - only admin/coach/creator can access
         admin: ({ req: { user } }) => {

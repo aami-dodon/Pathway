@@ -1,3 +1,4 @@
+// Force rebuild
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
@@ -54,9 +55,7 @@ const corsOrigins = process.env.CORS_ORIGINS
   : ['http://localhost:3000', 'http://localhost:9007']
 
 export default buildConfig({
-  routes: {
-    admin: '/',
-  },
+  cookiePrefix: 'pathway',
   cors: corsOrigins,
   csrf: corsOrigins,
   admin: {
