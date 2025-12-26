@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isAdminOrCoach } from '../../access'
+import { quizDeliveryHandler } from '../../endpoints/quiz-delivery'
 
 export const Quizzes: CollectionConfig = {
     slug: 'quizzes',
@@ -20,6 +21,13 @@ export const Quizzes: CollectionConfig = {
         // Delete: Admin only
         delete: isAdmin,
     },
+    endpoints: [
+        {
+            path: '/:id/take',
+            method: 'get',
+            handler: quizDeliveryHandler,
+        },
+    ],
     fields: [
         {
             name: 'title',

@@ -1,5 +1,6 @@
 import type { CollectionConfig, Where } from 'payload'
-import { isAdmin, isAdminOrCoach } from '../../access'
+import { isAdmin, isAdminOrCoach, fieldIsAdminOrCoach } from '../../access'
+import { lessonContentHandler } from '../../endpoints/lesson-content'
 
 export const Lessons: CollectionConfig = {
     slug: 'lessons',
@@ -34,6 +35,13 @@ export const Lessons: CollectionConfig = {
         // Delete: Admin only
         delete: isAdmin,
     },
+    endpoints: [
+        {
+            path: '/:id/content',
+            method: 'get',
+            handler: lessonContentHandler,
+        },
+    ],
     fields: [
         // Basic Info
         {
@@ -98,6 +106,9 @@ export const Lessons: CollectionConfig = {
                 description: 'Video lesson content',
                 condition: (data) => data.type === 'video',
             },
+            access: {
+                read: fieldIsAdminOrCoach,
+            },
             fields: [
                 {
                     name: 'videoUrl',
@@ -139,6 +150,9 @@ export const Lessons: CollectionConfig = {
                 description: 'Text-based lesson content',
                 condition: (data) => data.type === 'text' || data.type === 'interactive',
             },
+            access: {
+                read: fieldIsAdminOrCoach,
+            },
         },
         // Audio Content
         {
@@ -147,6 +161,9 @@ export const Lessons: CollectionConfig = {
             admin: {
                 description: 'Audio lesson content',
                 condition: (data) => data.type === 'audio',
+            },
+            access: {
+                read: fieldIsAdminOrCoach,
             },
             fields: [
                 {
@@ -170,6 +187,9 @@ export const Lessons: CollectionConfig = {
             admin: {
                 description: 'Assignment details',
                 condition: (data) => data.type === 'assignment',
+            },
+            access: {
+                read: fieldIsAdminOrCoach,
             },
             fields: [
                 {
@@ -216,6 +236,9 @@ export const Lessons: CollectionConfig = {
                 description: 'Associated quiz for this lesson',
                 condition: (data) => data.type === 'quiz',
             },
+            access: {
+                read: fieldIsAdminOrCoach,
+            },
         },
         // Live Session Details
         {
@@ -224,6 +247,9 @@ export const Lessons: CollectionConfig = {
             admin: {
                 description: 'Live session details',
                 condition: (data) => data.type === 'live',
+            },
+            access: {
+                read: fieldIsAdminOrCoach,
             },
             fields: [
                 {
@@ -258,6 +284,9 @@ export const Lessons: CollectionConfig = {
             type: 'array',
             admin: {
                 description: 'Downloadable resources and materials',
+            },
+            access: {
+                read: fieldIsAdminOrCoach,
             },
             fields: [
                 {
