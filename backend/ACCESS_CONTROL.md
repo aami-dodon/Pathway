@@ -1,6 +1,6 @@
 # Access Control Documentation
 
-This document outlines the access control rules for all Payload CMS collections.
+This document outlines the access control rules, field-level security, and critical business constraints for all Payload CMS collections.
 
 ## Role Hierarchy
 
@@ -26,8 +26,10 @@ This document outlines the access control rules for all Payload CMS collections.
 
 | Collection | Read | Create | Update | Delete |
 |------------|------|--------|--------|--------|
-| **Users** | Self + Admin | Public (registration) | Self + Admin | Admin |
+| **Users** | Self + Admin | Public (registration)* | Self + Admin | Admin |
 | **Media** | Public | Auth | Owner + Admin | Admin |
+
+> *Users: Public creation allowed for registration, but `role` defaults to 'subscriber'.
 
 ### User Profiles
 
@@ -42,14 +44,16 @@ This document outlines the access control rules for all Payload CMS collections.
 |------------|------|--------|--------|--------|
 | **Categories** | Public | Creator+ | Creator+ | Admin |
 | **Tags** | Public | Creator+ | Creator+ | Admin |
-| **Posts** | Published + Access Level | Creator+ | Creator+ | Admin |
+| **Posts** | Published + Access Level* | Creator+ | Creator+ | Admin |
 | **Pages** | Published + Admin | Creator+ | Creator+ | Admin |
+
+> *Posts: See "Access Level Content Gating" below.
 
 ### Learning Management (LMS)
 
 | Collection | Read | Create | Update | Delete |
 |------------|------|--------|--------|--------|
-| **Courses** | Published + Access Level | Coach+ | Coach+ | Admin |
+| **Courses** | Published + Access Level* | Coach+ | Coach+ | Admin |
 | **Modules** | Published | Coach+ | Coach+ | Admin |
 | **Lessons** | Published/Free | Coach+ | Coach+ | Admin |
 | **Quizzes** | ⚠️ **Coach+ ONLY** | Coach+ | Coach+ | Admin |
@@ -58,49 +62,79 @@ This document outlines the access control rules for all Payload CMS collections.
 | **QuizAttempts** | Own + Coach+ | Own | Own* | Admin |
 
 > *QuizAttempts: Users can update their answers, but scoring/grading fields are staff-only.
+> *Courses: See "Access Level Content Gating" below.
 
 ### Booking
 
 | Collection | Read | Create | Update | Delete |
 |------------|------|--------|--------|--------|
-| **CoachingSessions** | Own + Coach (their sessions) + Admin | Public (anyone) | Coach+ | Admin |
+| **CoachingSessions** | Custom* | Public (anyone) | Coach+ (own) | Admin |
 
-> *CoachingSessions: Anyone can book a 1:1 session. Bookers see their own sessions, coaches see sessions booked with them.
+> *CoachingSessions Read Access:
+> - **Admins**: All sessions
+> - **Coaches**: Sessions where they are the assigned coach
+> - **Users**: Sessions they booked (matched by `bookedByUser` ID or `bookerEmail`)
+> - **Anonymous**: None
 
 ## Access Level Content Gating
 
-Posts and Courses support two access levels:
+Posts and Courses support specific visibility rules based on the `accessLevel` field and publication status:
 
-| Access Level | Anonymous | Authenticated |
-|--------------|-----------|---------------|
-| `public` | ✅ Can view | ✅ Can view |
-| `subscribers` | ❌ Cannot view | ✅ Can view |
+| Access Level | Status | Anonymous User | Authenticated User | Admin/Creator/Coach |
+|--------------|--------|----------------|--------------------|---------------------|
+| `public` | `published` | ✅ View | ✅ View | ✅ View |
+| `subscribers` | `published` | ❌ Hidden | ✅ View | ✅ View |
+| Any | `draft` | ❌ Hidden | ❌ Hidden | ✅ View |
+
+## Field-Level Security
+
+Specific fields satisfy stricter access control than their parent collection.
+
+### Users Collection
+| Field | Access Rule | Rationale |
+|-------|-------------|-----------|
+| `role` | **Admin Only** (Create/Update) | Prevents privilege escalation attacks. |
+
+### CoachingSessions Collection
+| Field | Access Rule | Rationale |
+|-------|-------------|-----------|
+| `status` | **Coach+ Only** (Update) | Prevents users from confirming/cancelling their own sessions arbitrarily. |
+| `meetingLink` | **Coach+ Only** (Update) | Prevents link injection tampering. |
+| `coachNotes` | **Coach+ Only** (Read/Update) | Private notes for the coach, hidden from the booker. |
+| `confirmedAt` | **Coach+ Only** (Update) | System managed timestamp for confirmation. |
+
+## Business Logic Constraints (Validation & Hooks)
+
+These constraints act as functional access controls, preventing invalid state transitions or data integrity issues.
+
+### Coaching Session Constraints
+1.  **Duration Limit**: Sessions cannot exceed 30 minutes.
+2.  **Coach Availability**:
+    *   Bookings must fall within the coach's defined weekly hours (converted to coach's timezone).
+    *   Checks against specific days (Mon-Sun) and time slots.
+3.  **Conflict Prevention (15-min Gap)**:
+    *   New bookings must not overlap existing sessions.
+    *   **Mandatory Gap**: There must be at least a 15-minute buffer between any two sessions for the same coach.
+    *   Check logic: `NOT (NewStart >= OldEnd + 15m OR NewEnd <= OldStart - 15m)`.
+4.  **Automatic Zoom Creation**:
+    *   When status changes to `confirmed`, a Zoom meeting is automatically generated via backend service.
+    *   Meeting details (`joinUrl`, `meetingId`, `password`) are saved to system-managed fields.
+
+### User Profile Protection
+1.  **Ownership Enforcement**:
+    *   `SubscriberProfile` and `CoachProfile` have `user` fields that are forced to the current user's ID on creation.
+    *   The `user` field is immutable (cannot be changed after creation).
 
 ## Security Features
 
-### 1. Profile Ownership Protection
-- Users can only create profiles for themselves (enforced via hooks)
-- The `user` field cannot be changed after creation
-- Prevents profile hijacking attacks
+### 1. Quiz Answer Protection ⚠️
+- **Critical**: The `Quizzes` collection is **not accessible to learners via API** (`Coach+` only read access).
+- Correct answers (`isCorrect`, `correctAnswer`, `acceptedAnswers`) are stored in the collection.
+- **Requirement**: A custom API endpoint must be used to serve quizzes to learners with answers stripped.
 
-### 2. Quiz Answer Protection ⚠️
-- **Critical**: The Quizzes collection is **not accessible to learners via API**
-- Correct answers (`isCorrect`, `correctAnswer`, `acceptedAnswers`) are stored in the collection
-- A custom API endpoint must be created to serve quizzes with answers stripped
-
-### 3. Self-Enrollment Protection
-- Users can only enroll themselves, not others
-- The `subscriber` field is forced to the current user's profile
-
-### 4. Progress & Score Protection
-- Users can only access progress for their own enrollments
-- Grading fields have field-level access control:
-  - `score`, `passed`, `pointsAwarded`, `feedback` → Staff only
-  - `answers` (submitted) → User can update while in-progress
-
-### 5. Ownership Tracking
-- Media tracks `createdBy` for ownership-based updates
-- Profiles link to `user` for ownership verification
+### 2. Enrollment Verification
+- Access to `Lessons` and `Modules` content should functionally depend on an active `Enrollment`.
+- While basic read access is open to authenticated users for discovery, the actual content delivery (e.g., video URL) should be gated by an enrollment check.
 
 ## Centralized Access Functions
 
@@ -121,19 +155,15 @@ Located in `/src/access/`:
 | `contentAccess` | Respects `accessLevel` field + auth status |
 | `courseContentAccess` | LMS content gating |
 
-### Field-Level Access Functions
-
-**Important**: Payload CMS requires different types for collection-level vs field-level access.
-Use these `field*` prefixed functions for `field.access` properties:
-
+### Field-Level Access Helpers
 | Function | Description |
 |----------|-------------|
-| `fieldIsAdmin` | Admin role only (for field-level) |
-| `fieldIsAdminOrCoach` | Admin or coach role (for field-level) |
-| `fieldIsAdminOrCreator` | Admin, coach, or creator (for field-level) |
-| `fieldIsAuthenticated` | Any logged-in user (for field-level) |
+| `fieldIsAdmin` | Admin role only |
+| `fieldIsAdminOrCoach` | Admin or coach role |
+| `fieldIsAdminOrCreator` | Admin, coach, or creator |
+| `fieldIsAuthenticated` | Any logged-in user |
 
-## Hooks
+## Hooks Inventory
 
 Located in `/src/hooks/`:
 
@@ -145,37 +175,6 @@ Located in `/src/hooks/`:
 | `preventUserChange` | Prevents modifying `user` field after creation |
 | `setEnrolledAt` | Sets enrollment timestamp |
 | `setJoinedAt` | Sets subscriber profile join date |
-
-## Reusable Fields
-
-Located in `/src/fields/`:
-
-| Field | Description |
-|-------|-------------|
-| `slugField` | Standard unique, indexed slug |
-| `seoFields` | SEO group (metaTitle, metaDescription, ogImage) |
-| `publishStatusField` | Draft/Published/Archived status |
-| `publishedAtField` | Publication timestamp |
-| `accessLevelField` | Public/Subscribers access selector |
-
-## TODO: Required API Endpoints
-
-### Quiz Delivery Endpoint
-Since quizzes are staff-only readable, create an endpoint that:
-1. Fetches the quiz by ID
-2. Strips sensitive answer data (`isCorrect`, `correctAnswer`, `acceptedAnswers`)
-3. Returns sanitized quiz for learner consumption
-
-```typescript
-// Example: GET /api/quizzes/:id/take
-// Returns quiz without correct answers for learners
-```
-
-### Enrollment Verification
-For full LMS security, lesson/module access should verify:
-1. User has an active enrollment in the parent course
-2. The lesson/module is published
-3. Any prerequisites are completed
 
 ---
 
