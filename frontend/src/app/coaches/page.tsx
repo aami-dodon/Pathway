@@ -61,7 +61,7 @@ function CoachCard({ coach }: { coach: CoachProfile }) {
 
     return (
         <Card className="h-full overflow-hidden border-border/50 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group relative">
-            <Link href={`/coaches/${coach.id}`} className="absolute inset-0 z-10">
+            <Link href={`/coaches/${coach.slug}`} className="absolute inset-0 z-10">
                 <span className="sr-only">View Profile values</span>
             </Link>
             <CardContent className="p-6">

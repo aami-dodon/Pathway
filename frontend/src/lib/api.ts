@@ -17,6 +17,7 @@ export interface CoachProfile {
     id: string;
     user: User | string;
     displayName: string;
+    slug: string;
     bio?: string;
     profilePhoto?: Media;
     expertise?: { area: string }[];
@@ -331,6 +332,16 @@ class ApiClient {
 
     async getCoachProfile(id: string): Promise<CoachProfile> {
         return this.request(`/api/coach-profiles/${id}`);
+    }
+
+    async getCoachProfileBySlug(slug: string): Promise<CoachProfile | null> {
+        const params = new URLSearchParams();
+        params.set('where[slug][equals]', slug);
+        params.set('limit', '1');
+        const response = await this.request<PaginatedResponse<CoachProfile>>(
+            `/api/coach-profiles?${params.toString()}`
+        );
+        return response.docs[0] || null;
     }
 
     async createCoachProfile(data: Partial<CoachProfile>): Promise<CoachProfile> {

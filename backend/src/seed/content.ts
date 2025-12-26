@@ -382,10 +382,10 @@ export async function seedPosts(payload: Payload, coachProfiles: any[], categori
     return created
 }
 
-export async function seedPages(payload: Payload, coachProfiles: any[]) {
+export async function seedPages(payload: Payload, adminUser: any) {
     console.log('   Creating/Updating pages...')
     const created: any[] = []
-    const author = coachProfiles[0]
+    const authorId = adminUser?.id
 
     for (const pageData of pagesData) {
         try {
@@ -398,7 +398,10 @@ export async function seedPages(payload: Payload, coachProfiles: any[]) {
             const data = {
                 title: pageData.title,
                 slug: pageData.slug,
-                author: author?.id,
+                author: {
+                    relationTo: 'users' as const,
+                    value: authorId,
+                },
                 content: createRichText(pageData.content),
                 status: 'published' as const,
                 publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date().toISOString(),

@@ -49,10 +49,10 @@ export const Pages: CollectionConfig = {
         {
             name: 'author',
             type: 'relationship',
-            relationTo: 'coach-profiles',
+            relationTo: ['coach-profiles', 'users'],
             hasMany: false,
             admin: {
-                description: 'The coach who authored/maintains this page',
+                description: 'The coach or admin who authored/maintains this page',
             },
         },
         {

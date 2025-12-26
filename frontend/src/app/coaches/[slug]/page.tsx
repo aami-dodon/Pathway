@@ -19,10 +19,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { CoachProfile, PaginatedResponse, Course, API_BASE_URL } from "@/lib/api";
+import { CoachProfile, PaginatedResponse, Course, API_BASE_URL, api } from "@/lib/api";
 import BookingCalendar from "./BookingCalendar";
 
 
@@ -30,24 +29,14 @@ import BookingCalendar from "./BookingCalendar";
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-    params: Promise<{ id: string }>;
+    params: Promise<{ slug: string }>;
 }
 
-async function getCoach(id: string): Promise<CoachProfile | null> {
+async function getCoachBySlug(slug: string): Promise<CoachProfile | null> {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/coach-profiles/${id}`, {
-            next: { revalidate: 60 },
-        });
-
-        if (!response.ok) {
-            if (response.status === 404) return null;
-            console.error("Failed to fetch coach:", response.status);
-            return null;
-        }
-
-        return response.json();
+        return await api.getCoachProfileBySlug(slug);
     } catch (error) {
-        console.error("Failed to fetch coach:", error);
+        console.error("Failed to fetch coach by slug:", error);
         return null;
     }
 }
@@ -69,35 +58,15 @@ async function getCoachCourses(coachId: string): Promise<Course[]> {
     }
 }
 
-function ProfileSkeleton() {
-    return (
-        <div className="min-h-screen">
-            <div className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background">
-                <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
-                    <Skeleton className="h-6 w-32 mb-8" />
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                        <Skeleton className="h-40 w-40 rounded-full" />
-                        <div className="flex-1">
-                            <Skeleton className="h-10 w-64 mb-4" />
-                            <Skeleton className="h-6 w-48 mb-4" />
-                            <Skeleton className="h-24 w-full" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
 export default async function CoachProfilePage({ params }: PageProps) {
-    const { id } = await params;
-    const coach = await getCoach(id);
+    const { slug } = await params;
+    const coach = await getCoachBySlug(slug);
 
     if (!coach) {
         notFound();
     }
 
-    const courses = await getCoachCourses(id);
+    const courses = await getCoachCourses(coach.id);
 
     const initials = coach.displayName
         .split(" ")

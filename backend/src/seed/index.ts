@@ -38,7 +38,7 @@ async function seed() {
     try {
         // Phase 0: Admin User
         console.log('📦 Phase 0: Seeding Admin...')
-        await upsertAdmin(payload)
+        const admin = await upsertAdmin(payload)
         console.log('✅ Admin seeded\n')
 
         // Phase 1: Core Users & Profiles
@@ -57,7 +57,7 @@ async function seed() {
         // Phase 3: CMS Content
         console.log('📦 Phase 3: Seeding Posts & Pages...')
         await seedPosts(payload, coachProfiles, categories, tags)
-        await seedPages(payload, coachProfiles)
+        await seedPages(payload, admin)
         console.log('✅ Posts & Pages seeded\n')
 
         // Phase 4: LMS Structure

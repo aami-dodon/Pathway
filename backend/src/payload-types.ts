@@ -500,9 +500,17 @@ export interface Page {
    */
   slug?: string | null;
   /**
-   * The coach who authored/maintains this page
+   * The coach or admin who authored/maintains this page
    */
-  author?: (number | null) | CoachProfile;
+  author?:
+    | ({
+        relationTo: 'coach-profiles';
+        value: number | CoachProfile;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null);
   content: {
     root: {
       type: string;
