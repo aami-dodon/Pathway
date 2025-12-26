@@ -5,17 +5,16 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
-// Core collections
-import { Users } from './collections/Users'
-import { Media } from './collections/Media'
+// Administration collections
+import { Users, Media } from './collections/administration'
 
 // User Profiles - separate from CMS for LMS reuse
 import { CoachProfile, SubscriberProfile } from './collections/user-profiles'
 
-// Content Management System collections
-import { Categories, Tags, Posts, Pages } from './collections/cms'
+// Content Management collections
+import { Categories, Tags, Posts, Pages } from './collections/content-management'
 
-// Learning Management System collections
+// Learning Management collections
 import {
   Courses,
   Modules,
@@ -24,7 +23,7 @@ import {
   Enrollments,
   Progress,
   QuizAttempts,
-} from './collections/lms'
+} from './collections/learning-management'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -37,7 +36,7 @@ export default buildConfig({
     },
   },
   collections: [
-    // Core
+    // Administration
     Users,
     Media,
     // User Profiles

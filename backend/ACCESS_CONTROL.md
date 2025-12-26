@@ -22,7 +22,7 @@ This document outlines the access control rules for all Payload CMS collections.
 - **Coach+**: Admin or Coach roles
 - **Admin**: Admin role only
 
-### Core Collections
+### Administration
 
 | Collection | Read | Create | Update | Delete |
 |------------|------|--------|--------|--------|
