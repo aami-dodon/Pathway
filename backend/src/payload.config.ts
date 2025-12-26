@@ -49,15 +49,10 @@ const serverBaseURL = (process.env.BASE_URL || '').replace(/\/$/, '')
 const hasPublicBucket = Boolean(process.env.S3_BUCKET)
 const hasPrivateBucket = Boolean(process.env.S3_PRIVATE_BUCKET)
 
-// CORS origins from environment variable (comma-separated)
-const corsOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
-  : []
-
 export default buildConfig({
   cookiePrefix: 'pathway',
-  cors: corsOrigins,
-  csrf: corsOrigins,
+  cors: '*',
+  csrf: [], // explicitly disable csrf
   routes: {
     admin: '/',
   },

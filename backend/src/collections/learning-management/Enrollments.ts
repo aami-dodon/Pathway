@@ -1,6 +1,7 @@
 import type { CollectionConfig, Access } from 'payload'
 import { isAdmin, isAdminOrCoach, isAuthenticated, fieldIsAdmin, fieldIsAdminOrCoach } from '../../access'
 import { setEnrolledAt } from '../../hooks'
+import { deleteEnrollmentChildren } from '../../hooks/cascadeDelete'
 
 /**
  * Custom access: User can only see their own enrollments (via subscriber profile)
@@ -81,6 +82,7 @@ export const Enrollments: CollectionConfig = {
                 return data
             },
         ],
+        beforeDelete: [deleteEnrollmentChildren],
     },
     fields: [
         // Subscriber who enrolled - references Subscriber Profile

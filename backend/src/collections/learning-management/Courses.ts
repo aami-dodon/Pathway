@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isAdminOrCoach } from '../../access'
 import { setPublishedAt } from '../../hooks'
+import { deleteCourseChildren } from '../../hooks/cascadeDelete'
 
 export const Courses: CollectionConfig = {
     slug: 'courses',
@@ -34,6 +35,7 @@ export const Courses: CollectionConfig = {
     },
     hooks: {
         beforeChange: [setPublishedAt],
+        beforeDelete: [deleteCourseChildren],
     },
     fields: [
         // Basic Information

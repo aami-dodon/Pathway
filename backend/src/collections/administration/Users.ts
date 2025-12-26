@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isAdminOrSelf } from '../../access'
+import { deleteUserChildren } from '../../hooks/cascadeDelete'
 
 export const Users: CollectionConfig = {
     slug: 'users',
@@ -7,6 +8,9 @@ export const Users: CollectionConfig = {
         group: 'Administration',
         useAsTitle: 'email',
         description: 'User accounts for authentication and authorization',
+    },
+    hooks: {
+        beforeDelete: [deleteUserChildren],
     },
     auth: true,
     endpoints: [
