@@ -9,11 +9,11 @@ import { getPayload } from 'payload'
 import config from '../payload.config'
 
 // Import seed data modules
-import { seedUsers, seedCoachProfiles, seedSubscriberProfiles } from './users'
-import { seedCategories, seedTags, seedPosts, seedPages } from './content'
-import { seedCourses, seedModules, seedLessons, seedQuizzes } from './lms'
-import { seedEnrollments, seedProgress, seedQuizAttempts } from './enrollments'
-import { seedCoachingSessions } from './bookings'
+import { seedUsers, seedCoachProfiles, seedSubscriberProfiles } from './users.js'
+import { seedCategories, seedTags, seedPosts, seedPages } from './content.js'
+import { seedCourses, seedModules, seedLessons, seedQuizzes } from './lms.js'
+import { seedEnrollments, seedProgress, seedQuizAttempts } from './enrollments.js'
+import { seedCoachingSessions } from './bookings.js'
 
 async function seed() {
     console.log('🌱 Starting demo data seeding...\n')

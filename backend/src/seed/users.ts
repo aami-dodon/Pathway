@@ -3,8 +3,14 @@
  */
 import type { Payload } from 'payload'
 
+// Type definitions
+type UserRole = 'admin' | 'coach' | 'creator' | 'subscriber'
+type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
+type PreferredFormat = 'video' | 'text' | 'audio' | 'interactive'
+type LearningPace = 'self-paced' | 'scheduled' | 'intensive'
+
 // User data with roles
-const usersData = [
+const usersData: { email: string; password: string; role: UserRole }[] = [
     // Coaches
     { email: 'sarah.johnson@pathway.dev', password: 'Demo123!', role: 'coach' },
     { email: 'michael.chen@pathway.dev', password: 'Demo123!', role: 'coach' },
@@ -46,11 +52,11 @@ const coachProfilesData = [
         experience: { yearsOfExperience: 15, credentials: 'ICF PCC, MBA Harvard Business School', previousWork: 'VP of Operations at TechCorp, Director at GlobalFinance' },
         timezone: 'America/New_York',
         availability: [
-            { day: 'mon', startTime: '09:00', endTime: '17:00' },
-            { day: 'tue', startTime: '09:00', endTime: '17:00' },
-            { day: 'wed', startTime: '09:00', endTime: '17:00' },
-            { day: 'thu', startTime: '09:00', endTime: '17:00' },
-            { day: 'fri', startTime: '09:00', endTime: '14:00' },
+            { day: 'mon' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
+            { day: 'tue' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
+            { day: 'wed' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
+            { day: 'thu' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
+            { day: 'fri' as DayOfWeek, startTime: '09:00', endTime: '14:00' },
         ],
         socialLinks: { website: 'https://sarahjohnson.coach', linkedin: 'linkedin.com/in/sarahjohnsoncoach', twitter: '@sarahcoaches' },
     },
@@ -61,10 +67,10 @@ const coachProfilesData = [
         experience: { yearsOfExperience: 12, credentials: 'ACC ICF, CS Stanford University', previousWork: 'Senior Engineer at Google, Team Lead at Meta' },
         timezone: 'America/Los_Angeles',
         availability: [
-            { day: 'mon', startTime: '10:00', endTime: '18:00' },
-            { day: 'tue', startTime: '10:00', endTime: '18:00' },
-            { day: 'wed', startTime: '10:00', endTime: '18:00' },
-            { day: 'thu', startTime: '10:00', endTime: '18:00' },
+            { day: 'mon' as DayOfWeek, startTime: '10:00', endTime: '18:00' },
+            { day: 'tue' as DayOfWeek, startTime: '10:00', endTime: '18:00' },
+            { day: 'wed' as DayOfWeek, startTime: '10:00', endTime: '18:00' },
+            { day: 'thu' as DayOfWeek, startTime: '10:00', endTime: '18:00' },
         ],
         socialLinks: { website: 'https://michaelchen.dev', linkedin: 'linkedin.com/in/michaelchencoach' },
     },
@@ -75,9 +81,9 @@ const coachProfilesData = [
         experience: { yearsOfExperience: 8, credentials: 'Certified Mindfulness Teacher, Health Coach Certification', previousWork: 'Corporate Wellness Director at WellnessCo' },
         timezone: 'Europe/London',
         availability: [
-            { day: 'mon', startTime: '08:00', endTime: '16:00' },
-            { day: 'wed', startTime: '08:00', endTime: '16:00' },
-            { day: 'fri', startTime: '08:00', endTime: '12:00' },
+            { day: 'mon' as DayOfWeek, startTime: '08:00', endTime: '16:00' },
+            { day: 'wed' as DayOfWeek, startTime: '08:00', endTime: '16:00' },
+            { day: 'fri' as DayOfWeek, startTime: '08:00', endTime: '12:00' },
         ],
         socialLinks: { website: 'https://emilywellness.com', linkedin: 'linkedin.com/in/emilywilliamscoach' },
     },
@@ -88,10 +94,10 @@ const coachProfilesData = [
         experience: { yearsOfExperience: 18, credentials: 'MBA Wharton, YC Alumni', previousWork: 'Founder & CEO of TechStartup (Acquired), Partner at VentureCapital' },
         timezone: 'Asia/Singapore',
         availability: [
-            { day: 'tue', startTime: '09:00', endTime: '17:00' },
-            { day: 'wed', startTime: '09:00', endTime: '17:00' },
-            { day: 'thu', startTime: '09:00', endTime: '17:00' },
-            { day: 'sat', startTime: '10:00', endTime: '14:00' },
+            { day: 'tue' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
+            { day: 'wed' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
+            { day: 'thu' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
+            { day: 'sat' as DayOfWeek, startTime: '10:00', endTime: '14:00' },
         ],
         socialLinks: { website: 'https://davidkumar.biz', linkedin: 'linkedin.com/in/davidkumarentrepreneur', twitter: '@davidkstartups' },
     },
@@ -102,18 +108,18 @@ const coachProfilesData = [
         experience: { yearsOfExperience: 10, credentials: 'Toastmasters DTM, Communications MA Columbia', previousWork: 'Head of Communications at MediaCorp, TEDx Speaker Coach' },
         timezone: 'America/Chicago',
         availability: [
-            { day: 'mon', startTime: '11:00', endTime: '19:00' },
-            { day: 'tue', startTime: '11:00', endTime: '19:00' },
-            { day: 'wed', startTime: '11:00', endTime: '19:00' },
-            { day: 'thu', startTime: '11:00', endTime: '19:00' },
-            { day: 'fri', startTime: '11:00', endTime: '15:00' },
+            { day: 'mon' as DayOfWeek, startTime: '11:00', endTime: '19:00' },
+            { day: 'tue' as DayOfWeek, startTime: '11:00', endTime: '19:00' },
+            { day: 'wed' as DayOfWeek, startTime: '11:00', endTime: '19:00' },
+            { day: 'thu' as DayOfWeek, startTime: '11:00', endTime: '19:00' },
+            { day: 'fri' as DayOfWeek, startTime: '11:00', endTime: '15:00' },
         ],
         socialLinks: { website: 'https://lisamartinez.speak', linkedin: 'linkedin.com/in/lisamartinezspeaker' },
     },
 ]
 
 // Subscriber profile data
-const subscriberProfilesData = [
+const subscriberProfilesData: { displayName: string; interests: string[]; learningPreferences: { preferredFormat: PreferredFormat; pace: LearningPace } }[] = [
     { displayName: 'John Doe', interests: ['Leadership', 'Career Growth'], learningPreferences: { preferredFormat: 'video', pace: 'self-paced' } },
     { displayName: 'Jane Smith', interests: ['Entrepreneurship', 'Marketing'], learningPreferences: { preferredFormat: 'text', pace: 'scheduled' } },
     { displayName: 'Bob Wilson', interests: ['Technology', 'Product Management'], learningPreferences: { preferredFormat: 'video', pace: 'self-paced' } },

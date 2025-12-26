@@ -32,7 +32,9 @@ const tagsData = [
     { name: 'Networking', slug: 'networking' },
 ]
 
-const postsData = [
+type AccessLevel = 'public' | 'subscribers'
+
+const postsData: { title: string; slug: string; excerpt: string; accessLevel: AccessLevel; categorySlug: string; tagSlugs: string[] }[] = [
     {
         title: '10 Essential Leadership Skills for the Modern Workplace',
         slug: 'essential-leadership-skills-modern-workplace',
@@ -245,8 +247,8 @@ function createRichText(text: string) {
                     version: 1,
                 },
             ],
-            direction: 'ltr',
-            format: '',
+            direction: 'ltr' as const,
+            format: '' as const,
             indent: 0,
             version: 1,
         },
