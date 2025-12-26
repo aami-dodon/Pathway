@@ -1,7 +1,5 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isAdminOrCoach } from '../../access'
-import { deleteModuleChildren } from '../../hooks/cascadeDelete'
-
 export const Modules: CollectionConfig = {
     slug: 'modules',
     admin: {
@@ -9,9 +7,6 @@ export const Modules: CollectionConfig = {
         useAsTitle: 'title',
         description: 'Course modules - organized sections within a course',
         defaultColumns: ['title', 'order', 'isPublished', 'updatedAt'],
-    },
-    hooks: {
-        beforeDelete: [deleteModuleChildren],
     },
     access: {
         // Read: Coaches/admins see all, everyone else sees published only

@@ -1,7 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { anyone, isAdmin, isAdminOrCoach, isAdminOrOwner } from '../../access'
 import { enforceUserOwnership, preventUserChange } from '../../hooks'
-import { deleteCoachChildren } from '../../hooks/cascadeDelete'
 
 export const CoachProfile: CollectionConfig = {
     slug: 'coach-profiles',
@@ -22,7 +21,6 @@ export const CoachProfile: CollectionConfig = {
     },
     hooks: {
         beforeChange: [enforceUserOwnership, preventUserChange],
-        beforeDelete: [deleteCoachChildren],
     },
     fields: [
         // Required one-to-one relationship with Users

@@ -1,8 +1,6 @@
 import type { CollectionConfig, Where } from 'payload'
 import { isAdmin, isAdminOrCoach, fieldIsAdminOrCoach } from '../../access'
 import { lessonContentHandler } from '../../endpoints/lesson-content'
-import { deleteLessonChildren } from '../../hooks/cascadeDelete'
-
 export const Lessons: CollectionConfig = {
     slug: 'lessons',
     admin: {
@@ -13,9 +11,6 @@ export const Lessons: CollectionConfig = {
     },
     versions: {
         drafts: true,
-    },
-    hooks: {
-        beforeDelete: [deleteLessonChildren],
     },
     access: {
         // Read: Coaches/admins see all, everyone else sees published/free only

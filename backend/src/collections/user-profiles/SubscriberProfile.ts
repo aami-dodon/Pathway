@@ -1,7 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAuthenticated, isAdmin, isAdminOrOwner } from '../../access'
 import { enforceUserOwnership, preventUserChange, setJoinedAt } from '../../hooks'
-import { deleteSubscriberChildren } from '../../hooks/cascadeDelete'
 
 export const SubscriberProfile: CollectionConfig = {
     slug: 'subscriber-profiles',
@@ -23,7 +22,6 @@ export const SubscriberProfile: CollectionConfig = {
     },
     hooks: {
         beforeChange: [enforceUserOwnership, preventUserChange, setJoinedAt],
-        beforeDelete: [deleteSubscriberChildren],
     },
     fields: [
         // Required one-to-one relationship with Users

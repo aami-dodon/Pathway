@@ -49,7 +49,29 @@ const serverBaseURL = (process.env.BASE_URL || '').replace(/\/$/, '')
 const hasPublicBucket = Boolean(process.env.S3_BUCKET)
 const hasPrivateBucket = Boolean(process.env.S3_PRIVATE_BUCKET)
 
+import { translateDatabaseError } from './hooks/errorTranslation'
+
 export default buildConfig({
+  hooks: {
+    afterError: [
+      async ({ error, result, req }) => {
+        const translation = translateDatabaseError(error, req)
+        if (translation) {
+          return {
+            response: {
+              ...result,
+              errors: [
+                {
+                  message: translation.message,
+                },
+              ],
+            },
+            status: translation.status,
+          }
+        }
+      },
+    ],
+  },
   cookiePrefix: 'pathway',
   cors: '*',
   csrf: [], // explicitly disable csrf
