@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - '9006:9006'
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    # Use the PORT environment variable from .env, but map it correctly above.
+    environment:
+      - PORT=9006

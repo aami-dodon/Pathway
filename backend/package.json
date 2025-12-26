@@ -6,13 +6,13 @@
   "type": "module",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
-    "dev": "node -r dotenv/config -e \"try { require('child_process').execSync('cross-env NODE_OPTIONS=--no-deprecation next dev', {stdio: 'inherit'}); } catch (e) { process.exit(0); }\"",
+    "dev": "node -r dotenv/config scripts/dev_wrapper.cjs",
     "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
-    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "start": "node -r dotenv/config scripts/start_wrapper.cjs",
     "test": "pnpm run test:api",
     "test:api": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts tests/api"
   },
