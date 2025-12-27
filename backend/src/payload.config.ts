@@ -73,7 +73,7 @@ export default buildConfig({
     ],
   },
   cookiePrefix: 'pathway',
-  cors: '*',
+  cors: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim()) : [],
   csrf: [], // explicitly disable csrf
   routes: {
     admin: '/',
