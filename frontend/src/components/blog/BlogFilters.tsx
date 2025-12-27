@@ -23,14 +23,14 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
             <FilterSection title="Categories">
                 <CheckboxFilter
                     filterKey="category"
-                    options={categories.map(c => ({ label: c.name, value: c.id }))}
+                    options={categories.map(c => ({ label: c.name, value: String(c.id) }))}
                 />
             </FilterSection>
 
             <FilterSection title="Tags">
                 <CheckboxFilter
                     filterKey="tags"
-                    options={tags.map(t => ({ label: t.name, value: t.id }))}
+                    options={tags.map(t => ({ label: t.name, value: String(t.id) }))}
                 />
             </FilterSection>
         </div>

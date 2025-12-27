@@ -29,7 +29,7 @@ export function CourseFilters({ categories }: CourseFiltersProps) {
             <FilterSection title="Categories">
                 <CheckboxFilter
                     filterKey="category"
-                    options={categories.map(c => ({ label: c.name, value: c.id }))}
+                    options={categories.map(c => ({ label: c.name, value: String(c.id) }))}
                 />
             </FilterSection>
 
