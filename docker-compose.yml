@@ -1,24 +1,60 @@
+name: pathway
+
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pathway-backend
     ports:
-      - '9006:9006'
+      - "9006:9006"
     env_file:
       - ./backend/.env
-    restart: unless-stopped
     environment:
+      - NODE_ENV=production
       - PORT=9006
+      - HOSTNAME=0.0.0.0
+    networks:
+      - pathway-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:9006/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
       args:
+        # Build-time variable for client-side API calls
         NEXT_PUBLIC_API_URL: http://localhost:9006
+    container_name: pathway-frontend
     ports:
-      - '9007:9007'
+      - "9007:9007"
     env_file:
       - ./frontend/.env
-    restart: unless-stopped
     environment:
+      - NODE_ENV=production
       - PORT=9007
+      - HOSTNAME=0.0.0.0
+      # Runtime variable for server-side API calls (SSR)
       - INTERNAL_API_URL=http://backend:9006
+    networks:
+      - pathway-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:9007"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  pathway-network:
+    driver: bridge
