@@ -7,6 +7,7 @@ export const Categories: CollectionConfig = {
         group: 'Content Management',
         useAsTitle: 'name',
         description: 'Content categories for blogs and articles',
+        defaultColumns: ['name', 'slug', 'isPublished', 'updatedAt'],
     },
     access: {
         read: () => true,
@@ -36,6 +37,15 @@ export const Categories: CollectionConfig = {
         {
             name: 'description',
             type: 'textarea',
+        },
+        {
+            name: 'isPublished',
+            type: 'checkbox',
+            defaultValue: true,
+            admin: {
+                position: 'sidebar',
+                description: 'Whether this category is active and visible',
+            },
         },
     ],
 }

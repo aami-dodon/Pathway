@@ -7,10 +7,7 @@ export const Pages: CollectionConfig = {
         group: 'Content Management',
         useAsTitle: 'title',
         description: 'Static pages for the website',
-        defaultColumns: ['title', 'slug', 'status', 'updatedAt'],
-    },
-    versions: {
-        drafts: true,
+        defaultColumns: ['title', 'slug', 'isPublished', 'updatedAt'],
     },
     access: {
         read: () => true,
@@ -55,18 +52,13 @@ export const Pages: CollectionConfig = {
             type: 'richText',
             required: true,
         },
-        // Publishing
         {
-            name: 'status',
-            type: 'select',
-            defaultValue: 'draft',
-            options: [
-                { label: 'Draft', value: 'draft' },
-                { label: 'Published', value: 'published' },
-                { label: 'Archived', value: 'archived' },
-            ],
+            name: 'isPublished',
+            type: 'checkbox',
+            defaultValue: false,
             admin: {
                 position: 'sidebar',
+                description: 'Whether this page is visible to the public',
             },
         },
         {

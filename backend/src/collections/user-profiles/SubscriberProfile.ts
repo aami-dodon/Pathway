@@ -9,6 +9,7 @@ export const SubscriberProfile: CollectionConfig = {
         group: 'User Profiles',
         useAsTitle: 'displayName',
         description: 'Learner-specific profile information for subscribers',
+        defaultColumns: ['displayName', 'user', 'isActive', 'metadata.joinedAt'],
     },
     access: {
         read: () => true,
@@ -136,6 +137,15 @@ export const SubscriberProfile: CollectionConfig = {
                     ],
                 },
             ],
+        },
+        {
+            name: 'isActive',
+            type: 'checkbox',
+            defaultValue: true,
+            admin: {
+                position: 'sidebar',
+                description: 'Whether this subscriber profile is currently active',
+            },
         },
     ],
 }

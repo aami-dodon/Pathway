@@ -9,9 +9,6 @@ export const Lessons: CollectionConfig = {
         description: 'Individual lessons with learning content',
         defaultColumns: ['title', 'type', 'order', 'isFree', 'isPublished', 'updatedAt'],
     },
-    versions: {
-        drafts: true,
-    },
     access: {
         read: () => true,
         create: () => true,

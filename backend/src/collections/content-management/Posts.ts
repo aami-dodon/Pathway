@@ -7,10 +7,7 @@ export const Posts: CollectionConfig = {
         group: 'Content Management',
         useAsTitle: 'title',
         description: 'Blog posts and articles',
-        defaultColumns: ['title', 'author', 'status', 'accessLevel', 'updatedAt'],
-    },
-    versions: {
-        drafts: true,
+        defaultColumns: ['title', 'author', 'isPublished', 'accessLevel', 'updatedAt'],
     },
     access: {
         read: () => true,
@@ -126,16 +123,12 @@ export const Posts: CollectionConfig = {
             },
         },
         {
-            name: 'status',
-            type: 'select',
-            defaultValue: 'draft',
-            options: [
-                { label: 'Draft', value: 'draft' },
-                { label: 'Published', value: 'published' },
-                { label: 'Archived', value: 'archived' },
-            ],
+            name: 'isPublished',
+            type: 'checkbox',
+            defaultValue: false,
             admin: {
                 position: 'sidebar',
+                description: 'Whether this post is visible to the public (or subscribers if set)',
             },
         },
         // SEO

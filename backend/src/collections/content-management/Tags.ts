@@ -7,6 +7,7 @@ export const Tags: CollectionConfig = {
         group: 'Content Management',
         useAsTitle: 'name',
         description: 'Tags for content classification and discovery',
+        defaultColumns: ['name', 'slug', 'isPublished', 'updatedAt'],
     },
     access: {
         read: () => true,
@@ -31,6 +32,15 @@ export const Tags: CollectionConfig = {
             },
             hooks: {
                 beforeValidate: [formatSlug('name')],
+            },
+        },
+        {
+            name: 'isPublished',
+            type: 'checkbox',
+            defaultValue: true,
+            admin: {
+                position: 'sidebar',
+                description: 'Whether this tag is active and visible',
             },
         },
     ],

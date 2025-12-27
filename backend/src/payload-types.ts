@@ -1229,6 +1229,10 @@ export interface SubscriberProfile {
     preferredFormat?: ('video' | 'text' | 'audio' | 'interactive') | null;
     pace?: ('self-paced' | 'scheduled' | 'intensive') | null;
   };
+  /**
+   * Whether this subscriber profile is currently active
+   */
+  isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1246,6 +1250,10 @@ export interface Category {
    */
   slug?: string | null;
   description?: string | null;
+  /**
+   * Whether this category is active and visible
+   */
+  isPublished?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1262,6 +1270,10 @@ export interface Tag {
    * Will be automatically generated from name if left empty.
    */
   slug?: string | null;
+  /**
+   * Whether this tag is active and visible
+   */
+  isPublished?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1319,7 +1331,10 @@ export interface Post {
    * Publication date for the post
    */
   publishedAt?: string | null;
-  status?: ('draft' | 'published' | 'archived') | null;
+  /**
+   * Whether this post is visible to the public (or subscribers if set)
+   */
+  isPublished?: boolean | null;
   /**
    * Search engine optimization settings
    */
@@ -1343,7 +1358,6 @@ export interface Post {
   };
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * Static pages for the website
@@ -1385,7 +1399,10 @@ export interface Page {
     };
     [k: string]: unknown;
   };
-  status?: ('draft' | 'published' | 'archived') | null;
+  /**
+   * Whether this page is visible to the public
+   */
+  isPublished?: boolean | null;
   /**
    * Publication date
    */
@@ -1409,7 +1426,6 @@ export interface Page {
   };
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * Online courses and learning programs
@@ -1529,7 +1545,10 @@ export interface Course {
      */
     endDate?: string | null;
   };
-  status?: ('draft' | 'published' | 'archived') | null;
+  /**
+   * Whether this course is visible to learners
+   */
+  isPublished?: boolean | null;
   /**
    * Publication date
    */
@@ -1552,7 +1571,6 @@ export interface Course {
   };
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * Course modules - organized sections within a course
@@ -1816,7 +1834,6 @@ export interface Lesson {
   isPublished?: boolean | null;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * Quizzes and assessments for lessons and modules
@@ -3032,6 +3049,7 @@ export interface SubscriberProfilesSelect<T extends boolean = true> {
         preferredFormat?: T;
         pace?: T;
       };
+  isActive?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3043,6 +3061,7 @@ export interface CategoriesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
   description?: T;
+  isPublished?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3053,6 +3072,7 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface TagsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  isPublished?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3072,7 +3092,7 @@ export interface PostsSelect<T extends boolean = true> {
   tags?: T;
   accessLevel?: T;
   publishedAt?: T;
-  status?: T;
+  isPublished?: T;
   seo?:
     | T
     | {
@@ -3083,7 +3103,6 @@ export interface PostsSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3094,7 +3113,7 @@ export interface PagesSelect<T extends boolean = true> {
   slug?: T;
   author?: T;
   content?: T;
-  status?: T;
+  isPublished?: T;
   publishedAt?: T;
   seo?:
     | T
@@ -3105,7 +3124,6 @@ export interface PagesSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3155,7 +3173,7 @@ export interface CoursesSelect<T extends boolean = true> {
         startDate?: T;
         endDate?: T;
       };
-  status?: T;
+  isPublished?: T;
   publishedAt?: T;
   category?: T;
   tags?: T;
@@ -3168,7 +3186,6 @@ export interface CoursesSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3264,7 +3281,6 @@ export interface LessonsSelect<T extends boolean = true> {
   isPublished?: T;
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

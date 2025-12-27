@@ -9,7 +9,7 @@ export const setPublishedAt: CollectionBeforeChangeHook = ({
     originalDoc,
 }) => {
     // If changing to published and not already published before
-    if (data.status === 'published' && !originalDoc?.publishedAt) {
+    if (data.isPublished === true && !originalDoc?.publishedAt) {
         return {
             ...data,
             publishedAt: new Date().toISOString(),

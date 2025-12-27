@@ -62,7 +62,9 @@ export const cleanupUserBeforeDelete: CollectionBeforeDeleteHook = async ({ id, 
                 const columnName = row.column_name as string
                 if (tableName.startsWith('coach_profiles_')) continue
 
-                // Avoid unique constraint conflicts in relationship tables
+                // 1. Discover all tables/columns referencing coach_profiles
+                // This catches relationship (_rels) tables and any other future references automatically.
+                // Note: Versioning (_v) tables are being removed, but this query remains robust.
                 if (tableName.endsWith('_rels')) {
                     await db.execute(sql`
                         DELETE FROM ${sql.identifier(tableName)} 

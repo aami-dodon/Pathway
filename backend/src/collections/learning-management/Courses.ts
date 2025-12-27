@@ -7,10 +7,7 @@ export const Courses: CollectionConfig = {
         group: 'Learning Management',
         useAsTitle: 'title',
         description: 'Online courses and learning programs',
-        defaultColumns: ['title', 'instructor', 'status', 'updatedAt'],
-    },
-    versions: {
-        drafts: true,
+        defaultColumns: ['title', 'instructor', 'isPublished', 'updatedAt'],
     },
     access: {
         read: () => true,
@@ -229,18 +226,13 @@ export const Courses: CollectionConfig = {
                 },
             ],
         },
-        // Publishing
         {
-            name: 'status',
-            type: 'select',
-            defaultValue: 'draft',
-            options: [
-                { label: 'Draft', value: 'draft' },
-                { label: 'Published', value: 'published' },
-                { label: 'Archived', value: 'archived' },
-            ],
+            name: 'isPublished',
+            type: 'checkbox',
+            defaultValue: false,
             admin: {
                 position: 'sidebar',
+                description: 'Whether this course is visible to learners',
             },
         },
         {
