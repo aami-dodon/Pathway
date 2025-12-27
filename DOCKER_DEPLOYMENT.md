@@ -33,6 +33,7 @@ INTERNAL_API_URL=http://backend:9006
 BASE_URL=https://pathway-api.dodon.in
 PORT=9006
 CORS_ORIGINS=https://pathway.dodon.in,https://pathway-api.dodon.in
+FRONTEND_URL=https://pathway.dodon.in
 # ... rest of your production variables
 ```
 

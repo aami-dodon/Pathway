@@ -316,6 +316,13 @@ class ApiClient {
         });
     }
 
+    async resetPassword(token: string, password: string): Promise<void> {
+        return this.request('/api/users/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ token, password }),
+        });
+    }
+
     async me(): Promise<{ user: User | null }> {
         return this.request('/api/users/me');
     }

@@ -8,7 +8,20 @@ export const Users: CollectionConfig = {
         useAsTitle: 'email',
         description: 'User accounts for authentication and authorization',
     },
-    auth: true,
+    auth: {
+        forgotPassword: {
+            generateEmailSubject: () => 'Reset your password',
+            generateEmailHTML: (args) => {
+                const token = args?.token
+                const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`
+                return `
+                        <p>You have requested to reset your password.</p>
+                        <p>Please click on the following link to reset your password:</p>
+                        <p><a href="${resetLink}">${resetLink}</a></p>
+                    `
+            },
+        },
+    },
     endpoints: [
         {
             path: '/logout',
