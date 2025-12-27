@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { api, API_BASE_URL } from "@/lib/api";
+import { useAuth } from "@/components/providers/auth-provider";
 import { toast } from "sonner";
 
 const benefits = [
@@ -20,6 +21,7 @@ const benefits = [
 
 export default function RegisterPage() {
     const router = useRouter();
+    const { login } = useAuth(); // Keep login if used, or remove useAuth if not needed. Checking usage below.
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");

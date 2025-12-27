@@ -10,6 +10,7 @@ import {
     Calendar,
     Loader2,
     Save,
+    Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,12 @@ export default function ProfilePage() {
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [preferredFormat, setPreferredFormat] = useState("");
     const [pace, setPace] = useState("");
+
+    // Change Password state
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -101,6 +108,38 @@ export default function ProfilePage() {
         }
     };
 
+    const handleChangePassword = async () => {
+        if (!user) return;
+
+        if (newPassword !== confirmNewPassword) {
+            toast.error("New passwords do not match");
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            toast.error("Password must be at least 8 characters");
+            return;
+        }
+
+        setIsChangingPassword(true);
+        try {
+            // Verify current password first by attempting to login
+            await api.login(user.email, currentPassword);
+
+            // If login succeeds, update the user with the new password
+            await api.updateUser(user.id, { password: newPassword });
+
+            toast.success("Password changed successfully");
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmNewPassword("");
+        } catch (error) {
+            toast.error("Incorrect current password or update failed");
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
+
     if (authLoading || isLoading) {
         return (
             <div className="container mx-auto px-4 py-12 max-w-4xl">
@@ -143,7 +182,7 @@ export default function ProfilePage() {
 
             {/* Tabs */}
             <Tabs defaultValue="profile" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+                <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
                     <TabsTrigger value="profile" className="gap-2">
                         <User className="h-4 w-4" />
                         Profile
@@ -155,6 +194,10 @@ export default function ProfilePage() {
                     <TabsTrigger value="settings" className="gap-2">
                         <Settings className="h-4 w-4" />
                         Settings
+                    </TabsTrigger>
+                    <TabsTrigger value="security" className="gap-2">
+                        <Lock className="h-4 w-4" />
+                        Security
                     </TabsTrigger>
                 </TabsList>
 
@@ -329,6 +372,78 @@ export default function ProfilePage() {
                                         <Save className="mr-2 h-4 w-4" />
                                         Save Settings
                                     </>
+                                )}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* Security Tab */}
+                <TabsContent value="security">
+                    {/* Change Password Card */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Lock className="h-4 w-4" />
+                                Security
+                            </CardTitle>
+                            <CardDescription>
+                                Update your password
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="currentPassword">Current Password</Label>
+                                <Input
+                                    id="currentPassword"
+                                    type="password"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="max-w-md"
+                                />
+                            </div>
+
+                            <Separator className="max-w-md" />
+
+                            <div className="space-y-2">
+                                <Label htmlFor="newPassword">New Password</Label>
+                                <Input
+                                    id="newPassword"
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="max-w-md"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Must be at least 8 characters
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+                                <Input
+                                    id="confirmNewPassword"
+                                    type="password"
+                                    value={confirmNewPassword}
+                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="max-w-md"
+                                />
+                            </div>
+
+                            <Button
+                                onClick={handleChangePassword}
+                                disabled={isChangingPassword || !currentPassword || !newPassword || !confirmNewPassword}
+                            >
+                                {isChangingPassword ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Updating...
+                                    </>
+                                ) : (
+                                    "Update Password"
                                 )}
                             </Button>
                         </CardContent>

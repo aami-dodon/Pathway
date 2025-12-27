@@ -340,7 +340,7 @@ class ApiClient {
         return this.request(`/api/users/${id}`);
     }
 
-    async updateUser(id: string, data: Partial<User>): Promise<User> {
+    async updateUser(id: string, data: Partial<User> & { password?: string }): Promise<User> {
         const response = await this.request<{ doc: User }>(`/api/users/${id}`, {
             method: 'PATCH',
             body: JSON.stringify(data),
