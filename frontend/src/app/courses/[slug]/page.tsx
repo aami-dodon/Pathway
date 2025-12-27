@@ -39,6 +39,7 @@ import {
     PaginatedResponse,
     API_BASE_URL,
 } from "@/lib/api";
+import { SocialShare } from "@/components/social-share";
 
 
 
@@ -284,6 +285,8 @@ export default async function CoursePage({ params }: CoursePageProps) {
         "all-levels": "All Levels",
     };
 
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://pathway.com"}/courses/${course.slug}`;
+
     return (
         <div className="min-h-screen">
             {/* Hero Section */}
@@ -364,6 +367,11 @@ export default async function CoursePage({ params }: CoursePageProps) {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Social Share */}
+                            <div className="mt-8">
+                                <SocialShare url={shareUrl} title={course.title} />
+                            </div>
                         </div>
 
                         {/* Enrollment Card */}
@@ -620,7 +628,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                         </div>
                     </div>
                 </div>
-            </section>
-        </div>
+            </section >
+        </div >
     );
 }

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Post, CoachProfile, Category, Tag as TagType, PaginatedResponse, API_BASE_URL } from "@/lib/api";
+import { SocialShare } from "@/components/social-share";
 
 export const dynamic = "force-dynamic";
 
@@ -204,6 +205,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         })
         : null;
 
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://pathway.com"}/blog/${post.slug}`;
+
     return (
         <article className="min-h-screen">
             {/* Hero Section */}
@@ -281,6 +284,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                                 <Clock className="h-4 w-4" />
                                 5 min read
                             </div>
+                        </div>
+
+                        {/* Social Share */}
+                        <div className="mt-8">
+                            <SocialShare url={shareUrl} title={post.title} />
                         </div>
                     </div>
                 </div>
