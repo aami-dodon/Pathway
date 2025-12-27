@@ -309,6 +309,13 @@ class ApiClient {
         return this.request('/api/users/logout', { method: 'POST' });
     }
 
+    async forgotPassword(email: string): Promise<void> {
+        return this.request('/api/users/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+    }
+
     async me(): Promise<{ user: User | null }> {
         return this.request('/api/users/me');
     }

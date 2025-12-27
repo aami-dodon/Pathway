@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
     BookOpen,
@@ -37,6 +37,7 @@ const navigation = [
 
 export function Header() {
     const pathname = usePathname();
+    const router = useRouter();
     const { theme, setTheme } = useTheme();
     const { user, logout, isLoading } = useAuth();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,6 +45,7 @@ export function Header() {
     const handleLogout = async () => {
         try {
             await logout();
+            router.push("/");
         } catch (error) {
             console.error("Logout failed:", error);
         }
