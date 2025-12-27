@@ -17,7 +17,7 @@ export function BlogFilters({ categories, tags }: BlogFiltersProps) {
                 <h3 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Search
                 </h3>
-                <SearchInput placeholder="Search articles..." />
+                <SearchInput placeholder="Search articles..." showDropdown={false} />
             </div>
 
             <FilterSection title="Categories">

@@ -29,7 +29,7 @@ export function CoachFilters() {
                 <h3 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Search
                 </h3>
-                <SearchInput placeholder="Search coaches..." />
+                <SearchInput placeholder="Search coaches..." showDropdown={false} />
             </div>
 
             <FilterSection title="Expertise">

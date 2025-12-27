@@ -13,6 +13,7 @@ interface SearchInputProps {
     placeholder?: string;
     className?: string;
     index?: "posts" | "courses" | "coaches";
+    showDropdown?: boolean;
 }
 
 interface SearchHit {
@@ -30,7 +31,8 @@ interface SearchHit {
 export function SearchInput({
     placeholder = "Search...",
     className,
-    index
+    index,
+    showDropdown = true
 }: SearchInputProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -59,7 +61,7 @@ export function SearchInput({
 
     // Search API call
     const performSearch = React.useCallback(async (query: string) => {
-        if (!query.trim()) {
+        if (!showDropdown || !query.trim()) {
             setResults([]);
             setIsOpen(false);
             return;
@@ -101,6 +103,8 @@ export function SearchInput({
     const debouncedSearch = useDebouncedCallback(performSearch, 300);
 
     // Update URL with debounce
+    const [isPending, startTransition] = React.useTransition();
+
     const updateUrl = React.useCallback((val: string) => {
         isInternalUpdate.current = true;
         const params = new URLSearchParams(searchParams.toString());
@@ -110,10 +114,13 @@ export function SearchInput({
             params.delete("search");
         }
         params.delete("page");
-        router.push(`?${params.toString()}`, { scroll: false });
+
+        startTransition(() => {
+            router.replace(`?${params.toString()}`, { scroll: false });
+        });
     }, [router, searchParams]);
 
-    const debouncedUpdateUrl = useDebouncedCallback(updateUrl, 500);
+    const debouncedUpdateUrl = useDebouncedCallback(updateUrl, 300);
 
     // Sync state with URL changes (for back/forward navigation)
     React.useEffect(() => {
@@ -148,7 +155,9 @@ export function SearchInput({
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setText(val);
-        debouncedSearch(val);
+        if (showDropdown) {
+            debouncedSearch(val);
+        }
         debouncedUpdateUrl(val);
     };
 
@@ -200,12 +209,12 @@ export function SearchInput({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 className="pl-9 pr-9"
-                onFocus={() => text && results.length > 0 && setIsOpen(true)}
+                onFocus={() => showDropdown && text && results.length > 0 && setIsOpen(true)}
             />
-            {isLoading && (
+            {(isLoading || isPending) && (
                 <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
             )}
-            {!isLoading && text && (
+            {!isLoading && !isPending && text && (
                 <button
                     type="button"
                     onClick={handleClear}

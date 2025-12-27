@@ -26,20 +26,30 @@ async function getCoursesPageData(): Promise<CoursesPageData | null> {
 
 async function getCourses(searchParams: { [key: string]: string | string[] | undefined }): Promise<Course[]> {
     try {
-        const params: any = {
-            limit: 20,
-            depth: 2,
-            where: {
-                isPublished: { equals: true },
-            },
-        };
-
         const queryString = new URLSearchParams();
-        if (params.limit) queryString.set('limit', params.limit.toString());
-        if (params.depth) queryString.set('depth', params.depth.toString());
+        queryString.set('limit', '20');
+        queryString.set('depth', '2');
+        queryString.set('where[isPublished][equals]', 'true');
 
         if (searchParams.search) {
-            queryString.set('where[title][like]', searchParams.search as string);
+            try {
+                const searchRes = await fetch(
+                    `${API_BASE_URL}/api/search?q=${encodeURIComponent(searchParams.search as string)}&index=courses&limit=50`,
+                    { next: { revalidate: 0 } }
+                );
+
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    const ids = searchData.hits?.map((hit: any) => hit.id) || [];
+
+                    if (ids.length === 0) return [];
+
+                    queryString.set('where[id][in]', ids.join(','));
+                }
+            } catch (err) {
+                console.error("Meilisearch lookup failed, falling back to Payload:", err);
+                queryString.set('where[title][like]', searchParams.search as string);
+            }
         }
 
         if (searchParams.category) {
@@ -49,8 +59,6 @@ async function getCourses(searchParams: { [key: string]: string | string[] | und
         if (searchParams.difficulty) {
             queryString.set('where[difficulty][in]', searchParams.difficulty as string);
         }
-
-        queryString.set('where[isPublished][equals]', 'true');
 
         const response = await fetch(
             `${API_BASE_URL}/api/courses?${queryString.toString()}`,

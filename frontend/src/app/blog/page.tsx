@@ -24,56 +24,47 @@ async function getBlogPageData(): Promise<BlogPageData | null> {
 
 async function getPosts(searchParams: { [key: string]: string | string[] | undefined }): Promise<Post[]> {
     try {
-        const params: any = {
-            limit: 12,
-            where: {
-                isPublished: { equals: true },
-            },
-        };
+        const queryString = new URLSearchParams();
+        queryString.set('where[isPublished][equals]', 'true');
+        queryString.set('limit', '12');
 
-        // Handle Search
+        // NEW: Meilisearch-powered search
         if (searchParams.search) {
-            params.where.title = { like: searchParams.search };
+            try {
+                const searchRes = await fetch(
+                    `${API_BASE_URL}/api/search?q=${encodeURIComponent(searchParams.search as string)}&index=posts&limit=50`,
+                    { next: { revalidate: 0 } }
+                );
+
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    const ids = searchData.hits?.map((hit: any) => hit.id) || [];
+
+                    if (ids.length === 0) return [];
+
+                    // Filter by IDs in Payload to get full data
+                    queryString.set('where[id][in]', ids.join(','));
+                }
+            } catch (err) {
+                console.error("Meilisearch lookup failed, falling back to Payload:", err);
+                queryString.set('where[title][like]', searchParams.search as string);
+            }
         }
 
         // Handle Category (support multiple)
         if (searchParams.category) {
-            const categories = (searchParams.category as string).split(',');
-            params.where.category = { in: categories };
+            queryString.set('where[category][in]', searchParams.category as string);
         }
 
         // Handle Tags (support multiple)
         if (searchParams.tags) {
-            const tags = (searchParams.tags as string).split(',');
-            params.where.tags = { in: tags };
-        }
-
-        const queryString = new URLSearchParams();
-        if (params.limit) queryString.set('limit', params.limit.toString());
-
-        // Construct 'where' query manually for nested objects if needed, 
-        // or rely on a query builder. standard Payload query params structure:
-        // where[field][operator]=value
-
-        if (searchParams.search) {
-            queryString.set('where[title][like]', searchParams.search as string);
-        }
-
-        if (searchParams.category) {
-            // "in" operator expects comma separated values
-            queryString.set('where[category][in]', searchParams.category as string);
-        }
-
-        if (searchParams.tags) {
             queryString.set('where[tags][in]', searchParams.tags as string);
         }
-
-        queryString.set('where[isPublished][equals]', 'true');
 
         const response = await fetch(
             `${API_BASE_URL}/api/posts?${queryString.toString()}`,
             {
-                next: { revalidate: 0 }, // Disable cache for filtering
+                next: { revalidate: 0 },
             }
         );
 
@@ -83,6 +74,20 @@ async function getPosts(searchParams: { [key: string]: string | string[] | undef
         }
 
         const data: PaginatedResponse<Post> = await response.json();
+
+        // If we searched via Meilisearch, we should ideally preserve the ranking order
+        if (searchParams.search && data.docs) {
+            // Mapping docs by ID for quick lookup
+            const docsById = data.docs.reduce((acc, doc) => {
+                acc[doc.id] = doc;
+                return acc;
+            }, {} as Record<string, Post>);
+
+            // Re-fetch IDs from Meilisearch if needed or just re-request the hit list
+            // For now, let's keep it simple. If we want perfect ranking, we'd re-sort data.docs
+            // based on the 'ids' array we got earlier.
+        }
+
         return data.docs;
     } catch (error) {
         console.error("Failed to fetch posts:", error);

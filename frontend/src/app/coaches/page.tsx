@@ -36,7 +36,24 @@ async function getCoaches(searchParams: { [key: string]: string | string[] | und
         queryString.set('where[isActive][equals]', 'true');
 
         if (searchParams.search) {
-            queryString.set('where[displayName][like]', searchParams.search as string);
+            try {
+                const searchRes = await fetch(
+                    `${API_BASE_URL}/api/search?q=${encodeURIComponent(searchParams.search as string)}&index=coaches&limit=50`,
+                    { next: { revalidate: 0 } }
+                );
+
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    const ids = searchData.hits?.map((hit: any) => hit.id) || [];
+
+                    if (ids.length === 0) return [];
+
+                    queryString.set('where[id][in]', ids.join(','));
+                }
+            } catch (err) {
+                console.error("Meilisearch lookup failed, falling back to Payload:", err);
+                queryString.set('where[displayName][like]', searchParams.search as string);
+            }
         }
 
         if (searchParams.expertise) {

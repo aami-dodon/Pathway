@@ -23,7 +23,7 @@ export function CourseFilters({ categories }: CourseFiltersProps) {
                 <h3 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     Search
                 </h3>
-                <SearchInput placeholder="Search courses..." />
+                <SearchInput placeholder="Search courses..." showDropdown={false} />
             </div>
 
             <FilterSection title="Categories">

@@ -75,7 +75,7 @@ export function CheckboxFilter({ filterKey, options }: CheckboxFilterProps) {
 
         // Use transition for the navigation to prevent blocking the UI
         startTransition(() => {
-            router.push(`?${params.toString()}`, { scroll: false });
+            router.replace(`?${params.toString()}`, { scroll: false });
         });
     };
 
