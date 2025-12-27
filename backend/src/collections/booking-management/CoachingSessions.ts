@@ -1,4 +1,5 @@
 import { CollectionConfig, Access, Where, APIError } from 'payload'
+import { timezoneField } from '../../fields/timezone'
 import { anyone, isAdmin, isAdminOrCoach, fieldIsAdminOrCoach } from '../../access'
 
 
@@ -325,14 +326,12 @@ export const CoachingSessions: CollectionConfig = {
                 description: 'Session duration in minutes (Max 30)',
             },
         },
-        {
-            name: 'timezone',
-            type: 'text',
-            defaultValue: 'UTC',
+        timezoneField({
             admin: {
                 description: 'Timezone of the booker',
             },
-        },
+            required: false,
+        }),
         // Session Status
         {
             name: 'status',

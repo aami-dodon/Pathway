@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { timezoneField } from '../../fields/timezone'
 import { isAuthenticated, isAdmin, isAdminOrOwner } from '../../access'
 import { enforceUserOwnership, preventUserChange, setJoinedAt } from '../../hooks'
 
@@ -86,13 +87,12 @@ export const SubscriberProfile: CollectionConfig = {
                 description: 'Additional subscriber metadata',
             },
             fields: [
-                {
-                    name: 'timezone',
-                    type: 'text',
+                timezoneField({
                     admin: {
                         description: 'Preferred timezone for scheduling and notifications',
                     },
-                },
+                    required: false,
+                }),
                 {
                     name: 'language',
                     type: 'text',

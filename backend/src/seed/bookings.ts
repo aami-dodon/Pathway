@@ -92,7 +92,7 @@ export async function seedCoachingSessions(payload: Payload, coachProfiles: any[
                 bookedByUser: booker.id,
                 scheduledAt: scheduledDate.toISOString(),
                 duration: 30,
-                timezone: 'UTC',
+                timezone: 'UTC' as any,
                 status,
                 sessionType: 'video' as const,
                 topic: sessionTopics[i % sessionTopics.length],

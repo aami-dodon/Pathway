@@ -11,7 +11,6 @@ import {
     User,
     X,
     LogOut,
-    Settings,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
@@ -137,12 +136,7 @@ export function Header() {
                                                 My Courses
                                             </Link>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem asChild>
-                                            <Link href="/settings" className="cursor-pointer">
-                                                <Settings className="mr-2 h-4 w-4" />
-                                                Settings
-                                            </Link>
-                                        </DropdownMenuItem>
+
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             className="cursor-pointer text-destructive focus:text-destructive"

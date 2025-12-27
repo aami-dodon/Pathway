@@ -51,7 +51,7 @@ const coachProfilesData = [
         bio: 'Leadership coach with 15+ years experience helping executives and teams reach their full potential. Former Fortune 500 executive turned coach.',
         expertise: ['Leadership Development', 'Executive Coaching', 'Team Building', 'Strategic Planning'],
         experience: { yearsOfExperience: 15, credentials: 'ICF PCC, MBA Harvard Business School', previousWork: 'VP of Operations at TechCorp, Director at GlobalFinance' },
-        timezone: 'America/New_York',
+        timezone: 'America/New_York' as any,
         availability: [
             { day: 'mon' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
             { day: 'tue' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
@@ -67,7 +67,7 @@ const coachProfilesData = [
         bio: 'Technology and career transition coach specializing in helping tech professionals navigate their career paths. Former Google engineer.',
         expertise: ['Career Transition', 'Tech Leadership', 'Interview Preparation', 'Personal Branding'],
         experience: { yearsOfExperience: 12, credentials: 'ACC ICF, CS Stanford University', previousWork: 'Senior Engineer at Google, Team Lead at Meta' },
-        timezone: 'America/Los_Angeles',
+        timezone: 'America/Los_Angeles' as any,
         availability: [
             { day: 'mon' as DayOfWeek, startTime: '10:00', endTime: '18:00' },
             { day: 'tue' as DayOfWeek, startTime: '10:00', endTime: '18:00' },
@@ -82,7 +82,7 @@ const coachProfilesData = [
         bio: 'Wellness and mindfulness coach focused on work-life balance, stress management, and holistic well-being for busy professionals.',
         expertise: ['Mindfulness', 'Stress Management', 'Work-Life Balance', 'Wellness Coaching'],
         experience: { yearsOfExperience: 8, credentials: 'Certified Mindfulness Teacher, Health Coach Certification', previousWork: 'Corporate Wellness Director at WellnessCo' },
-        timezone: 'Europe/London',
+        timezone: 'Europe/London' as any,
         availability: [
             { day: 'mon' as DayOfWeek, startTime: '08:00', endTime: '16:00' },
             { day: 'wed' as DayOfWeek, startTime: '08:00', endTime: '16:00' },
@@ -96,7 +96,7 @@ const coachProfilesData = [
         bio: 'Entrepreneurship and business strategy coach. Serial entrepreneur who has built and sold 3 successful startups.',
         expertise: ['Entrepreneurship', 'Business Strategy', 'Fundraising', 'Product Development', 'Startup Growth'],
         experience: { yearsOfExperience: 18, credentials: 'MBA Wharton, YC Alumni', previousWork: 'Founder & CEO of TechStartup (Acquired), Partner at VentureCapital' },
-        timezone: 'Asia/Singapore',
+        timezone: 'Asia/Singapore' as any,
         availability: [
             { day: 'tue' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
             { day: 'wed' as DayOfWeek, startTime: '09:00', endTime: '17:00' },
@@ -111,7 +111,7 @@ const coachProfilesData = [
         bio: 'Communication and public speaking coach helping professionals become confident, impactful speakers and leaders.',
         expertise: ['Public Speaking', 'Communication Skills', 'Presentation Design', 'Executive Presence'],
         experience: { yearsOfExperience: 10, credentials: 'Toastmasters DTM, Communications MA Columbia', previousWork: 'Head of Communications at MediaCorp, TEDx Speaker Coach' },
-        timezone: 'America/Chicago',
+        timezone: 'America/Chicago' as any,
         availability: [
             { day: 'mon' as DayOfWeek, startTime: '11:00', endTime: '19:00' },
             { day: 'tue' as DayOfWeek, startTime: '11:00', endTime: '19:00' },
@@ -304,7 +304,7 @@ export async function seedSubscriberProfiles(payload: Payload, users: any[]) {
                 interests: profileData.interests.map(topic => ({ topic })),
                 learningPreferences: profileData.learningPreferences,
                 metadata: {
-                    timezone: 'UTC',
+                    timezone: 'UTC' as any,
                     language: 'en',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     joinedAt: existing.docs.length > 0 ? (existing.docs[0] as any).metadata?.joinedAt : new Date().toISOString(),

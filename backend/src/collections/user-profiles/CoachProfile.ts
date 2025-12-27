@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { timezoneField } from '../../fields/timezone'
 import { anyone, isAdmin, isAdminOrCoach, isAdminOrOwner } from '../../access'
 import { enforceUserOwnership, formatSlug, preventUserChange } from '../../hooks'
 
@@ -156,15 +157,11 @@ export const CoachProfile: CollectionConfig = {
             ],
         },
         // Availability Schedule
-        {
-            name: 'timezone',
-            type: 'text',
-            required: true,
-            defaultValue: 'UTC',
+        timezoneField({
             admin: {
                 description: 'Timezone for the availability slots below',
             },
-        },
+        }),
         {
             name: 'availability',
             type: 'array',

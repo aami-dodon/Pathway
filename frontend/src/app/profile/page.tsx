@@ -26,6 +26,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/components/providers/auth-provider";
 import { api, SubscriberProfile } from "@/lib/api";
+import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { toast } from "sonner";
 
 export default function ProfilePage() {
@@ -335,12 +336,10 @@ export default function ProfilePage() {
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
                                 <Label htmlFor="timezone">Timezone</Label>
-                                <Input
-                                    id="timezone"
+                                <TimezoneSelect
                                     value={timezone}
-                                    onChange={(e) => setTimezone(e.target.value)}
-                                    placeholder="e.g., America/New_York"
-                                    className="max-w-md"
+                                    onValueChange={setTimezone}
+                                    placeholder="Select your timezone"
                                 />
                                 <p className="text-xs text-muted-foreground">
                                     Used for scheduling and notifications
