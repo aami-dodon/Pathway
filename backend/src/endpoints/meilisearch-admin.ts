@@ -202,6 +202,31 @@ export const meilisearchReindexEndpoint: Endpoint = {
                 results.coaches = { indexed: coachDocs.length }
             }
 
+            // Reindex Pages
+            if (!indexToReindex || indexToReindex === INDEXES.PAGES) {
+                const pages = await payload.find({
+                    collection: 'pages',
+                    depth: 1,
+                    limit: 10000,
+                })
+
+                const pageDocs = pages.docs.map((page: any) => ({
+                    id: String(page.id),
+                    title: page.title,
+                    slug: page.slug || '',
+                    authorName: typeof page.author === 'object' ? page.author?.displayName || page.author?.email : undefined,
+                    isPublished: page.isPublished || false,
+                    publishedDate: page.publishedAt || undefined,
+                }))
+
+                const pagesIndex = client.index(INDEXES.PAGES)
+                await pagesIndex.deleteAllDocuments()
+                if (pageDocs.length > 0) {
+                    await pagesIndex.addDocuments(pageDocs)
+                }
+                results.pages = { indexed: pageDocs.length }
+            }
+
             return Response.json({
                 success: true,
                 message: 'Reindex completed',

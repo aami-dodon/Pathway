@@ -30,6 +30,7 @@ interface GroupedResults {
     posts: SearchHit[];
     courses: SearchHit[];
     coaches: SearchHit[];
+    pages: SearchHit[];
 }
 
 export function GlobalSearch() {
@@ -40,6 +41,7 @@ export function GlobalSearch() {
         posts: [],
         courses: [],
         coaches: [],
+        pages: [],
     });
     const [isLoading, setIsLoading] = React.useState(false);
     const [selectedIndex, setSelectedIndex] = React.useState(0);
@@ -47,10 +49,11 @@ export function GlobalSearch() {
 
     // Flatten results for keyboard navigation
     const flatResults = React.useMemo(() => {
-        const items: { type: "posts" | "courses" | "coaches"; hit: SearchHit }[] = [];
+        const items: { type: "posts" | "courses" | "coaches" | "pages"; hit: SearchHit }[] = [];
         results.posts.forEach((hit) => items.push({ type: "posts", hit }));
         results.courses.forEach((hit) => items.push({ type: "courses", hit }));
         results.coaches.forEach((hit) => items.push({ type: "coaches", hit }));
+        results.pages.forEach((hit) => items.push({ type: "pages", hit }));
         return items;
     }, [results]);
 
@@ -72,7 +75,7 @@ export function GlobalSearch() {
             setTimeout(() => inputRef.current?.focus(), 0);
         } else {
             setQuery("");
-            setResults({ posts: [], courses: [], coaches: [] });
+            setResults({ posts: [], courses: [], coaches: [], pages: [] });
             setSelectedIndex(0);
         }
     }, [open]);
@@ -80,7 +83,7 @@ export function GlobalSearch() {
     // Search API call
     const performSearch = React.useCallback(async (searchQuery: string) => {
         if (!searchQuery.trim()) {
-            setResults({ posts: [], courses: [], coaches: [] });
+            setResults({ posts: [], courses: [], coaches: [], pages: [] });
             return;
         }
 
@@ -98,6 +101,7 @@ export function GlobalSearch() {
                         posts: data.results.posts || [],
                         courses: data.results.courses || [],
                         coaches: data.results.coaches || [],
+                        pages: data.results.pages || [],
                     });
                 }
             }
@@ -122,6 +126,7 @@ export function GlobalSearch() {
         if (type === "posts") path = `/blog/${slug}`;
         else if (type === "courses") path = `/courses/${slug}`;
         else if (type === "coaches") path = `/coaches/${slug}`;
+        else if (type === "pages") path = `/${slug}`;
 
         setOpen(false);
         router.push(path);
@@ -151,6 +156,8 @@ export function GlobalSearch() {
                 return <GraduationCap className="h-4 w-4 text-muted-foreground" />;
             case "coaches":
                 return <Users className="h-4 w-4 text-muted-foreground" />;
+            case "pages":
+                return <FileText className="h-4 w-4 text-muted-foreground" />;
             default:
                 return null;
         }
@@ -164,6 +171,8 @@ export function GlobalSearch() {
                 return "Courses";
             case "coaches":
                 return "Coaches";
+            case "pages":
+                return "Pages";
             default:
                 return "";
         }
@@ -202,7 +211,7 @@ export function GlobalSearch() {
                             value={query}
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
-                            placeholder="Search posts, courses, and coaches..."
+                            placeholder="Search posts, courses, coaches, and pages..."
                             className="flex h-10 w-full border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                         {isLoading && (
@@ -224,7 +233,7 @@ export function GlobalSearch() {
                     <div className="max-h-[400px] overflow-y-auto">
                         {hasResults && (
                             <div className="p-2">
-                                {(["posts", "courses", "coaches"] as const).map((type) => {
+                                {(["posts", "courses", "coaches", "pages"] as const).map((type) => {
                                     const items = results[type];
                                     if (items.length === 0) return null;
 

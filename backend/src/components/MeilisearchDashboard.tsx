@@ -26,8 +26,6 @@ export const MeilisearchDashboard: React.FC = () => {
     }, [])
 
     const handleReindex = async () => {
-        if (!confirm('Are you sure you want to reindex all collections? This will clear existing Meilisearch data and refill it.')) return
-
         try {
             setReindexing(true)
             setMessage('Starting reindex...')
@@ -47,8 +45,6 @@ export const MeilisearchDashboard: React.FC = () => {
     }
 
     const handleClear = async () => {
-        if (!confirm('Are you sure you want to clear all Meilisearch indexes?')) return
-
         try {
             setMessage('Clearing indexes...')
             const res = await fetch('/api/admin/meilisearch/clear', { method: 'DELETE' })
@@ -66,8 +62,7 @@ export const MeilisearchDashboard: React.FC = () => {
 
     return (
         <Gutter className="meilisearch-dashboard">
-            <div style={{ padding: '20px 0' }}>
-                <h1 style={{ marginBottom: '20px' }}>Meilisearch Management</h1>
+            <div style={{ padding: '0 0 20px 0' }}>
 
                 {loading ? (
                     <p>Loading Meilisearch status...</p>
@@ -155,7 +150,7 @@ export const MeilisearchDashboard: React.FC = () => {
 
                 <div style={{ marginTop: '40px', fontSize: '0.9rem', color: 'var(--theme-text-soft)' }}>
                     <p>Meilisearch Host: <code>{status?.connected ? 'Configured' : 'Missing'}</code></p>
-                    <p>Indexes Managed: <code>posts</code>, <code>courses</code>, <code>coaches</code></p>
+                    <p>Indexes Managed: <code>posts</code>, <code>courses</code>, <code>coaches</code>, <code>pages</code></p>
                 </div>
             </div>
         </Gutter>

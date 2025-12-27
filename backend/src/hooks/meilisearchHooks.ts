@@ -7,6 +7,7 @@ import {
     PostDocument,
     CourseDocument,
     CoachDocument,
+    PageDocument,
 } from '../services/meilisearch'
 
 // Helper to extract plain text from rich text content
@@ -52,7 +53,7 @@ export const indexPostAfterChange: CollectionAfterChangeHook = async ({
         excerpt: fullDoc.excerpt || '',
         categoryName:
             typeof fullDoc.category === 'object' && fullDoc.category
-                ? fullDoc.category.name
+                ? (fullDoc.category as any).name
                 : undefined,
         categoryId:
             typeof fullDoc.category === 'object' && fullDoc.category
@@ -112,7 +113,7 @@ export const indexCourseAfterChange: CollectionAfterChangeHook = async ({
         description: fullDoc.shortDescription || descriptionText.slice(0, 500) || '',
         categoryName:
             typeof fullDoc.category === 'object' && fullDoc.category
-                ? fullDoc.category.name
+                ? (fullDoc.category as any).name
                 : undefined,
         categoryId:
             typeof fullDoc.category === 'object' && fullDoc.category
@@ -186,5 +187,47 @@ export const indexCoachAfterChange: CollectionAfterChangeHook = async ({
 
 export const deleteCoachAfterDelete: CollectionAfterDeleteHook = async ({ doc }) => {
     await deleteDocument(INDEXES.COACHES, String(doc.id))
+    return doc
+}
+
+// ============= PAGES HOOKS =============
+
+export const indexPageAfterChange: CollectionAfterChangeHook = async ({
+    doc,
+    operation,
+    req,
+}) => {
+    const fullDoc = await req.payload.findByID({
+        collection: 'pages',
+        id: doc.id,
+        depth: 1,
+    })
+
+    const contentText = extractPlainText(fullDoc.content)
+
+    const pageDoc: PageDocument = {
+        id: String(fullDoc.id),
+        title: fullDoc.title,
+        slug: fullDoc.slug || '',
+        content: contentText.slice(0, 1000),
+        authorName:
+            typeof fullDoc.author === 'object' && fullDoc.author
+                ? (fullDoc.author as any)?.displayName || (fullDoc.author as any)?.email
+                : undefined,
+        isPublished: fullDoc.isPublished || false,
+        publishedDate: fullDoc.publishedAt || undefined,
+    }
+
+    if (operation === 'create') {
+        await indexDocument(INDEXES.PAGES, pageDoc)
+    } else {
+        await updateDocument(INDEXES.PAGES, pageDoc)
+    }
+
+    return doc
+}
+
+export const deletePageAfterDelete: CollectionAfterDeleteHook = async ({ doc }) => {
+    await deleteDocument(INDEXES.PAGES, String(doc.id))
     return doc
 }

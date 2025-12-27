@@ -9,7 +9,7 @@ export const MeilisearchAdmin: GlobalConfig = {
             views: {
                 edit: {
                     default: {
-                        Component: '/components/MeilisearchDashboard/index#MeilisearchDashboard',
+                        Component: '/components/MeilisearchDashboard#MeilisearchDashboard',
                     }
                 }
             }

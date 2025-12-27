@@ -36,7 +36,7 @@ export const searchEndpoint: Endpoint = {
 
         // Add filter for published/active content
         let filter: string | undefined
-        if (index === INDEXES.POSTS || index === INDEXES.COURSES) {
+        if (index === INDEXES.POSTS || index === INDEXES.COURSES || index === INDEXES.PAGES) {
             filter = 'isPublished = true'
         } else if (index === INDEXES.COACHES) {
             filter = 'isActive = true'

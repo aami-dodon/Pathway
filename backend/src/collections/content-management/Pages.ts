@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { formatSlug, setPublishedAt } from '../../hooks'
+import { indexPageAfterChange, deletePageAfterDelete } from '../../hooks/meilisearchHooks'
 
 export const Pages: CollectionConfig = {
     slug: 'pages',
@@ -17,6 +18,8 @@ export const Pages: CollectionConfig = {
     },
     hooks: {
         beforeChange: [setPublishedAt],
+        afterChange: [indexPageAfterChange],
+        afterDelete: [deletePageAfterDelete],
     },
     fields: [
         {

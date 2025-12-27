@@ -124,6 +124,7 @@ export interface Config {
     'coaches-page': CoachesPage;
     'header-nav': HeaderNav;
     'footer-content': FooterContent;
+    'meilisearch-admin': MeilisearchAdmin;
   };
   globalsSelect: {
     'home-page': HomePageSelect<false> | HomePageSelect<true>;
@@ -132,6 +133,7 @@ export interface Config {
     'coaches-page': CoachesPageSelect<false> | CoachesPageSelect<true>;
     'header-nav': HeaderNavSelect<false> | HeaderNavSelect<true>;
     'footer-content': FooterContentSelect<false> | FooterContentSelect<true>;
+    'meilisearch-admin': MeilisearchAdminSelect<false> | MeilisearchAdminSelect<true>;
   };
   locale: null;
   user: User & {
@@ -3714,6 +3716,16 @@ export interface FooterContent {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meilisearch-admin".
+ */
+export interface MeilisearchAdmin {
+  id: number;
+  lastReindex?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home-page_select".
  */
 export interface HomePageSelect<T extends boolean = true> {
@@ -3882,6 +3894,16 @@ export interface FooterContentSelect<T extends boolean = true> {
         github?: T;
         linkedin?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meilisearch-admin_select".
+ */
+export interface MeilisearchAdminSelect<T extends boolean = true> {
+  lastReindex?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

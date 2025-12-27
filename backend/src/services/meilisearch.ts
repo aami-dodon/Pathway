@@ -1,4 +1,4 @@
-import { MeiliSearch, Index } from 'meilisearch'
+import { MeiliSearch, Index, RecordAny } from 'meilisearch'
 
 // Meilisearch client singleton
 let client: MeiliSearch | null = null
@@ -24,6 +24,7 @@ export const INDEXES = {
     POSTS: 'posts',
     COURSES: 'courses',
     COACHES: 'coaches',
+    PAGES: 'pages',
 } as const
 
 // Document types for indexing
@@ -65,6 +66,16 @@ export interface CoachDocument {
     profilePhotoUrl?: string
 }
 
+export interface PageDocument {
+    id: string
+    title: string
+    slug: string
+    content?: string
+    authorName?: string
+    isPublished: boolean
+    publishedDate?: string
+}
+
 // Initialize indexes with proper settings
 export async function initializeMeilisearchIndexes(): Promise<void> {
     const client = getMeilisearchClient()
@@ -92,6 +103,13 @@ export async function initializeMeilisearchIndexes(): Promise<void> {
         await coachesIndex.updateFilterableAttributes(['isActive'])
         await coachesIndex.updateSortableAttributes(['displayName', 'yearsOfExperience'])
 
+        // Create pages index
+        await client.createIndex(INDEXES.PAGES, { primaryKey: 'id' })
+        const pagesIndex = client.index(INDEXES.PAGES)
+        await pagesIndex.updateSearchableAttributes(['title', 'content', 'authorName'])
+        await pagesIndex.updateFilterableAttributes(['isPublished'])
+        await pagesIndex.updateSortableAttributes(['publishedDate', 'title'])
+
         console.log('✅ Meilisearch indexes initialized successfully')
     } catch (error: any) {
         // Index might already exist, that's ok
@@ -102,7 +120,7 @@ export async function initializeMeilisearchIndexes(): Promise<void> {
 }
 
 // Generic indexing functions
-export async function indexDocument<T extends { id: string }>(
+export async function indexDocument<T extends RecordAny>(
     indexName: string,
     document: T
 ): Promise<void> {
@@ -117,7 +135,7 @@ export async function indexDocument<T extends { id: string }>(
     }
 }
 
-export async function updateDocument<T extends { id: string }>(
+export async function updateDocument<T extends RecordAny>(
     indexName: string,
     document: T
 ): Promise<void> {
@@ -161,7 +179,7 @@ export interface SearchResult<T> {
     estimatedTotalHits: number
 }
 
-export async function search<T>(
+export async function search<T extends RecordAny>(
     indexName: string,
     options: SearchOptions
 ): Promise<SearchResult<T> | null> {
@@ -193,7 +211,7 @@ export async function search<T>(
 // Multi-index search for global search
 export async function multiSearch(
     query: string,
-    indexes: string[] = [INDEXES.POSTS, INDEXES.COURSES, INDEXES.COACHES],
+    indexes: string[] = [INDEXES.POSTS, INDEXES.COURSES, INDEXES.COACHES, INDEXES.PAGES],
     limit: number = 5
 ): Promise<{ [key: string]: any[] }> {
     const client = getMeilisearchClient()
