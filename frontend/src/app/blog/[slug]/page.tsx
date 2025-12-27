@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers"; // Added import here
 import Link from "next/link";
-import { ArrowLeft, Calendar, User, Clock, Tag } from "lucide-react";
+import { ArrowLeft, Calendar, User, Clock, Tag, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,12 +14,20 @@ interface BlogPostPageProps {
     params: Promise<{ slug: string }>;
 }
 
+
 async function getPostBySlug(slug: string): Promise<Post | null> {
     try {
+        const headersList = await headers();
+        const cookie = headersList.get('cookie');
+
         const response = await fetch(
             `${API_BASE_URL}/api/posts?where[slug][equals]=${encodeURIComponent(slug)}&depth=2`,
             {
                 next: { revalidate: 60 },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(cookie ? { Cookie: cookie } : {}),
+                }
             }
         );
 
@@ -296,7 +305,28 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <section className="py-12 sm:py-16">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-3xl">
-                        <RichTextContent content={post.content} />
+
+                        {(!post.content && post.accessLevel === 'subscribers') ? (
+                            <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-8 text-center sm:p-12">
+                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                                    <Lock className="h-8 w-8 text-destructive" />
+                                </div>
+                                <h2 className="mb-3 text-2xl font-bold">Subscribers Only Content</h2>
+                                <p className="mb-8 text-muted-foreground">
+                                    This article is exclusive to our subscribers. Sign in or create an account to unlock full access.
+                                </p>
+                                <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                                    <Button asChild size="lg">
+                                        <Link href="/login">Log in</Link>
+                                    </Button>
+                                    <Button asChild variant="outline" size="lg">
+                                        <Link href="/register">Register</Link>
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <RichTextContent content={post.content} />
+                        )}
 
                         {/* Tags */}
                         {tags.length > 0 && (
@@ -339,7 +369,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                                                 </p>
                                             )}
                                             <Button variant="link" asChild className="mt-2 h-auto p-0 text-primary">
-                                                <Link href={`/coaches/${author.id}`}>View Profile →</Link>
+                                                <Link href={`/coaches/${author.slug}`}>View Profile →</Link>
                                             </Button>
                                         </div>
                                     </div>

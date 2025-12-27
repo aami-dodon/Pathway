@@ -610,7 +610,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                                                     {instructor.bio}
                                                 </p>
                                                 <Button variant="link" asChild className="mt-2 h-auto p-0 text-primary">
-                                                    <Link href={`/coaches/${instructor.id}`}>View Profile →</Link>
+                                                    <Link href={`/coaches/${instructor.slug}`}>View Profile →</Link>
                                                 </Button>
                                             </div>
                                         </div>
