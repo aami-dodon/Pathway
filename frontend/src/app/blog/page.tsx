@@ -21,7 +21,7 @@ async function getBlogPageData(): Promise<BlogPageData | null> {
 async function getPosts(): Promise<Post[]> {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/posts?limit=12&where[status][equals]=published`,
+            `${API_BASE_URL}/api/posts?limit=12&where[isPublished][equals]=true`,
             {
                 next: { revalidate: 60 }, // Cache for 60 seconds
             }

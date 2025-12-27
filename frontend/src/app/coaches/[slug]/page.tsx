@@ -44,7 +44,7 @@ async function getCoachBySlug(slug: string): Promise<CoachProfile | null> {
 async function getCoachCourses(coachId: string): Promise<Course[]> {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/courses?where[instructor][equals]=${coachId}&where[status][equals]=published&limit=10`,
+            `${API_BASE_URL}/api/courses?where[instructor][equals]=${coachId}&where[isPublished][equals]=true&limit=10`,
             { next: { revalidate: 60 } }
         );
 

@@ -49,7 +49,7 @@ async function getPostBySlug(slug: string): Promise<Post | null> {
 export async function generateStaticParams() {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/posts?where[status][equals]=published&limit=100`,
+            `${API_BASE_URL}/api/posts?where[isPublished][equals]=true&limit=100`,
             { next: { revalidate: 3600 } }
         );
 

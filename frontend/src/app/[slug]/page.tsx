@@ -15,7 +15,7 @@ import { ContactForm } from "@/components/home/ContactForm";
 async function getPageBySlug(slug: string): Promise<Page | null> {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/pages?where[slug][equals]=${encodeURIComponent(slug)}&where[status][equals]=published&depth=2`,
+            `${API_BASE_URL}/api/pages?where[slug][equals]=${encodeURIComponent(slug)}&where[isPublished][equals]=true&depth=2`,
             {
                 cache: 'no-store',
             }

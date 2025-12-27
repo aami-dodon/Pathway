@@ -104,7 +104,7 @@ async function checkUserAuthentication(): Promise<boolean> {
 export async function generateStaticParams() {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/courses?where[status][equals]=published&limit=100`,
+            `${API_BASE_URL}/api/courses?where[isPublished][equals]=true&limit=100`,
             { next: { revalidate: 3600 } }
         );
 

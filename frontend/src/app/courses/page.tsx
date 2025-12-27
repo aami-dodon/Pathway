@@ -23,7 +23,7 @@ async function getCoursesPageData(): Promise<CoursesPageData | null> {
 async function getCourses(): Promise<Course[]> {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/courses?where[status][equals]=published&depth=2&limit=20`,
+            `${API_BASE_URL}/api/courses?where[isPublished][equals]=true&depth=2&limit=20`,
             {
                 next: { revalidate: 60 },
             }

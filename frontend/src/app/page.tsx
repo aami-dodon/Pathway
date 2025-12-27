@@ -31,7 +31,7 @@ const iconMap: Record<string, LucideIcon> = {
 async function getFeaturedCourses(): Promise<Course[]> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/courses?where[status][equals]=published&depth=2&limit=3`,
+      `${API_BASE_URL}/api/courses?where[isPublished][equals]=true&depth=2&limit=3`,
       { next: { revalidate: 60 } }
     );
     if (!response.ok) return [];
