@@ -153,6 +153,7 @@ export interface Course {
         startDate?: string;
         endDate?: string;
     };
+    accessLevel?: 'public' | 'subscribers';
     status: 'draft' | 'published' | 'archived';
     publishedAt?: string;
     category?: Category | string;
@@ -312,6 +313,34 @@ export interface CoachesPageData {
         badge: string;
         title: string;
         description: string;
+    };
+}
+
+export interface HeaderNavData {
+    navigationLinks: {
+        name: string;
+        href: string;
+    }[];
+}
+
+export interface FooterContentData {
+    description: string;
+    productLinks: {
+        name: string;
+        href: string;
+    }[];
+    companyLinks: {
+        name: string;
+        href: string;
+    }[];
+    legalLinks: {
+        name: string;
+        href: string;
+    }[];
+    socialLinks: {
+        twitter?: string;
+        github?: string;
+        linkedin?: string;
     };
 }
 

@@ -36,6 +36,8 @@ import { HomePage } from './globals/HomePage'
 import { BlogPage } from './globals/BlogPage'
 import { CoursesPage } from './globals/CoursesPage'
 import { CoachesPage } from './globals/CoachesPage'
+import { HeaderNav } from './globals/HeaderNav'
+import { FooterContent } from './globals/FooterContent'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -146,6 +148,8 @@ export default buildConfig({
     BlogPage,
     CoursesPage,
     CoachesPage,
+    HeaderNav,
+    FooterContent,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

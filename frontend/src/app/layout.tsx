@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
+import { HeaderNavData, FooterContentData, api } from "@/lib/api";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -32,11 +33,32 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+async function getHeaderNav(): Promise<HeaderNavData | null> {
+  try {
+    return await api.getGlobal<HeaderNavData>('header-nav', { cache: 'no-store' });
+  } catch (error) {
+    console.error("Failed to fetch header nav:", error);
+    return null;
+  }
+}
+
+async function getFooterContent(): Promise<FooterContentData | null> {
+  try {
+    return await api.getGlobal<FooterContentData>('footer-content', { cache: 'no-store' });
+  } catch (error) {
+    console.error("Failed to fetch footer content:", error);
+    return null;
+  }
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerNav = await getHeaderNav();
+  const footerContent = await getFooterContent();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
@@ -49,9 +71,9 @@ export default function RootLayout({
           <DynamicFavicon />
           <AuthProvider>
             <div className="relative min-h-screen flex flex-col">
-              <Header />
+              <Header navigationLinks={headerNav?.navigationLinks} />
               <main className="flex-1">{children}</main>
-              <Footer />
+              <Footer footerData={footerContent || undefined} />
             </div>
             <Toaster position="top-right" />
           </AuthProvider>

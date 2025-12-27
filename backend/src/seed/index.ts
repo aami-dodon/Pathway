@@ -16,7 +16,7 @@ import { seedEnrollments, seedProgress, seedQuizAttempts } from './enrollments.j
 
 import { seedCoachingSessions } from './bookings.js'
 import { seedHomePage } from './home-page.js'
-import { seedListingPages } from './listing-pages.js'
+import { seedSiteContent } from './site-content.js'
 
 async function seed() {
     const nodeEnv = process.env.NODE_ENV || 'development'
@@ -88,10 +88,10 @@ async function seed() {
         await seedHomePage(payload)
         console.log('✅ Home Page seeded')
 
-        // Phase 8: Seed Listing Pages
-        console.log('\n📦 Phase 8: Seeding Listing Pages...')
-        await seedListingPages(payload)
-        console.log('✅ Listing Pages seeded\n')
+        // Phase 8: Seed Site Content
+        console.log('\n📦 Phase 8: Seeding Site Content...')
+        await seedSiteContent(payload)
+        console.log('✅ Site Content seeded\n')
 
         console.log('🎉 Demo data seeding complete!')
         console.log('\n📊 Summary:')

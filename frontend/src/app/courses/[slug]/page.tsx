@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import React from "react";
 import {
@@ -68,6 +69,35 @@ async function getCourseBySlug(slug: string): Promise<Course | null> {
     } catch (error) {
         console.error("Failed to fetch course:", error);
         return null;
+    }
+}
+
+async function checkUserAuthentication(): Promise<boolean> {
+    try {
+        const headersList = await headers();
+        const cookie = headersList.get('cookie');
+
+        if (!cookie) {
+            return false;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Cookie: cookie,
+            },
+            cache: 'no-store',
+        });
+
+        if (!response.ok) {
+            return false;
+        }
+
+        const data = await response.json();
+        return !!data.user;
+    } catch (error) {
+        console.error("Failed to check authentication:", error);
+        return false;
     }
 }
 
@@ -252,6 +282,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
         notFound();
     }
 
+    const isAuthenticated = await checkUserAuthentication();
     const instructor = course.instructor as CoachProfile | undefined;
     const modules = (course.modules || []) as Module[];
     const category = course.category as Category | undefined;
@@ -394,12 +425,36 @@ export default async function CoursePage({ params }: CoursePageProps) {
                                 <CardContent className="p-6">
                                     <Button
                                         className="w-full h-12 text-base shadow-lg shadow-primary/25"
-                                        disabled={course.enrollment?.isOpen === false}
+                                        disabled={!isAuthenticated || course.enrollment?.isOpen === false}
                                     >
                                         {course.enrollment?.isOpen === false
                                             ? "Enrollment Closed"
                                             : "Enroll Now"}
                                     </Button>
+
+                                    {!isAuthenticated && (
+                                        <div className="mt-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+                                            <div className="flex items-start gap-3">
+                                                <Lock className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-medium text-foreground mb-3">
+                                                        Login Required to Enroll
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground mb-3">
+                                                        Please sign in or create an account to enroll in this course.
+                                                    </p>
+                                                    <div className="flex flex-col gap-2 sm:flex-row">
+                                                        <Button asChild size="sm" className="flex-1">
+                                                            <Link href="/login">Log in</Link>
+                                                        </Button>
+                                                        <Button asChild variant="outline" size="sm" className="flex-1">
+                                                            <Link href="/register">Register</Link>
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="mt-6 space-y-3 text-sm">
                                         <div className="flex items-center justify-between">

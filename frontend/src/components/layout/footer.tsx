@@ -2,25 +2,44 @@ import Link from "next/link";
 import { Github, Twitter, Linkedin } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 
-const footerLinks = {
-    product: [
-        { name: "Courses", href: "/courses" },
-        { name: "Blog", href: "/blog" },
-        { name: "Coaches", href: "/coaches" },
-    ],
-    company: [
-        { name: "About", href: "/about" },
-        { name: "Careers", href: "/careers" },
-        { name: "Contact", href: "/contact" },
-    ],
-    legal: [
-        { name: "Privacy Policy", href: "/privacy" },
-        { name: "Terms of Service", href: "/terms" },
-        { name: "Cookie Policy", href: "/cookies" },
-    ],
-};
+interface FooterProps {
+    footerData?: {
+        description: string;
+        productLinks: { name: string; href: string }[];
+        companyLinks: { name: string; href: string }[];
+        legalLinks: { name: string; href: string }[];
+        socialLinks: {
+            twitter?: string;
+            github?: string;
+            linkedin?: string;
+        };
+    };
+}
 
-export function Footer() {
+export function Footer({ footerData }: FooterProps) {
+    const data = footerData || {
+        description: 'Learn from expert coaches and accelerate your personal and professional growth.',
+        productLinks: [
+            { name: "Courses", href: "/courses" },
+            { name: "Blog", href: "/blog" },
+            { name: "Coaches", href: "/coaches" },
+        ],
+        companyLinks: [
+            { name: "About", href: "/about" },
+            { name: "Careers", href: "/careers" },
+            { name: "Contact", href: "/contact" },
+        ],
+        legalLinks: [
+            { name: "Privacy Policy", href: "/privacy" },
+            { name: "Terms of Service", href: "/terms" },
+            { name: "Cookie Policy", href: "/cookies" },
+        ],
+        socialLinks: {
+            twitter: 'https://twitter.com',
+            github: 'https://github.com',
+            linkedin: 'https://linkedin.com',
+        },
+    };
     return (
         <footer className="border-t border-border/40 bg-muted/30">
             <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -29,11 +48,11 @@ export function Footer() {
                     <div className="col-span-2 md:col-span-1">
                         <Logo size="sm" />
                         <p className="mt-4 text-sm text-muted-foreground max-w-xs">
-                            Learn from expert coaches and accelerate your personal and professional growth.
+                            {data.description}
                         </p>
                         <div className="mt-6 flex gap-4">
                             <a
-                                href="https://twitter.com"
+                                href={data.socialLinks.twitter || 'https://twitter.com'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -42,7 +61,7 @@ export function Footer() {
                                 <span className="sr-only">Twitter</span>
                             </a>
                             <a
-                                href="https://github.com"
+                                href={data.socialLinks.github || 'https://github.com'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -51,7 +70,7 @@ export function Footer() {
                                 <span className="sr-only">GitHub</span>
                             </a>
                             <a
-                                href="https://linkedin.com"
+                                href={data.socialLinks.linkedin || 'https://linkedin.com'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -66,7 +85,7 @@ export function Footer() {
                     <div>
                         <h3 className="text-sm font-semibold">Product</h3>
                         <ul className="mt-4 space-y-3">
-                            {footerLinks.product.map((link) => (
+                            {data.productLinks.map((link) => (
                                 <li key={link.name}>
                                     <Link
                                         href={link.href}
@@ -83,7 +102,7 @@ export function Footer() {
                     <div>
                         <h3 className="text-sm font-semibold">Company</h3>
                         <ul className="mt-4 space-y-3">
-                            {footerLinks.company.map((link) => (
+                            {data.companyLinks.map((link) => (
                                 <li key={link.name}>
                                     <Link
                                         href={link.href}
@@ -100,7 +119,7 @@ export function Footer() {
                     <div>
                         <h3 className="text-sm font-semibold">Legal</h3>
                         <ul className="mt-4 space-y-3">
-                            {footerLinks.legal.map((link) => (
+                            {data.legalLinks.map((link) => (
                                 <li key={link.name}>
                                     <Link
                                         href={link.href}

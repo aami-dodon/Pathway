@@ -27,14 +27,17 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
 
-const navigation = [
-    { name: "Home", href: "/" },
-    { name: "Blog", href: "/blog" },
-    { name: "Courses", href: "/courses" },
-    { name: "Coaches", href: "/coaches" },
-];
+interface HeaderProps {
+    navigationLinks?: { name: string; href: string }[];
+}
 
-export function Header() {
+export function Header({ navigationLinks }: HeaderProps) {
+    const navigation = navigationLinks || [
+        { name: "Home", href: "/" },
+        { name: "Blog", href: "/blog" },
+        { name: "Courses", href: "/courses" },
+        { name: "Coaches", href: "/coaches" },
+    ];
     const pathname = usePathname();
     const router = useRouter();
     const { theme, setTheme } = useTheme();

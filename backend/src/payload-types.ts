@@ -122,12 +122,16 @@ export interface Config {
     'blog-page': BlogPage;
     'courses-page': CoursesPage;
     'coaches-page': CoachesPage;
+    'header-nav': HeaderNav;
+    'footer-content': FooterContent;
   };
   globalsSelect: {
     'home-page': HomePageSelect<false> | HomePageSelect<true>;
     'blog-page': BlogPageSelect<false> | BlogPageSelect<true>;
     'courses-page': CoursesPageSelect<false> | CoursesPageSelect<true>;
     'coaches-page': CoachesPageSelect<false> | CoachesPageSelect<true>;
+    'header-nav': HeaderNavSelect<false> | HeaderNavSelect<true>;
+    'footer-content': FooterContentSelect<false> | FooterContentSelect<true>;
   };
   locale: null;
   user: User & {
@@ -3635,6 +3639,57 @@ export interface CoachesPage {
   createdAt?: string | null;
 }
 /**
+ * Manage the header navigation menu
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header-nav".
+ */
+export interface HeaderNav {
+  id: number;
+  navigationLinks: {
+    name: string;
+    href: string;
+    id?: string | null;
+  }[];
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Manage the footer content and links
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer-content".
+ */
+export interface FooterContent {
+  id: number;
+  /**
+   * Short description displayed under the logo
+   */
+  description: string;
+  productLinks: {
+    name: string;
+    href: string;
+    id?: string | null;
+  }[];
+  companyLinks: {
+    name: string;
+    href: string;
+    id?: string | null;
+  }[];
+  legalLinks: {
+    name: string;
+    href: string;
+    id?: string | null;
+  }[];
+  socialLinks?: {
+    twitter?: string | null;
+    github?: string | null;
+    linkedin?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home-page_select".
  */
@@ -3749,6 +3804,60 @@ export interface CoachesPageSelect<T extends boolean = true> {
         badge?: T;
         title?: T;
         description?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header-nav_select".
+ */
+export interface HeaderNavSelect<T extends boolean = true> {
+  navigationLinks?:
+    | T
+    | {
+        name?: T;
+        href?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer-content_select".
+ */
+export interface FooterContentSelect<T extends boolean = true> {
+  description?: T;
+  productLinks?:
+    | T
+    | {
+        name?: T;
+        href?: T;
+        id?: T;
+      };
+  companyLinks?:
+    | T
+    | {
+        name?: T;
+        href?: T;
+        id?: T;
+      };
+  legalLinks?:
+    | T
+    | {
+        name?: T;
+        href?: T;
+        id?: T;
+      };
+  socialLinks?:
+    | T
+    | {
+        twitter?: T;
+        github?: T;
+        linkedin?: T;
       };
   updatedAt?: T;
   createdAt?: T;
