@@ -3,14 +3,14 @@ import type { CollectionAfterDeleteHook } from 'payload'
 export const cleanupProfiles: CollectionAfterDeleteHook = async ({ id: userId, req }) => {
     const { payload } = req
 
-    if (req.context.internalCleanup) {
+    if (req.context[`cleanup_users_${userId}`]) {
         console.log(`[cleanupProfiles] Skipping cleanup for User ${userId} (Already processed)`)
         return
     }
 
     try {
-        // Set context to signify this is a cascade from User deletion
-        req.context.internalCleanup = true
+        // Set context to signify this is a cascade for this specific user
+        req.context[`cleanup_users_${userId}`] = true
 
         // Find and delete any associated subscriber profiles
         const subscriberProfiles = await (payload.find as any)({
