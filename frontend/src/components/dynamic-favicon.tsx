@@ -18,6 +18,10 @@ export function DynamicFavicon() {
                     return;
                 }
 
+                if (!document.body) {
+                    return;
+                }
+
                 // Create test element to get computed primary color
                 const testDiv = document.createElement('div');
                 testDiv.className = 'bg-primary';
@@ -28,7 +32,12 @@ export function DynamicFavicon() {
 
                 // Get computed color (might be in oklch, rgb, or any format)
                 const computedColor = getComputedStyle(testDiv).backgroundColor;
-                document.body.removeChild(testDiv);
+
+                if (document.body.contains(testDiv)) {
+                    document.body.removeChild(testDiv);
+                } else {
+                    testDiv.remove();
+                }
 
                 console.log('Computed color from CSS:', computedColor);
 
@@ -57,19 +66,21 @@ export function DynamicFavicon() {
                 // We use encodeURIComponent for robustness instead of manual base64 conversion
                 const url = `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
-                // Remove any existing favicon links
-                const existingLinks = document.querySelectorAll("link[rel='icon'], link[rel='shortcut icon']");
-                existingLinks.forEach(link => {
-                    // No need to revoke objects anymore since we aren't using blobs
-                    link.remove();
-                });
+                // Find existing dynamic favicon
+                let link = document.querySelector("link[data-dynamic-favicon='true']") as HTMLLinkElement;
 
-                // Create new favicon link
-                const link = document.createElement('link');
-                link.rel = 'icon';
-                link.type = 'image/svg+xml';
-                link.href = url;
-                document.head.appendChild(link);
+                if (link) {
+                    // Update existing
+                    link.href = url;
+                } else {
+                    // Create new
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    link.type = 'image/svg+xml';
+                    link.href = url;
+                    link.setAttribute('data-dynamic-favicon', 'true');
+                    document.head.appendChild(link);
+                }
 
                 console.log('Favicon updated successfully');
             } catch (error) {
