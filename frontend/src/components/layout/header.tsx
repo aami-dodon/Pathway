@@ -26,6 +26,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
+import { GlobalSearch } from "@/components/layout/GlobalSearch";
 
 interface HeaderProps {
     navigationLinks?: { name: string; href: string }[];
@@ -82,6 +83,9 @@ export function Header({ navigationLinks }: HeaderProps) {
 
                 {/* Right Section */}
                 <div className="flex items-center gap-2">
+                    {/* Global Search */}
+                    <GlobalSearch />
+
                     {/* Theme Toggle */}
                     <Button
                         variant="ghost"

@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { formatSlug, setPublishedAt } from '../../hooks'
+import { indexPostAfterChange, deletePostAfterDelete } from '../../hooks/meilisearchHooks'
 
 export const Posts: CollectionConfig = {
     slug: 'posts',
@@ -17,6 +18,8 @@ export const Posts: CollectionConfig = {
     },
     hooks: {
         beforeChange: [setPublishedAt],
+        afterChange: [indexPostAfterChange],
+        afterDelete: [deletePostAfterDelete],
     },
     fields: [
         {

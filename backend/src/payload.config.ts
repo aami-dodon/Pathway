@@ -38,6 +38,7 @@ import { CoursesPage } from './globals/CoursesPage'
 import { CoachesPage } from './globals/CoachesPage'
 import { HeaderNav } from './globals/HeaderNav'
 import { FooterContent } from './globals/FooterContent'
+// import { MeilisearchAdmin } from './globals/MeilisearchAdmin'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -57,6 +58,12 @@ const hasPublicBucket = Boolean(process.env.S3_BUCKET)
 const hasPrivateBucket = Boolean(process.env.S3_PRIVATE_BUCKET)
 
 import { translateDatabaseError } from './hooks/errorTranslation'
+import { searchEndpoints } from './endpoints/search'
+import { meilisearchAdminEndpoints } from './endpoints/meilisearch-admin'
+import { initializeMeilisearchIndexes } from './services/meilisearch'
+
+// Initialize Meilisearch indexes on startup
+initializeMeilisearchIndexes().catch(console.error)
 
 export default buildConfig({
   hooks: {
@@ -157,7 +164,9 @@ export default buildConfig({
     CoachesPage,
     HeaderNav,
     FooterContent,
+    // MeilisearchAdmin,
   ],
+  endpoints: [...searchEndpoints, ...meilisearchAdminEndpoints],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

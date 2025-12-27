@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { timezoneField } from '../../fields/timezone'
 import { enforceUserOwnership, formatSlug, preventUserChange } from '../../hooks'
 import { cleanupUserBeforeDelete, cleanupUserAfterDelete } from './hooks'
+import { indexCoachAfterChange, deleteCoachAfterDelete } from '../../hooks/meilisearchHooks'
 
 export const CoachProfile: CollectionConfig = {
     slug: 'coach-profiles',
@@ -17,9 +18,10 @@ export const CoachProfile: CollectionConfig = {
         delete: () => true,
     },
     hooks: {
-        afterDelete: [cleanupUserAfterDelete],
+        afterDelete: [cleanupUserAfterDelete, deleteCoachAfterDelete],
         beforeDelete: [cleanupUserBeforeDelete],
         beforeChange: [enforceUserOwnership, preventUserChange],
+        afterChange: [indexCoachAfterChange],
     },
     fields: [
         // Required one-to-one relationship with Users

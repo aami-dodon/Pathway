@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { formatSlug, setPublishedAt } from '../../hooks'
+import { indexCourseAfterChange, deleteCourseAfterDelete } from '../../hooks/meilisearchHooks'
 
 export const Courses: CollectionConfig = {
     slug: 'courses',
@@ -17,6 +18,8 @@ export const Courses: CollectionConfig = {
     },
     hooks: {
         beforeChange: [setPublishedAt],
+        afterChange: [indexCourseAfterChange],
+        afterDelete: [deleteCourseAfterDelete],
     },
     fields: [
         // Basic Information
