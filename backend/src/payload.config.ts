@@ -31,6 +31,12 @@ import {
 // Booking Management collections
 import { CoachingSessions } from './collections/booking-management'
 
+// Global configs
+import { HomePage } from './globals/HomePage'
+import { BlogPage } from './globals/BlogPage'
+import { CoursesPage } from './globals/CoursesPage'
+import { CoachesPage } from './globals/CoachesPage'
+
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -134,6 +140,12 @@ export default buildConfig({
     QuizAttempts,
     // Booking Management
     CoachingSessions,
+  ],
+  globals: [
+    HomePage,
+    BlogPage,
+    CoursesPage,
+    CoachesPage,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

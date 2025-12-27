@@ -10,12 +10,14 @@ interface StaticPageProps {
     params: Promise<{ slug: string }>;
 }
 
+import { ContactForm } from "@/components/home/ContactForm";
+
 async function getPageBySlug(slug: string): Promise<Page | null> {
     try {
         const response = await fetch(
             `${API_BASE_URL}/api/pages?where[slug][equals]=${encodeURIComponent(slug)}&where[status][equals]=published&depth=2`,
             {
-                next: { revalidate: 60 },
+                cache: 'no-store',
             }
         );
 
@@ -187,6 +189,12 @@ export default async function StaticPage({ params }: StaticPageProps) {
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-3xl">
                         <RichTextContent content={page.content} />
+
+                        {slug === 'contact' && (
+                            <div className="mt-12">
+                                <ContactForm />
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

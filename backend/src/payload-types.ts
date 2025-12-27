@@ -117,8 +117,18 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'home-page': HomePage;
+    'blog-page': BlogPage;
+    'courses-page': CoursesPage;
+    'coaches-page': CoachesPage;
+  };
+  globalsSelect: {
+    'home-page': HomePageSelect<false> | HomePageSelect<true>;
+    'blog-page': BlogPageSelect<false> | BlogPageSelect<true>;
+    'courses-page': CoursesPageSelect<false> | CoursesPageSelect<true>;
+    'coaches-page': CoachesPageSelect<false> | CoachesPageSelect<true>;
+  };
   locale: null;
   user: User & {
     collection: 'users';
@@ -3484,6 +3494,265 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home-page".
+ */
+export interface HomePage {
+  id: number;
+  hero: {
+    badge: string;
+    title: string;
+    highlightedText: string;
+    description: string;
+    primaryButtonText: string;
+    primaryButtonLink: string;
+    secondaryButtonText: string;
+    secondaryButtonLink: string;
+  };
+  stats?:
+    | {
+        value: string;
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  featuresHeader: {
+    badge: string;
+    title: string;
+    description: string;
+  };
+  features?:
+    | {
+        icon: 'BookOpen' | 'Users' | 'Sparkles' | 'GraduationCap';
+        title: string;
+        description: string;
+        id?: string | null;
+      }[]
+    | null;
+  testimonialsHeader: {
+    badge: string;
+    title: string;
+  };
+  reviews?:
+    | {
+        name: string;
+        role: string;
+        content: string;
+        avatar: string;
+        id?: string | null;
+      }[]
+    | null;
+  cta: {
+    title: string;
+    description: string;
+    buttonText: string;
+    buttonLink: string;
+    benefits?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Manage the Blog listing page hero section
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blog-page".
+ */
+export interface BlogPage {
+  id: number;
+  hero: {
+    /**
+     * Badge text displayed above the title
+     */
+    badge: string;
+    /**
+     * Main heading for the blog page
+     */
+    title: string;
+    /**
+     * Subtitle/description text
+     */
+    description: string;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Manage the Courses listing page hero section
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses-page".
+ */
+export interface CoursesPage {
+  id: number;
+  hero: {
+    /**
+     * Badge text displayed above the title
+     */
+    badge: string;
+    /**
+     * Main heading for the courses page
+     */
+    title: string;
+    /**
+     * Subtitle/description text
+     */
+    description: string;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Manage the Coaches listing page hero section
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coaches-page".
+ */
+export interface CoachesPage {
+  id: number;
+  hero: {
+    /**
+     * Badge text displayed above the title
+     */
+    badge: string;
+    /**
+     * Main heading for the coaches page
+     */
+    title: string;
+    /**
+     * Subtitle/description text
+     */
+    description: string;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home-page_select".
+ */
+export interface HomePageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        highlightedText?: T;
+        description?: T;
+        primaryButtonText?: T;
+        primaryButtonLink?: T;
+        secondaryButtonText?: T;
+        secondaryButtonLink?: T;
+      };
+  stats?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  featuresHeader?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        description?: T;
+      };
+  features?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  testimonialsHeader?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+      };
+  reviews?:
+    | T
+    | {
+        name?: T;
+        role?: T;
+        content?: T;
+        avatar?: T;
+        id?: T;
+      };
+  cta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        buttonText?: T;
+        buttonLink?: T;
+        benefits?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "blog-page_select".
+ */
+export interface BlogPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        description?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "courses-page_select".
+ */
+export interface CoursesPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        description?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coaches-page_select".
+ */
+export interface CoachesPageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        description?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

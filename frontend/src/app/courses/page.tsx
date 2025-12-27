@@ -5,9 +5,18 @@ import { CourseCard } from "@/components/courses/CourseCard";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Course, CoachProfile, PaginatedResponse, API_BASE_URL } from "@/lib/api";
+import { Course, CoachProfile, PaginatedResponse, API_BASE_URL, CoursesPageData, api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+async function getCoursesPageData(): Promise<CoursesPageData | null> {
+    try {
+        return await api.getGlobal<CoursesPageData>('courses-page', { cache: 'no-store' });
+    } catch (error) {
+        console.error("Failed to fetch courses page data:", error);
+        return null;
+    }
+}
 
 
 
@@ -81,7 +90,17 @@ async function CoursesGrid() {
     );
 }
 
-export default function CoursesPage() {
+export default async function CoursesPage() {
+    const pageData = await getCoursesPageData();
+
+    // Fallback data
+    const data = pageData || {
+        hero: {
+            badge: 'Courses',
+            title: 'Learn New Skills',
+            description: 'Explore our catalog of expert-led courses designed to help you grow professionally and personally.',
+        },
+    };
     return (
         <div className="min-h-screen">
             {/* Hero */}
@@ -89,14 +108,13 @@ export default function CoursesPage() {
                 <div className="container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <Badge variant="secondary" className="mb-4">
-                            Courses
+                            {data.hero.badge}
                         </Badge>
                         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                            Learn New Skills
+                            {data.hero.title}
                         </h1>
                         <p className="mt-4 text-lg text-muted-foreground">
-                            Explore our catalog of expert-led courses designed to help you
-                            grow professionally and personally.
+                            {data.hero.description}
                         </p>
                     </div>
                 </div>

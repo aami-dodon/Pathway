@@ -5,9 +5,18 @@ import { PostCard } from "@/components/blog/PostCard";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Post, CoachProfile, PaginatedResponse, API_BASE_URL } from "@/lib/api";
+import { Post, CoachProfile, PaginatedResponse, API_BASE_URL, BlogPageData, api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+async function getBlogPageData(): Promise<BlogPageData | null> {
+    try {
+        return await api.getGlobal<BlogPageData>('blog-page', { cache: 'no-store' });
+    } catch (error) {
+        console.error("Failed to fetch blog page data:", error);
+        return null;
+    }
+}
 
 async function getPosts(): Promise<Post[]> {
     try {
@@ -75,7 +84,18 @@ async function PostsGrid() {
     );
 }
 
-export default function BlogPage() {
+export default async function BlogPage() {
+    const pageData = await getBlogPageData();
+
+    // Fallback data
+    const data = pageData || {
+        hero: {
+            badge: 'Blog',
+            title: 'Insights from Our Experts',
+            description: 'Discover articles, tutorials, and thoughts from our community of coaches and creators.',
+        },
+    };
+
     return (
         <div className="min-h-screen">
             {/* Hero */}
@@ -83,14 +103,13 @@ export default function BlogPage() {
                 <div className="container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <Badge variant="secondary" className="mb-4">
-                            Blog
+                            {data.hero.badge}
                         </Badge>
                         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                            Insights from Our Experts
+                            {data.hero.title}
                         </h1>
                         <p className="mt-4 text-lg text-muted-foreground">
-                            Discover articles, tutorials, and thoughts from our community of
-                            coaches and creators.
+                            {data.hero.description}
                         </p>
                     </div>
                 </div>

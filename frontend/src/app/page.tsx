@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Star,
   Quote,
+  LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,64 +17,16 @@ import { Badge } from "@/components/ui/badge";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { PostCard } from "@/components/blog/PostCard";
 import { ContactForm } from "@/components/home/ContactForm";
-import { AuraBackground } from "@/components/ui/aura-background";
 import { ScrollAnimation } from "@/components/ui/scroll-animation";
 import { TextReveal } from "@/components/ui/text-reveal";
-import { API_BASE_URL, PaginatedResponse, Course, Post } from "@/lib/api";
+import { API_BASE_URL, PaginatedResponse, Course, Post, HomePageData, api } from "@/lib/api";
 
-const features = [
-  {
-    icon: BookOpen,
-    title: "Expert-Led Courses",
-    description:
-      "Learn from industry professionals with proven track records and real-world experience.",
-  },
-  {
-    icon: Users,
-    title: "Personal Coaching",
-    description:
-      "Book one-on-one sessions with coaches who can guide your personal growth journey.",
-  },
-  {
-    icon: Sparkles,
-    title: "Premium Content",
-    description:
-      "Access exclusive articles, tutorials, and insights written by our community of experts.",
-  },
-  {
-    icon: Users,
-    title: "Community Access",
-    description: "Join a vibrant community of learners and mentors to share knowledge and grow together."
-  }
-];
-
-const stats = [
-  { value: "10K+", label: "Active Learners" },
-  { value: "500+", label: "Expert Coaches" },
-  { value: "1,000+", label: "Courses Available" },
-  { value: "98%", label: "Satisfaction Rate" },
-];
-
-const reviews = [
-  {
-    name: "Sarah Johnson",
-    role: "Software Engineer",
-    content: "Pathway has completely transformed my career. The courses are practical and the coaching sessions provided me with the guidance I needed to land my dream job.",
-    avatar: "SJ"
-  },
-  {
-    name: "Michael Chen",
-    role: "Product Manager",
-    content: "The quality of content here is unmatched. I've taken several courses and read countless articles. Each one has added real value to my professional life.",
-    avatar: "MC"
-  },
-  {
-    name: "Emily Rodriguez",
-    role: "UX Designer",
-    content: "I love the community aspect. Connecting with other learners and mentors has opened so many doors for collaboration and growth.",
-    avatar: "ER"
-  }
-];
+const iconMap: Record<string, LucideIcon> = {
+  BookOpen,
+  Users,
+  Sparkles,
+  GraduationCap,
+};
 
 async function getFeaturedCourses(): Promise<Course[]> {
   try {
@@ -105,16 +58,108 @@ async function getFeaturedPosts(): Promise<Post[]> {
   }
 }
 
+async function getHomePageData(): Promise<HomePageData | null> {
+  try {
+    return await api.getGlobal<HomePageData>('home-page', { cache: 'no-store' });
+  } catch (error) {
+    console.error("Failed to fetch home page data:", error);
+    return null;
+  }
+}
+
+// Fallback data in case CMS is empty or fails
+const fallbackData: HomePageData = {
+  hero: {
+    badge: "New courses added weekly",
+    title: "Transform Your Career with",
+    highlightedText: "Expert Guidance",
+    description: "Join thousands of learners accessing premium courses, insightful content, and personalized coaching from industry-leading experts.",
+    primaryButtonText: "Explore Courses",
+    primaryButtonLink: "/courses",
+    secondaryButtonText: "Read Latest Posts",
+    secondaryButtonLink: "/blog",
+  },
+  stats: [
+    { value: "10K+", label: "Active Learners" },
+    { value: "500+", label: "Expert Coaches" },
+    { value: "1,000+", label: "Courses Available" },
+    { value: "98%", label: "Satisfaction Rate" },
+  ],
+  featuresHeader: {
+    badge: "Why Choose Pathway",
+    title: "Everything you need to succeed",
+    description: "We provide the tools, content, and connections to help you reach your goals.",
+  },
+  features: [
+    {
+      icon: "BookOpen",
+      title: "Expert-Led Courses",
+      description: "Learn from industry professionals with proven track records and real-world experience.",
+    },
+    {
+      icon: "Users",
+      title: "Personal Coaching",
+      description: "Book one-on-one sessions with coaches who can guide your personal growth journey.",
+    },
+    {
+      icon: "Sparkles",
+      title: "Premium Content",
+      description: "Access exclusive articles, tutorials, and insights written by our community of experts.",
+    },
+    {
+      icon: "Users",
+      title: "Community Access",
+      description: "Join a vibrant community of learners and mentors to share knowledge and grow together.",
+    }
+  ],
+  testimonialsHeader: {
+    badge: "Testimonials",
+    title: "Loved by learners everywhere",
+  },
+  reviews: [
+    {
+      name: "Sarah Johnson",
+      role: "Software Engineer",
+      content: "Pathway has completely transformed my career. The courses are practical and the coaching sessions provided me with the guidance I needed to land my dream job.",
+      avatar: "SJ"
+    },
+    {
+      name: "Michael Chen",
+      role: "Product Manager",
+      content: "The quality of content here is unmatched. I've taken several courses and read countless articles. Each one has added real value to my professional life.",
+      avatar: "MC"
+    },
+    {
+      name: "Emily Rodriguez",
+      role: "UX Designer",
+      content: "I love the community aspect. Connecting with other learners and mentors has opened so many doors for collaboration and growth.",
+      avatar: "ER"
+    }
+  ],
+  cta: {
+    title: "Ready to start your learning journey?",
+    description: "Join our community of learners and get access to exclusive content and coaching sessions.",
+    buttonText: "Get Started Free",
+    buttonLink: "/register",
+    benefits: [
+      { text: "Unlimited course access" },
+      { text: "1-on-1 coaching sessions" },
+      { text: "Exclusive community" },
+    ]
+  }
+};
+
 export default async function HomePage() {
-  const [courses, posts] = await Promise.all([
+  const [courses, posts, cmsData] = await Promise.all([
     getFeaturedCourses(),
     getFeaturedPosts(),
+    getHomePageData(),
   ]);
 
-  return (
-    <div className="flex flex-col">
-      <AuraBackground />
+  const data = cmsData || fallbackData;
 
+  return (
+    <div className="flex flex-col home-page-wrapper">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Background gradient */}
@@ -129,23 +174,22 @@ export default async function HomePage() {
                 className="mb-6 px-4 py-1.5 text-sm font-medium border-primary/20 bg-primary/5"
               >
                 <Sparkles className="mr-2 h-3.5 w-3.5 text-primary" />
-                <span>New courses added weekly</span>
+                <span>{data.hero.badge}</span>
               </Badge>
             </ScrollAnimation>
 
             <ScrollAnimation delay={0.3}>
               <div className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl mb-6">
-                <TextReveal text="Transform Your Career with" className="inline" />{" "}
+                <TextReveal text={data.hero.title} className="inline" />{" "}
                 <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                  Expert Guidance
+                  {data.hero.highlightedText}
                 </span>
               </div>
             </ScrollAnimation>
 
             <ScrollAnimation delay={0.4}>
               <p className="mt-6 text-lg text-muted-foreground sm:text-xl max-w-2xl mx-auto leading-relaxed">
-                Join thousands of learners accessing premium courses, insightful
-                content, and personalized coaching from industry-leading experts.
+                {data.hero.description}
               </p>
             </ScrollAnimation>
 
@@ -156,8 +200,8 @@ export default async function HomePage() {
                   size="lg"
                   className="h-12 px-8 text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
                 >
-                  <Link href="/courses">
-                    Explore Courses
+                  <Link href={data.hero.primaryButtonLink}>
+                    {data.hero.primaryButtonText}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -167,9 +211,9 @@ export default async function HomePage() {
                   size="lg"
                   className="h-12 px-8 text-base group"
                 >
-                  <Link href="/blog">
+                  <Link href={data.hero.secondaryButtonLink}>
                     <Play className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
-                    Read Latest Posts
+                    {data.hero.secondaryButtonText}
                   </Link>
                 </Button>
               </div>
@@ -183,7 +227,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
           <ScrollAnimation>
             <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-              {stats.map((stat) => (
+              {data.stats.map((stat) => (
                 <div key={stat.label} className="text-center">
                   <div className="text-3xl font-bold tracking-tight sm:text-4xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                     {stat.value}
@@ -204,36 +248,38 @@ export default async function HomePage() {
           <div className="mx-auto max-w-2xl text-center">
             <ScrollAnimation>
               <Badge variant="secondary" className="mb-4">
-                Why Choose Pathway
+                {data.featuresHeader.badge}
               </Badge>
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                <TextReveal text="Everything you need to succeed" />
+                <TextReveal text={data.featuresHeader.title} />
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                We provide the tools, content, and connections to help you reach
-                your goals.
+                {data.featuresHeader.description}
               </p>
             </ScrollAnimation>
           </div>
 
           <div className="mx-auto mt-16 grid max-w-5xl gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, index) => (
-              <ScrollAnimation key={feature.title} delay={index * 0.1}>
-                <Card
-                  className="group relative overflow-hidden border-border/50 bg-gradient-to-b from-background to-muted/20 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 h-full"
-                >
-                  <CardContent className="p-6">
-                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 transition-transform group-hover:scale-110">
-                      <feature.icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-semibold">{feature.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </ScrollAnimation>
-            ))}
+            {data.features.map((feature, index) => {
+              const Icon = iconMap[feature.icon] || BookOpen;
+              return (
+                <ScrollAnimation key={feature.title} delay={index * 0.1}>
+                  <Card
+                    className="group relative overflow-hidden border-border/50 bg-gradient-to-b from-background to-muted/20 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 h-full"
+                  >
+                    <CardContent className="p-6">
+                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 transition-transform group-hover:scale-110">
+                        <Icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold">{feature.title}</h3>
+                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </ScrollAnimation>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -303,15 +349,15 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollAnimation>
             <div className="mx-auto max-w-2xl text-center mb-16">
-              <Badge variant="secondary" className="mb-4">Testimonials</Badge>
+              <Badge variant="secondary" className="mb-4">{data.testimonialsHeader.badge}</Badge>
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                <TextReveal text="Loved by learners everywhere" />
+                <TextReveal text={data.testimonialsHeader.title} />
               </h2>
             </div>
           </ScrollAnimation>
 
           <div className="grid gap-8 md:grid-cols-3">
-            {reviews.map((review, i) => (
+            {data.reviews.map((review, i) => (
               <ScrollAnimation key={i} delay={i * 0.1}>
                 <Card className="border-border bg-card h-full">
                   <CardContent className="p-6">
@@ -371,28 +417,23 @@ export default async function HomePage() {
               </div>
 
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                <TextReveal text="Ready to start your learning journey?" />
+                <TextReveal text={data.cta.title} />
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                Join our community of learners and get access to exclusive content
-                and coaching sessions.
+                {data.cta.description}
               </p>
             </ScrollAnimation>
 
             <ScrollAnimation delay={0.2}>
               <div className="mt-8 space-y-4">
                 <div className="flex flex-wrap justify-center gap-x-8 gap-y-3">
-                  {[
-                    "Unlimited course access",
-                    "1-on-1 coaching sessions",
-                    "Exclusive community",
-                  ].map((benefit) => (
+                  {data.cta.benefits.map((benefit) => (
                     <div
-                      key={benefit}
+                      key={benefit.text}
                       className="flex items-center gap-2 text-sm text-muted-foreground"
                     >
                       <CheckCircle2 className="h-4 w-4 text-primary" />
-                      {benefit}
+                      {benefit.text}
                     </div>
                   ))}
                 </div>
@@ -402,8 +443,8 @@ export default async function HomePage() {
                   size="lg"
                   className="mt-6 h-12 px-10 text-base shadow-lg shadow-primary/25"
                 >
-                  <Link href="/register">
-                    Get Started Free
+                  <Link href={data.cta.buttonLink}>
+                    {data.cta.buttonText}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>

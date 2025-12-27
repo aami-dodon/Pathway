@@ -13,7 +13,10 @@ import { upsertAdmin, seedUsers, seedCoachProfiles, seedSubscriberProfiles } fro
 import { seedCategories, seedTags, seedPosts, seedPages } from './content.js'
 import { seedCourses, seedModules, seedLessons, seedQuizzes } from './lms.js'
 import { seedEnrollments, seedProgress, seedQuizAttempts } from './enrollments.js'
+
 import { seedCoachingSessions } from './bookings.js'
+import { seedHomePage } from './home-page.js'
+import { seedListingPages } from './listing-pages.js'
 
 async function seed() {
     const nodeEnv = process.env.NODE_ENV || 'development'
@@ -79,6 +82,16 @@ async function seed() {
         console.log('📦 Phase 6: Seeding Coaching Sessions...')
         await seedCoachingSessions(payload, coachProfiles, users)
         console.log('✅ Coaching Sessions seeded\n')
+
+        // Phase 7: Seed Home Page
+        console.log('\n📦 Phase 7: Seeding Home Page...')
+        await seedHomePage(payload)
+        console.log('✅ Home Page seeded')
+
+        // Phase 8: Seed Listing Pages
+        console.log('\n📦 Phase 8: Seeding Listing Pages...')
+        await seedListingPages(payload)
+        console.log('✅ Listing Pages seeded\n')
 
         console.log('🎉 Demo data seeding complete!')
         console.log('\n📊 Summary:')

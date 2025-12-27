@@ -245,6 +245,76 @@ export interface AvailabilityResponse {
     slots: AvailableSlot[];
 }
 
+export interface HomePageData {
+    hero: {
+        badge: string;
+        title: string;
+        highlightedText: string;
+        description: string;
+        primaryButtonText: string;
+        primaryButtonLink: string;
+        secondaryButtonText: string;
+        secondaryButtonLink: string;
+    };
+    stats: {
+        value: string;
+        label: string;
+    }[];
+    featuresHeader: {
+        badge: string;
+        title: string;
+        description: string;
+    };
+    features: {
+        icon: string;
+        title: string;
+        description: string;
+    }[];
+    testimonialsHeader: {
+        badge: string;
+        title: string;
+    };
+    reviews: {
+        name: string;
+        role: string;
+        content: string;
+        avatar: string;
+    }[];
+    cta: {
+        title: string;
+        description: string;
+        buttonText: string;
+        buttonLink: string;
+        benefits: {
+            text: string;
+        }[];
+    };
+}
+
+export interface BlogPageData {
+    hero: {
+        badge: string;
+        title: string;
+        description: string;
+    };
+}
+
+export interface CoursesPageData {
+    hero: {
+        badge: string;
+        title: string;
+        description: string;
+    };
+}
+
+export interface CoachesPageData {
+    hero: {
+        badge: string;
+        title: string;
+        description: string;
+    };
+}
+
 export interface PaginatedResponse<T> {
     docs: T[];
     totalDocs: number;
@@ -518,6 +588,11 @@ class ApiClient {
             to: to.toISOString(),
         });
         return this.request(`/api/availability?${searchParams.toString()}`);
+    }
+
+    // Globals
+    async getGlobal<T>(slug: string, options?: RequestInit): Promise<T> {
+        return this.request(`/api/globals/${slug}`, options);
     }
 }
 

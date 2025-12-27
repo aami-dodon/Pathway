@@ -1,8 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export function AuraBackground() {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) {
+        return <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none" />;
+    }
+
     return (
         <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
             <motion.div

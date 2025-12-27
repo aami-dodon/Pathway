@@ -12,9 +12,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CoachProfile, PaginatedResponse, API_BASE_URL } from "@/lib/api";
+import { CoachProfile, PaginatedResponse, API_BASE_URL, CoachesPageData, api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
+
+async function getCoachesPageData(): Promise<CoachesPageData | null> {
+    try {
+        return await api.getGlobal<CoachesPageData>('coaches-page', { cache: 'no-store' });
+    } catch (error) {
+        console.error("Failed to fetch coaches page data:", error);
+        return null;
+    }
+}
 
 async function getCoaches(): Promise<CoachProfile[]> {
     try {
@@ -199,7 +208,17 @@ async function CoachesGrid() {
     );
 }
 
-export default function CoachesPage() {
+export default async function CoachesPage() {
+    const pageData = await getCoachesPageData();
+
+    // Fallback data
+    const data = pageData || {
+        hero: {
+            badge: 'Our Coaches',
+            title: 'Learn from the Best',
+            description: 'Connect with experienced professionals ready to guide your journey to success.',
+        },
+    };
     return (
         <div className="min-h-screen">
             {/* Hero */}
@@ -207,14 +226,13 @@ export default function CoachesPage() {
                 <div className="container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
                     <div className="mx-auto max-w-2xl text-center">
                         <Badge variant="secondary" className="mb-4">
-                            Our Coaches
+                            {data.hero.badge}
                         </Badge>
                         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                            Learn from the Best
+                            {data.hero.title}
                         </h1>
                         <p className="mt-4 text-lg text-muted-foreground">
-                            Connect with experienced professionals ready to guide your journey
-                            to success.
+                            {data.hero.description}
                         </p>
                     </div>
                 </div>
