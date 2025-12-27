@@ -201,37 +201,32 @@ const pagesData = [
     {
         title: 'About Us',
         slug: 'about',
-        content: 'Pathway is a comprehensive learning and coaching platform designed to help professionals reach their full potential.',
+        content: 'Pathway is a comprehensive learning and coaching platform designed to help professionals reach their full potential. We connect learners with expert coaches and provide structured courses to accelerate personal and professional growth.',
     },
     {
-        title: 'How It Works',
-        slug: 'how-it-works',
-        content: 'Discover how our platform combines expert coaching, structured courses, and community support to accelerate your growth.',
-    },
-    {
-        title: 'For Coaches',
-        slug: 'for-coaches',
-        content: 'Join our community of expert coaches and share your knowledge with professionals worldwide.',
-    },
-    {
-        title: 'Privacy Policy',
-        slug: 'privacy-policy',
-        content: 'Our commitment to protecting your personal information and data privacy.',
-    },
-    {
-        title: 'Terms of Service',
-        slug: 'terms-of-service',
-        content: 'The terms and conditions governing your use of the Pathway platform.',
-    },
-    {
-        title: 'FAQ',
-        slug: 'faq',
-        content: 'Frequently asked questions about our courses, coaching, and platform features.',
+        title: 'Careers',
+        slug: 'careers',
+        content: 'Join our team at Pathway and help us transform professional development. We are always looking for talented individuals who are passionate about education, coaching, and technology. Check back soon for open positions or reach out to us directly.',
     },
     {
         title: 'Contact Us',
         slug: 'contact',
-        content: 'Get in touch with our team for support, partnerships, or general inquiries.',
+        content: 'Get in touch with our team for support, partnerships, or general inquiries. We would love to hear from you and answer any questions you may have about our platform, courses, or coaching services.',
+    },
+    {
+        title: 'Privacy Policy',
+        slug: 'privacy',
+        content: 'Our commitment to protecting your personal information and data privacy. We take your privacy seriously and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our platform.',
+    },
+    {
+        title: 'Terms of Service',
+        slug: 'terms',
+        content: 'The terms and conditions governing your use of the Pathway platform. By accessing or using our services, you agree to be bound by these terms. Please read them carefully before using our platform.',
+    },
+    {
+        title: 'Cookie Policy',
+        slug: 'cookies',
+        content: 'This cookie policy explains how we use cookies and similar technologies on our platform. Cookies help us provide you with a better experience by remembering your preferences and understanding how you use our services.',
     },
 ]
 

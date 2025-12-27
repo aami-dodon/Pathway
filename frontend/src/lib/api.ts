@@ -110,6 +110,23 @@ export interface Tag {
     slug: string;
 }
 
+export interface Page {
+    id: string;
+    title: string;
+    slug: string;
+    author?: CoachProfile | User | string;
+    content?: unknown;
+    status: 'draft' | 'published' | 'archived';
+    publishedAt?: string;
+    seo?: {
+        metaTitle?: string;
+        metaDescription?: string;
+        ogImage?: Media;
+    };
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface Course {
     id: string;
     title: string;
@@ -427,6 +444,27 @@ class ApiClient {
     // Tags
     async getTags(): Promise<PaginatedResponse<Tag>> {
         return this.request('/api/tags');
+    }
+
+    // Pages
+    async getPages(params?: { page?: number; limit?: number; status?: string }): Promise<PaginatedResponse<Page>> {
+        const searchParams = new URLSearchParams();
+        if (params?.page) searchParams.set('page', params.page.toString());
+        if (params?.limit) searchParams.set('limit', params.limit.toString());
+        if (params?.status) searchParams.set('where[status][equals]', params.status);
+        const query = searchParams.toString();
+        return this.request(`/api/pages${query ? `?${query}` : ''}`);
+    }
+
+    async getPageBySlug(slug: string): Promise<Page | null> {
+        const params = new URLSearchParams();
+        params.set('where[slug][equals]', slug);
+        params.set('where[status][equals]', 'published');
+        params.set('limit', '1');
+        const response = await this.request<PaginatedResponse<Page>>(
+            `/api/pages?${params.toString()}`
+        );
+        return response.docs[0] || null;
     }
 
     // Coaching Sessions
