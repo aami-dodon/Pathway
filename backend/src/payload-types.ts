@@ -172,6 +172,10 @@ export interface User {
    * User role determines permissions
    */
   role: 'subscriber' | 'creator' | 'coach' | 'admin';
+  /**
+   * Uncheck to block user login
+   */
+  isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -2901,6 +2905,7 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   role?: T;
+  isActive?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

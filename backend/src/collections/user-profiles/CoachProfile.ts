@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { timezoneField } from '../../fields/timezone'
 import { enforceUserOwnership, formatSlug, preventUserChange } from '../../hooks'
+import { cleanupUserBeforeDelete, cleanupUserAfterDelete } from './hooks'
 
 export const CoachProfile: CollectionConfig = {
     slug: 'coach-profiles',
@@ -16,6 +17,8 @@ export const CoachProfile: CollectionConfig = {
         delete: () => true,
     },
     hooks: {
+        afterDelete: [cleanupUserAfterDelete],
+        beforeDelete: [cleanupUserBeforeDelete],
         beforeChange: [enforceUserOwnership, preventUserChange],
     },
     fields: [

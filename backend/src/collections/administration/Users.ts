@@ -1,4 +1,9 @@
 import type { CollectionConfig } from 'payload'
+import {
+    manageProfiles,
+    cleanupProfiles,
+    checkUserStatus
+} from './hooks'
 
 export const Users: CollectionConfig = {
     slug: 'users',
@@ -76,6 +81,11 @@ export const Users: CollectionConfig = {
         update: () => true,
         delete: () => true,
     },
+    hooks: {
+        beforeLogin: [checkUserStatus],
+        afterChange: [manageProfiles],
+        afterDelete: [cleanupProfiles],
+    },
     fields: [
         {
             name: 'role',
@@ -95,6 +105,15 @@ export const Users: CollectionConfig = {
             admin: {
                 position: 'sidebar',
                 description: 'User role determines permissions',
+            },
+        },
+        {
+            name: 'isActive',
+            type: 'checkbox',
+            defaultValue: true,
+            admin: {
+                position: 'sidebar',
+                description: 'Uncheck to block user login',
             },
         },
     ],

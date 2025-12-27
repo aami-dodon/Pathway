@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { timezoneField } from '../../fields/timezone'
 import { enforceUserOwnership, preventUserChange, setJoinedAt } from '../../hooks'
+import { cleanupUserBeforeDelete, cleanupUserAfterDelete } from './hooks'
 
 export const SubscriberProfile: CollectionConfig = {
     slug: 'subscriber-profiles',
@@ -16,6 +17,8 @@ export const SubscriberProfile: CollectionConfig = {
         delete: () => true,
     },
     hooks: {
+        afterDelete: [cleanupUserAfterDelete],
+        beforeDelete: [cleanupUserBeforeDelete],
         beforeChange: [enforceUserOwnership, preventUserChange, setJoinedAt],
     },
     fields: [

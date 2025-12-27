@@ -62,6 +62,13 @@ export default buildConfig({
   hooks: {
     afterError: [
       async ({ error, result, req }) => {
+        // Log details to terminal to capture the specific failure before transaction aborts
+        console.error('\n!!! PAYLOAD ERROR DETECTED !!!')
+        console.error('Path:', req.url)
+        console.error('Original Error:', error)
+        if (error.stack) console.error('Stack Trace:', error.stack)
+        console.error('!!! END ERROR REPORT !!!\n')
+
         const translation = translateDatabaseError(error, req)
         if (translation) {
           return {
