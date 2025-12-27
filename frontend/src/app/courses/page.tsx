@@ -9,6 +9,7 @@ import { Course, CoachProfile, PaginatedResponse, API_BASE_URL, CoursesPageData,
 import { SidebarFilter } from "@/components/filters/SidebarFilter";
 import { MobileFilterDrawer } from "@/components/filters/MobileFilterDrawer";
 import { CourseFilters } from "@/components/courses/CourseFilters";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -113,22 +114,11 @@ export default async function CoursesPage(props: {
     };
     return (
         <div className="min-h-screen">
-            {/* Hero */}
-            <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background">
-                <div className="container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-                    <div className="mx-auto max-w-2xl text-center">
-                        <Badge variant="secondary" className="mb-4">
-                            {data.hero.badge}
-                        </Badge>
-                        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                            {data.hero.title}
-                        </h1>
-                        <p className="mt-4 text-lg text-muted-foreground">
-                            {data.hero.description}
-                        </p>
-                    </div>
-                </div>
-            </section>
+            <PageHeader
+                badge={data.hero.badge}
+                title={data.hero.title}
+                description={data.hero.description}
+            />
 
             {/* Main Content */}
             <section className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">

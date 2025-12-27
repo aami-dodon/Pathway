@@ -9,6 +9,7 @@ import { Post, CoachProfile, PaginatedResponse, API_BASE_URL, BlogPageData, api 
 import { SidebarFilter } from "@/components/filters/SidebarFilter";
 import { MobileFilterDrawer } from "@/components/filters/MobileFilterDrawer";
 import { BlogFilters } from "@/components/blog/BlogFilters";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -121,33 +122,13 @@ export default async function BlogPage(props: {
     const categoriesRes = await api.getCategories();
     const tagsRes = await api.getTags();
 
-    // Fallback data
-    const data = pageData || {
-        hero: {
-            badge: 'Blog',
-            title: 'Insights from Our Experts',
-            description: 'Discover articles, tutorials, and thoughts from our community of coaches and creators.',
-        },
-    };
-
     return (
         <div className="min-h-screen">
-            {/* Hero */}
-            <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background">
-                <div className="container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-                    <div className="mx-auto max-w-2xl text-center">
-                        <Badge variant="secondary" className="mb-4">
-                            {data.hero.badge}
-                        </Badge>
-                        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                            {data.hero.title}
-                        </h1>
-                        <p className="mt-4 text-lg text-muted-foreground">
-                            {data.hero.description}
-                        </p>
-                    </div>
-                </div>
-            </section>
+            <PageHeader
+                badge={pageData?.hero?.badge || 'Blog'}
+                title={pageData?.hero?.title || 'Insights from Our Experts'}
+                description={pageData?.hero?.description || 'Discover articles, tutorials, and thoughts from our community of coaches and creators.'}
+            />
 
             {/* Main Content */}
             <section className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">

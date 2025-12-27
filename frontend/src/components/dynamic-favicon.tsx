@@ -1,93 +1,90 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 
 export function DynamicFavicon() {
-    useEffect(() => {
-        // Function to generate favicon from current CSS variables
-        const generateFavicon = () => {
-            try {
-                // Create a canvas to convert any color format to RGB
-                const canvas = document.createElement('canvas');
-                canvas.width = 1;
-                canvas.height = 1;
-                const ctx = canvas.getContext('2d');
+    const pathname = usePathname();
 
-                if (!ctx) {
-                    console.error('Could not get canvas context');
-                    return;
-                }
+    const generateFavicon = useCallback(() => {
+        try {
+            // Create a canvas to convert any color format to RGB
+            const canvas = document.createElement('canvas');
+            canvas.width = 1;
+            canvas.height = 1;
+            const ctx = canvas.getContext('2d');
 
-                if (!document.body) {
-                    return;
-                }
+            if (!ctx) {
+                console.error('Could not get canvas context');
+                return;
+            }
 
-                // Create test element to get computed primary color
-                const testDiv = document.createElement('div');
-                testDiv.className = 'bg-primary';
-                testDiv.style.position = 'absolute';
-                testDiv.style.visibility = 'hidden';
-                testDiv.style.pointerEvents = 'none';
-                document.body.appendChild(testDiv);
+            if (!document.body) {
+                return;
+            }
 
-                // Get computed color (might be in oklch, rgb, or any format)
-                const computedColor = getComputedStyle(testDiv).backgroundColor;
+            // Create test element to get computed primary color
+            const testDiv = document.createElement('div');
+            testDiv.className = 'bg-primary';
+            testDiv.style.position = 'absolute';
+            testDiv.style.visibility = 'hidden';
+            testDiv.style.pointerEvents = 'none';
+            document.body.appendChild(testDiv);
 
-                if (document.body.contains(testDiv)) {
-                    document.body.removeChild(testDiv);
-                } else {
-                    testDiv.remove();
-                }
+            // Get computed color (might be in oklch, rgb, or any format)
+            const computedColor = getComputedStyle(testDiv).backgroundColor;
 
-                console.log('Computed color from CSS:', computedColor);
+            if (document.body.contains(testDiv)) {
+                document.body.removeChild(testDiv);
+            } else {
+                testDiv.remove();
+            }
 
-                // Use canvas to convert any color format to RGB
-                ctx.fillStyle = computedColor;
-                ctx.fillRect(0, 0, 1, 1);
-                const imageData = ctx.getImageData(0, 0, 1, 1).data;
+            console.log('Computed color from CSS:', computedColor);
 
-                // Convert to hex
-                const r = imageData[0];
-                const g = imageData[1];
-                const b = imageData[2];
-                const primaryHex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+            // Use canvas to convert any color format to RGB
+            ctx.fillStyle = computedColor;
+            ctx.fillRect(0, 0, 1, 1);
+            const imageData = ctx.getImageData(0, 0, 1, 1).data;
 
-                console.log('Favicon primary color (converted to hex):', primaryHex);
+            // Convert to hex
+            const r = imageData[0];
+            const g = imageData[1];
+            const b = imageData[2];
+            const primaryHex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
 
-                // Generate SVG with just the icon (no background) using primary color - maximum size
-                const svg = `<svg width="32" height="32" viewBox="2 4 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            console.log('Favicon primary color (converted to hex):', primaryHex);
+
+            // Generate SVG with just the icon (no background) using primary color - maximum size
+            const svg = `<svg width="32" height="32" viewBox="2 4 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" fill="none" stroke="${primaryHex}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M22 10v6" fill="none" stroke="${primaryHex}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" fill="none" stroke="${primaryHex}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
-                // Convert SVG to data URL
-                // Convert SVG to data URL (handling spaces and encoding correctly)
-                // We use encodeURIComponent for robustness instead of manual base64 conversion
-                const url = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+            // Convert SVG to data URL
+            const url = `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
-                // Find existing dynamic favicon
-                let link = document.querySelector("link[data-dynamic-favicon='true']") as HTMLLinkElement;
+            // Find existing dynamic favicons (there might be multiple if Next.js metadata injected one and we injected one)
+            // First, remove any existing dynamic ones we created
+            const existingInjected = document.querySelectorAll("link[data-dynamic-favicon='true']");
+            existingInjected.forEach(el => el.remove());
 
-                if (link) {
-                    // Update existing
-                    link.href = url;
-                } else {
-                    // Create new
-                    link = document.createElement('link');
-                    link.rel = 'icon';
-                    link.type = 'image/svg+xml';
-                    link.href = url;
-                    link.setAttribute('data-dynamic-favicon', 'true');
-                    document.head.appendChild(link);
-                }
+            // Create new
+            const link = document.createElement('link');
+            link.rel = 'icon';
+            link.type = 'image/svg+xml';
+            link.href = url;
+            link.setAttribute('data-dynamic-favicon', 'true');
+            document.head.appendChild(link);
 
-                console.log('Favicon updated successfully');
-            } catch (error) {
-                console.error('Failed to generate dynamic favicon:', error);
-            }
-        };
+            console.log('Favicon updated successfully');
+        } catch (error) {
+            console.error('Failed to generate dynamic favicon:', error);
+        }
+    }, []);
 
+    useEffect(() => {
         // Generate favicon after a delay to ensure styles are loaded
         const timer = setTimeout(generateFavicon, 200);
 
@@ -95,6 +92,7 @@ export function DynamicFavicon() {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'class') {
+                    // Small delay to let CSS variables update
                     setTimeout(generateFavicon, 100);
                 }
             });
@@ -109,7 +107,7 @@ export function DynamicFavicon() {
             clearTimeout(timer);
             observer.disconnect();
         };
-    }, []);
+    }, [generateFavicon, pathname]);
 
     return null;
 }
