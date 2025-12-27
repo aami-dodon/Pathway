@@ -21,6 +21,14 @@ export const metadata: Metadata = {
     title: "Pathway - Learn from Expert Coaches",
     description: "Discover courses, read expert insights, and book coaching sessions.",
     type: "website",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1574169208507-84376144848b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNDA2MjZ8MHwxfHNlYXJjaHwxMXx8YWJzdHJhY3R8ZW58MHx8fHwxNzY2ODAxNDMwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+        width: 1080,
+        height: 1080,
+        alt: "Pathway - Learn from Expert Coaches",
+      },
+    ],
   },
 };
 
