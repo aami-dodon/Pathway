@@ -30,7 +30,8 @@ services:
       dockerfile: Dockerfile
       args:
         # Build-time variable for client-side API calls
-        NEXT_PUBLIC_API_URL: http://localhost:9006
+        # Set NEXT_PUBLIC_API_URL in .env to override (e.g., https://pathway-api.dodon.in)
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:9006}
     container_name: pathway-frontend
     ports:
       - "9007:9007"
