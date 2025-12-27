@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { GraduationCap, Github, Twitter, Linkedin } from "lucide-react";
+import { Github, Twitter, Linkedin } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 
 const footerLinks = {
     product: [
@@ -26,12 +27,7 @@ export function Footer() {
                 <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
                     {/* Brand */}
                     <div className="col-span-2 md:col-span-1">
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70">
-                                <GraduationCap className="h-4 w-4 text-primary-foreground" />
-                            </div>
-                            <span className="text-lg font-bold">Pathway</span>
-                        </Link>
+                        <Logo size="sm" />
                         <p className="mt-4 text-sm text-muted-foreground max-w-xs">
                             Learn from expert coaches and accelerate your personal and professional growth.
                         </p>

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
     BookOpen,
-    GraduationCap,
     Menu,
     Moon,
     Sun,
@@ -27,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/components/providers/auth-provider";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/logo";
 
 const navigation = [
     { name: "Home", href: "/" },
@@ -53,14 +53,7 @@ export function Header() {
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
             <nav className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 group">
-                    <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/25 transition-transform group-hover:scale-105">
-                        <GraduationCap className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                    <span className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                        Pathway
-                    </span>
-                </Link>
+                <Logo size="md" />
 
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex md:items-center md:gap-1">
