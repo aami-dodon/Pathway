@@ -5,25 +5,7 @@ import type { Payload } from 'payload'
 
 
 
-// Rich text content helper
-function createRichText(text: string) {
-    return {
-        root: {
-            type: 'root',
-            children: [
-                {
-                    type: 'paragraph',
-                    children: [{ type: 'text', text, version: 1 }],
-                    version: 1,
-                },
-            ],
-            direction: 'ltr' as const,
-            format: '' as const,
-            indent: 0,
-            version: 1,
-        },
-    }
-}
+import { createRichText } from './utils.js'
 
 const quizzesData = [
     {
@@ -502,7 +484,7 @@ export async function seedCourses(payload: Payload, coachProfiles: any[], module
                 learningOutcomes: courseData.learningOutcomes.map(outcome => ({ outcome })),
                 prerequisites: courseData.prerequisites.map(prerequisite => ({ prerequisite })),
                 enrollment: { isOpen: true, maxEnrollments: 0 },
-                status: 'published' as const,
+                isPublished: true,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date().toISOString(),
                 category: category?.id,
