@@ -50,3 +50,6 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+COURSES_BACKEND_DOCUMENTATION.md
+.gitignore
+COURSES_FRONTEND_DOCUMENTATION.md
