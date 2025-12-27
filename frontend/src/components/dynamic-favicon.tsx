@@ -53,15 +53,14 @@ export function DynamicFavicon() {
 </svg>`;
 
                 // Convert SVG to data URL
-                const svgBlob = new Blob([svg], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(svgBlob);
+                // Convert SVG to data URL (handling spaces and encoding correctly)
+                // We use encodeURIComponent for robustness instead of manual base64 conversion
+                const url = `data:image/svg+xml,${encodeURIComponent(svg)}`;
 
                 // Remove any existing favicon links
                 const existingLinks = document.querySelectorAll("link[rel='icon'], link[rel='shortcut icon']");
                 existingLinks.forEach(link => {
-                    if (link.getAttribute('href')?.startsWith('blob:')) {
-                        URL.revokeObjectURL(link.getAttribute('href')!);
-                    }
+                    // No need to revoke objects anymore since we aren't using blobs
                     link.remove();
                 });
 
