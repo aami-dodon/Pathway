@@ -1,5 +1,5 @@
 import type { CollectionConfig, Access } from 'payload'
-import { isAdmin, isAdminOrCoach } from '../../access'
+import { isAdmin } from '../../access'
 
 /**
  * Custom access: Users can only see/modify their own progress
@@ -37,7 +37,7 @@ const progressAccess: Access = async ({ req }) => {
                 }
             }
         }
-    } catch (error) {
+    } catch (_error) {
         return false
     }
 

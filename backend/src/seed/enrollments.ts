@@ -3,8 +3,10 @@
  */
 import type { Payload } from 'payload'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedEnrollments(payload: Payload, subscriberProfiles: any[], courses: any[]) {
     console.log('   Creating/Updating enrollments...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     // Each subscriber enrolls in 1-3 courses
@@ -84,8 +86,10 @@ export async function seedEnrollments(payload: Payload, subscriberProfiles: any[
     return created
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedProgress(payload: Payload, enrollments: any[], lessons: any[]) {
     console.log('   Creating/Updating progress records...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     // Create progress for first few lessons for each enrollment
@@ -107,6 +111,7 @@ export async function seedProgress(payload: Payload, enrollments: any[], lessons
                     limit: 1,
                 })
 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const startedAt = existing.docs.length > 0 ? new Date((existing.docs[0] as any).startedAt) : new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
                 const isComplete = Math.random() > 0.2
 
@@ -140,7 +145,7 @@ export async function seedProgress(payload: Payload, enrollments: any[], lessons
                     })
                     created.push(progress)
                 }
-            } catch (e) {
+            } catch (_e) {
                 // Skip silently for progress records
             }
         }
@@ -150,8 +155,10 @@ export async function seedProgress(payload: Payload, enrollments: any[], lessons
     return created
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedQuizAttempts(payload: Payload, enrollments: any[], quizzes: any[]) {
     console.log('   Creating/Updating quiz attempts...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     // Create quiz attempts for some enrollments
@@ -181,8 +188,10 @@ export async function seedQuizAttempts(payload: Payload, enrollments: any[], qui
                     enrollment: enrollment.id,
                     quiz: quiz.id,
                     attemptNumber: 1,
-                    status: 'graded' as 'graded',
+                    status: 'graded' as const,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     startedAt: existing.docs.length > 0 ? (existing.docs[0] as any).startedAt : new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString(),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     submittedAt: existing.docs.length > 0 ? (existing.docs[0] as any).submittedAt : new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
                     gradedAt: new Date().toISOString(),
                     timeSpent: Math.floor(Math.random() * 1200) + 300,
@@ -212,7 +221,7 @@ export async function seedQuizAttempts(payload: Payload, enrollments: any[], qui
                     })
                     created.push(attempt)
                 }
-            } catch (e) {
+            } catch (_e) {
                 // Skip silently
             }
         }

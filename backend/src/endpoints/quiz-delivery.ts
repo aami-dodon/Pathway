@@ -131,13 +131,16 @@ export const quizDeliveryHandler: PayloadHandler = async (req) => {
                 const sanitizedQuestion = { ...q }
 
                 // Remove immediate answer keys
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 delete (sanitizedQuestion as any).correctAnswer
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 delete (sanitizedQuestion as any).acceptedAnswers
 
                 // Sanitize options for multiple choice/select
                 if (sanitizedQuestion.options) {
                     sanitizedQuestion.options = sanitizedQuestion.options.map((opt) => {
                         const sanitizedOpt = { ...opt }
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         delete (sanitizedOpt as any).isCorrect
                         return sanitizedOpt
                     })

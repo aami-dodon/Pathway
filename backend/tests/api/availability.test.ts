@@ -37,14 +37,18 @@ describe('Availability API', () => {
         let targetDate: string
 
         beforeAll(async () => {
-            const user = await createUser(randomEmail('coach'), '!TestPassword123')
+            // Re-login to ensure fresh token
+            const adminSession = await loginAsAdmin()
+            adminToken = adminSession.token
+
+            const user: any = await createUser(randomEmail('coach'), '!TestPassword123')
             const monday = nextUtcWeekday(1)
             targetDate = isoDateOnly(monday)
 
-            const coach = await createCoachProfile({
+            const coach: any = await createCoachProfile({
                 token: adminToken,
                 userId: user.id || user._id,
-                displayName: 'Test Coach',
+                displayName: `Test Coach ${Date.now()}`,
                 timezone: 'UTC',
                 availability: [
                     {

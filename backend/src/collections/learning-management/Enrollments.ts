@@ -31,7 +31,7 @@ const enrollmentReadAccess: Access = async ({ req }) => {
                 subscriber: { equals: subscriberProfile.docs[0].id },
             }
         }
-    } catch (error) {
+    } catch (_error) {
         // If lookup fails, deny access
         return false
     }

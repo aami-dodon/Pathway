@@ -1,5 +1,5 @@
 import { CollectionConfig, Access, Where, APIError } from 'payload'
-import { anyone, isAdmin, isAdminOrCoach, isAuthenticated, fieldIsAdmin, fieldIsAdminOrCoach } from '../../access'
+import { anyone, isAdmin, isAdminOrCoach, fieldIsAdminOrCoach } from '../../access'
 
 
 /**
@@ -79,7 +79,7 @@ export const CoachingSessions: CollectionConfig = {
                 return data
             },
             // Validation: Constraints (Duration & Conflicts)
-            async ({ data, req, originalDoc, operation }) => {
+            async ({ data, req, originalDoc, operation: _operation }) => {
                 const sessionData = { ...originalDoc, ...data }
                 // Only validate if scheduling details are present
                 if (!sessionData.scheduledAt || !sessionData.coach) return data
@@ -98,104 +98,109 @@ export const CoachingSessions: CollectionConfig = {
                     id: coachId,
                 })
 
-                if (coachProfile && (coachProfile as any).availability && (coachProfile as any).availability.length > 0) {
-                    const timezone = (coachProfile as any).timezone || 'UTC'
-                    const bookingDate = new Date(sessionData.scheduledAt)
+                if (coachProfile) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const coachProfileAny = coachProfile as any
+                    if (coachProfileAny.availability && coachProfileAny.availability.length > 0) {
+                        const timezone = coachProfileAny.timezone || 'UTC'
+                        const bookingDate = new Date(sessionData.scheduledAt)
 
-                    // Get Day in Coach's Timezone
-                    const bookingDay = new Intl.DateTimeFormat('en-US', {
-                        weekday: 'long',
-                        timeZone: timezone,
-                    }).format(bookingDate)
+                        // Get Day in Coach's Timezone
+                        const bookingDay = new Intl.DateTimeFormat('en-US', {
+                            weekday: 'long',
+                            timeZone: timezone,
+                        }).format(bookingDate)
 
-                    // Get Time in Coach's Timezone (HH:mm)
-                    const bookingTimeStr = new Intl.DateTimeFormat('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                        timeZone: timezone,
-                    }).format(bookingDate)
+                        // Get Time in Coach's Timezone (HH:mm)
+                        const bookingTimeStr = new Intl.DateTimeFormat('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                            timeZone: timezone,
+                        }).format(bookingDate)
 
-                    // Normalize "9:30" to "09:30"
-                    const [h, m] = bookingTimeStr.split(':')
-                    const normalizedTime = `${h.padStart(2, '0')}:${m}`
+                        // Normalize "9:30" to "09:30"
+                        const [h, m] = bookingTimeStr.split(':')
+                        const normalizedTime = `${h.padStart(2, '0')}:${m}`
 
-                    // Map Full Day Name to 'mon', 'tue' etc. from schema
-                    const dayMap: Record<string, string> = {
-                        Monday: 'mon',
-                        Tuesday: 'tue',
-                        Wednesday: 'wed',
-                        Thursday: 'thu',
-                        Friday: 'fri',
-                        Saturday: 'sat',
-                        Sunday: 'sun',
+                        // Map Full Day Name to 'mon', 'tue' etc. from schema
+                        const dayMap: Record<string, string> = {
+                            Monday: 'mon',
+                            Tuesday: 'tue',
+                            Wednesday: 'wed',
+                            Thursday: 'thu',
+                            Friday: 'fri',
+                            Saturday: 'sat',
+                            Sunday: 'sun',
+                        }
+                        const dayCode = dayMap[bookingDay]
+
+                        // Strict Check: The Booking Interval [Start, End] must be fully contained in [SlotStart, SlotEnd]
+                        const bookingEnd = new Date(bookingDate.getTime() + duration * 60000)
+                        const bookingEndTimeStr = new Intl.DateTimeFormat('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                            timeZone: timezone,
+                        }).format(bookingEnd)
+                        const [he, me] = bookingEndTimeStr.split(':')
+                        const normalizedEndTime = `${he.padStart(2, '0')}:${me}`
+
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const isCovered = (coachProfile as any).availability.some((slot: any) => {
+                            if (slot.day !== dayCode) return false
+                            return normalizedTime >= slot.startTime && normalizedEndTime <= slot.endTime
+                        })
+
+                        if (!isCovered) {
+                            // Improved error message
+                            throw new APIError(`Coach is not available at this time (${bookingDay} ${normalizedTime} - ${normalizedEndTime} ${timezone}). Please check their available slots.`, 400)
+                        }
                     }
-                    const dayCode = dayMap[bookingDay]
 
-                    // Strict Check: The Booking Interval [Start, End] must be fully contained in [SlotStart, SlotEnd]
-                    const bookingEnd = new Date(bookingDate.getTime() + duration * 60000)
-                    const bookingEndTimeStr = new Intl.DateTimeFormat('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                        timeZone: timezone,
-                    }).format(bookingEnd)
-                    const [he, me] = bookingEndTimeStr.split(':')
-                    const normalizedEndTime = `${he.padStart(2, '0')}:${me}`
+                    // 3. Conflict & Gap Check
+                    const start = new Date(sessionData.scheduledAt)
+                    const end = new Date(start.getTime() + duration * 60000)
 
-                    const isCovered = (coachProfile as any).availability.some((slot: any) => {
-                        if (slot.day !== dayCode) return false
-                        return normalizedTime >= slot.startTime && normalizedEndTime <= slot.endTime
+                    // Gap is 15 mins
+                    const GAP_MS = 15 * 60000
+                    // Search range: Check sufficiently wide window (e.g., +/- 2 hours) to catch conflicting sessions
+                    // We optimize by finding ANY session roughly around this time for this coach.
+                    const searchStart = new Date(start.getTime() - (60 * 60000 * 4))
+                    const searchEnd = new Date(end.getTime() + (60 * 60000 * 4))
+
+                    const potentialConflicts = await req.payload.find({
+                        collection: 'coaching-sessions',
+                        where: {
+                            and: [
+                                { coach: { equals: coachId } },
+                                { status: { not_equals: 'cancelled' } },
+                                { id: { not_equals: originalDoc?.id } }, // Exclude self
+                                { scheduledAt: { greater_than: searchStart.toISOString() } },
+                                { scheduledAt: { less_than: searchEnd.toISOString() } },
+                            ]
+                        },
+                        limit: 50,
                     })
 
-                    if (!isCovered) {
-                        // Improved error message
-                        throw new APIError(`Coach is not available at this time (${bookingDay} ${normalizedTime} - ${normalizedEndTime} ${timezone}). Please check their available slots.`, 400)
+                    // Validate Gap: 
+                    // A conflict exists if: 
+                    // NOT (NewStart >= OldEnd + 15  OR  NewEnd <= OldStart - 15)
+                    const hasConflict = potentialConflicts.docs.some(doc => {
+                        const docStart = new Date(doc.scheduledAt).getTime()
+                        const docEnd = docStart + ((doc.duration || 30) * 60000)
+                        const newStart = start.getTime()
+                        const newEnd = end.getTime()
+
+                        const validAfter = newStart >= (docEnd + GAP_MS)
+                        const validBefore = (newEnd + GAP_MS) <= docStart
+
+                        return !(validAfter || validBefore)
+                    })
+
+                    if (hasConflict) {
+                        throw new APIError('Scheduling Conflict: Must leave 15 minutes gap between sessions.', 400)
                     }
-                }
-
-                // 3. Conflict & Gap Check
-                const start = new Date(sessionData.scheduledAt)
-                const end = new Date(start.getTime() + duration * 60000)
-
-                // Gap is 15 mins
-                const GAP_MS = 15 * 60000
-                // Search range: Check sufficiently wide window (e.g., +/- 2 hours) to catch conflicting sessions
-                // We optimize by finding ANY session roughly around this time for this coach.
-                const searchStart = new Date(start.getTime() - (60 * 60000 * 4))
-                const searchEnd = new Date(end.getTime() + (60 * 60000 * 4))
-
-                const potentialConflicts = await req.payload.find({
-                    collection: 'coaching-sessions',
-                    where: {
-                        and: [
-                            { coach: { equals: coachId } },
-                            { status: { not_equals: 'cancelled' } },
-                            { id: { not_equals: originalDoc?.id } }, // Exclude self
-                            { scheduledAt: { greater_than: searchStart.toISOString() } },
-                            { scheduledAt: { less_than: searchEnd.toISOString() } },
-                        ]
-                    },
-                    limit: 50,
-                })
-
-                // Validate Gap: 
-                // A conflict exists if: 
-                // NOT (NewStart >= OldEnd + 15  OR  NewEnd <= OldStart - 15)
-                const hasConflict = potentialConflicts.docs.some(doc => {
-                    const docStart = new Date(doc.scheduledAt).getTime()
-                    const docEnd = docStart + ((doc.duration || 30) * 60000)
-                    const newStart = start.getTime()
-                    const newEnd = end.getTime()
-
-                    const validAfter = newStart >= (docEnd + GAP_MS)
-                    const validBefore = (newEnd + GAP_MS) <= docStart
-
-                    return !(validAfter || validBefore)
-                })
-
-                if (hasConflict) {
-                    throw new APIError('Scheduling Conflict: Must leave 15 minutes gap between sessions.', 400)
                 }
 
                 return data

@@ -192,6 +192,7 @@ export async function upsertAdmin(payload: Payload) {
 
 export async function seedUsers(payload: Payload) {
     console.log('   Creating/Updating users...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     for (const userData of usersData) {
@@ -225,8 +226,10 @@ export async function seedUsers(payload: Payload) {
     return created
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedCoachProfiles(payload: Payload, users: any[]) {
     console.log('   Creating/Updating coach profiles...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
     const coachUsers = users.filter(u => u.role === 'coach')
 
@@ -277,8 +280,10 @@ export async function seedCoachProfiles(payload: Payload, users: any[]) {
     return created
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedSubscriberProfiles(payload: Payload, users: any[]) {
     console.log('   Creating/Updating subscriber profiles...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
     const subscriberUsers = users.filter(u => u.role === 'subscriber')
 
@@ -301,6 +306,7 @@ export async function seedSubscriberProfiles(payload: Payload, users: any[]) {
                 metadata: {
                     timezone: 'UTC',
                     language: 'en',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     joinedAt: existing.docs.length > 0 ? (existing.docs[0] as any).metadata?.joinedAt : new Date().toISOString(),
                 },
             }

@@ -47,13 +47,13 @@ export const lessonContentHandler: PayloadHandler = async (req) => {
             return Response.json({ error: 'Lesson configuration error' }, { status: 500 })
         }
 
-        const module = modulesWithLesson.docs[0]
+        const lessonModule = modulesWithLesson.docs[0]
 
         // Find which course contains this module
         const coursesWithModule = await payload.find({
             collection: 'courses',
             where: {
-                modules: { equals: module.id },
+                modules: { equals: lessonModule.id },
             },
             limit: 1,
             overrideAccess: true,

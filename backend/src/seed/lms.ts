@@ -3,10 +3,7 @@
  */
 import type { Payload } from 'payload'
 
-// Type definitions for better type safety
-type QuestionType = 'multiple-choice' | 'true-false' | 'multiple-select' | 'short-answer' | 'essay' | 'fill-blank'
-type ShowCorrectAnswers = 'never' | 'after-submit' | 'after-pass' | 'after-attempts'
-type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'all-levels'
+
 
 // Rich text content helper
 function createRichText(text: string) {
@@ -311,6 +308,7 @@ const coursesData = [
 
 export async function seedQuizzes(payload: Payload) {
     console.log('   Creating/Updating quizzes...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     for (const quizData of quizzesData) {
@@ -352,8 +350,10 @@ export async function seedQuizzes(payload: Payload) {
     return created
 }
 
-export async function seedLessons(payload: Payload, quizzes: any[]) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function seedLessons(payload: Payload, _quizzes: any[]) {
     console.log('   Creating/Updating lessons...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     for (const lessonData of lessonsData) {
@@ -364,6 +364,7 @@ export async function seedLessons(payload: Payload, quizzes: any[]) {
                 limit: 1,
             })
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data: any = {
                 title: lessonData.title,
                 slug: lessonData.slug,
@@ -413,8 +414,10 @@ export async function seedLessons(payload: Payload, quizzes: any[]) {
     return created
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedModules(payload: Payload, lessons: any[], quizzes: any[]) {
     console.log('   Creating/Updating modules...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     for (const modData of modulesData) {
@@ -444,18 +447,18 @@ export async function seedModules(payload: Payload, lessons: any[], quizzes: any
             }
 
             if (existing.docs.length === 0) {
-                const module = await payload.create({
+                const moduleDoc = await payload.create({
                     collection: 'modules',
                     data,
                 })
-                created.push(module)
+                created.push(moduleDoc)
             } else {
-                const module = await payload.update({
+                const moduleDoc = await payload.update({
                     collection: 'modules',
                     id: existing.docs[0].id,
                     data,
                 })
-                created.push(module)
+                created.push(moduleDoc)
             }
         } catch (e) {
             console.log(`   ⚠️ Error seeding module ${modData.slug}: ${(e as Error).message}`)
@@ -466,8 +469,10 @@ export async function seedModules(payload: Payload, lessons: any[], quizzes: any
     return created
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedCourses(payload: Payload, coachProfiles: any[], modules: any[], categories: any[], tags: any[]) {
     console.log('   Creating/Updating courses...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     for (let i = 0; i < coursesData.length; i++) {
@@ -498,6 +503,7 @@ export async function seedCourses(payload: Payload, coachProfiles: any[], module
                 prerequisites: courseData.prerequisites.map(prerequisite => ({ prerequisite })),
                 enrollment: { isOpen: true, maxEnrollments: 0 },
                 status: 'published' as const,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date().toISOString(),
                 category: category?.id,
                 tags: courseTags.map(t => t.id),

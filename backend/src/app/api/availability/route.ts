@@ -36,11 +36,14 @@ export const GET = async (req: NextRequest) => {
             id: coachId,
         })
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (!coachProfile || !(coachProfile as any).availability) {
             return NextResponse.json({ slots: [] }, { headers: corsHeaders })
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const availability = (coachProfile as any).availability || []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const timezone = (coachProfile as any).timezone || 'UTC'
 
         // 2. Fetch Existing Sessions
@@ -84,12 +87,11 @@ export const GET = async (req: NextRequest) => {
             const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: timezone }).format(current)
             const dayCode = dayCodeMap[dayName]
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const daySlots = availability.filter((a: any) => a.day === dayCode)
 
             for (const slotTemplate of daySlots) {
                 // Parse "09:00" -> Date object for THIS specific day
-                const [h, m] = slotTemplate.startTime.split(':')
-                const [endH, endM] = slotTemplate.endTime.split(':')
 
                 // Construct slot start/end in Coach's Timezone
                 // This is tricky without a library. 
@@ -104,11 +106,11 @@ export const GET = async (req: NextRequest) => {
                     year: 'numeric', month: '2-digit', day: '2-digit',
                     timeZone: timezone
                 }).formatToParts(current)
-                const y = parts.find(p => p.type === 'year')?.value
-                const mo = parts.find(p => p.type === 'month')?.value
-                const d = parts.find(p => p.type === 'day')?.value
+                // const y = parts.find(p => p.type === 'year')?.value
 
-                const dateStr = `${y}-${mo}-${d}`
+                // const mo = parts.find(p => p.type === 'month')?.value
+                // const d = parts.find(p => p.type === 'day')?.value
+
 
                 // Create Date from String + Timezone? 
                 // JS Date is dumb. 
@@ -154,6 +156,7 @@ export const GET = async (req: NextRequest) => {
                     const normEndTime = `${eh.padStart(2, '0')}:${em}`
 
                     // Check if this slot fits in ANY availability window
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const fits = daySlots.some((ds: any) => {
                         return normStartTime >= ds.startTime && normEndTime <= ds.endTime
                     })

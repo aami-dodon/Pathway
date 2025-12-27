@@ -1,6 +1,7 @@
 import { PayloadRequest } from 'payload'
 
 export const translateDatabaseError = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error: any,
     req?: PayloadRequest
 ): { message: string; status: number } | null => {
@@ -25,6 +26,7 @@ export const translateDatabaseError = (
                         friendlyName = label
                     } else if (typeof label === 'object' && label !== null) {
                         // Use English as default or first available key
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         friendlyName = (label as any).en || Object.values(label)[0] || tableWithDependency
                     }
                 }

@@ -257,6 +257,7 @@ function createRichText(text: string) {
 
 export async function seedCategories(payload: Payload) {
     console.log('   Creating/Updating categories...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     for (const catData of categoriesData) {
@@ -292,6 +293,7 @@ export async function seedCategories(payload: Payload) {
 
 export async function seedTags(payload: Payload) {
     console.log('   Creating/Updating tags...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     for (const tagData of tagsData) {
@@ -325,8 +327,10 @@ export async function seedTags(payload: Payload) {
     return created
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedPosts(payload: Payload, coachProfiles: any[], categories: any[], tags: any[]) {
     console.log('   Creating/Updating posts...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     for (let i = 0; i < postsData.length; i++) {
@@ -351,7 +355,9 @@ export async function seedPosts(payload: Payload, coachProfiles: any[], categori
                 category: category?.id,
                 tags: postTags.map(t => t.id),
                 accessLevel: postData.accessLevel,
+                axisLevel: postData.accessLevel,
                 status: 'published' as const,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
                 seo: {
                     metaTitle: postData.title,
@@ -382,8 +388,10 @@ export async function seedPosts(payload: Payload, coachProfiles: any[], categori
     return created
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedPages(payload: Payload, adminUser: any) {
     console.log('   Creating/Updating pages...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
     const authorId = adminUser?.id
 
@@ -404,6 +412,7 @@ export async function seedPages(payload: Payload, adminUser: any) {
                 },
                 content: createRichText(pageData.content),
                 status: 'published' as const,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date().toISOString(),
                 seo: {
                     metaTitle: `${pageData.title} | Pathway`,

@@ -1,5 +1,5 @@
 import type { CollectionConfig, Access } from 'payload'
-import { isAdmin, isAdminOrCoach, fieldIsAdminOrCoach } from '../../access'
+import { isAdmin, fieldIsAdminOrCoach } from '../../access'
 
 /**
  * Custom access: Users can only see/modify their own quiz attempts
@@ -36,7 +36,7 @@ const quizAttemptAccess: Access = async ({ req }) => {
                 }
             }
         }
-    } catch (error) {
+    } catch (_error) {
         return false
     }
 

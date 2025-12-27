@@ -45,7 +45,6 @@ const s3BaseConfig = {
 }
 
 const publicFileURL = (process.env.S3_FILE_URL || '').replace(/\/$/, '')
-const serverBaseURL = (process.env.BASE_URL || '').replace(/\/$/, '')
 const hasPublicBucket = Boolean(process.env.S3_BUCKET)
 const hasPrivateBucket = Boolean(process.env.S3_PRIVATE_BUCKET)
 

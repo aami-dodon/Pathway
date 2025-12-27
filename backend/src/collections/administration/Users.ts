@@ -42,7 +42,7 @@ export const Users: CollectionConfig = {
                         }
                     })
 
-                } catch (error) {
+                } catch (_error) {
                     // Fallback: clear cookie anyway
                     const cookiePrefix = req.payload.config.cookiePrefix || 'payload'
                     const cookieName = `${cookiePrefix}-token`

@@ -3,8 +3,10 @@
  */
 import type { Payload } from 'payload'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function seedCoachingSessions(payload: Payload, coachProfiles: any[], users: any[]) {
     console.log('   Creating coaching sessions...')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created: any[] = []
 
     const sessionTopics = [

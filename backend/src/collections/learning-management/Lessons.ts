@@ -109,7 +109,6 @@ export const Lessons: CollectionConfig = {
         // Video Content
         {
             name: 'videoContent',
-            dbName: 'video',
             type: 'group',
             admin: {
                 description: 'Video lesson content',
@@ -128,7 +127,7 @@ export const Lessons: CollectionConfig = {
                 },
                 {
                     name: 'videoFile',
-                    dbName: 'vid_file',
+
                     type: 'upload',
                     relationTo: 'media-private',
                     admin: {
@@ -144,7 +143,6 @@ export const Lessons: CollectionConfig = {
                 },
                 {
                     name: 'captions',
-                    dbName: 'captions',
                     type: 'upload',
                     relationTo: 'media-private',
                     admin: {
@@ -168,7 +166,6 @@ export const Lessons: CollectionConfig = {
         // Audio Content
         {
             name: 'audioContent',
-            dbName: 'audio',
             type: 'group',
             admin: {
                 description: 'Audio lesson content',
@@ -180,7 +177,6 @@ export const Lessons: CollectionConfig = {
             fields: [
                 {
                     name: 'audioFile',
-                    dbName: 'aud_file',
                     type: 'upload',
                     relationTo: 'media-private',
                 },
