@@ -424,7 +424,8 @@ export default async function CoursePage({ params }: CoursePageProps) {
                                 )}
                                 <CardContent className="p-6">
                                     <Button
-                                        className="w-full h-12 text-base shadow-lg shadow-primary/25"
+                                        size="lg"
+                                        className="w-full cursor-pointer"
                                         disabled={!isAuthenticated || course.enrollment?.isOpen === false}
                                     >
                                         {course.enrollment?.isOpen === false
@@ -672,7 +673,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
                                                 <p className="text-sm text-muted-foreground line-clamp-4 mt-1">
                                                     {instructor.bio}
                                                 </p>
-                                                <Button variant="link" asChild className="mt-2 h-auto p-0 text-primary">
+                                                <Button variant="link" size="sm" asChild className="mt-2 h-auto p-0">
                                                     <Link href={`/coaches/${instructor.slug}`}>View Profile →</Link>
                                                 </Button>
                                             </div>

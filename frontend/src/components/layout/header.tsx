@@ -86,7 +86,7 @@ export function Header({ navigationLinks }: HeaderProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 rounded-lg"
+                        className="cursor-pointer"
                         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                     >
                         <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -102,7 +102,8 @@ export function Header({ navigationLinks }: HeaderProps) {
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             variant="ghost"
-                                            className="relative h-9 w-9 rounded-full ring-2 ring-transparent hover:ring-primary/20 transition-all"
+                                            size="icon"
+                                            className="relative rounded-full cursor-pointer"
                                         >
                                             <Avatar className="h-9 w-9">
                                                 <AvatarImage src="" alt={user.email} />
@@ -152,10 +153,10 @@ export function Header({ navigationLinks }: HeaderProps) {
                                 </DropdownMenu>
                             ) : (
                                 <div className="hidden sm:flex sm:items-center sm:gap-2">
-                                    <Button variant="ghost" asChild className="h-9">
+                                    <Button variant="ghost" asChild>
                                         <Link href="/login">Sign in</Link>
                                     </Button>
-                                    <Button asChild className="h-9 shadow-lg shadow-primary/25">
+                                    <Button asChild>
                                         <Link href="/register">Get Started</Link>
                                     </Button>
                                 </div>
@@ -166,7 +167,7 @@ export function Header({ navigationLinks }: HeaderProps) {
                     {/* Mobile Menu */}
                     <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                         <SheetTrigger asChild className="md:hidden">
-                            <Button variant="ghost" size="icon" className="h-9 w-9">
+                            <Button variant="ghost" size="icon" className="cursor-pointer">
                                 {mobileMenuOpen ? (
                                     <X className="h-5 w-5" />
                                 ) : (
@@ -195,20 +196,23 @@ export function Header({ navigationLinks }: HeaderProps) {
                                 {!user && (
                                     <>
                                         <div className="my-4 h-px bg-border" />
-                                        <Link
-                                            href="/login"
+                                        <Button
+                                            variant="ghost"
+                                            size="lg"
+                                            asChild
+                                            className="mt-2 w-full justify-start"
                                             onClick={() => setMobileMenuOpen(false)}
-                                            className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
                                         >
-                                            Sign in
-                                        </Link>
-                                        <Link
-                                            href="/register"
+                                            <Link href="/login">Sign in</Link>
+                                        </Button>
+                                        <Button
+                                            size="lg"
+                                            asChild
+                                            className="mt-2 w-full"
                                             onClick={() => setMobileMenuOpen(false)}
-                                            className="flex items-center justify-center gap-3 rounded-lg bg-primary px-4 py-3 text-base font-medium text-primary-foreground"
                                         >
-                                            Get Started
-                                        </Link>
+                                            <Link href="/register">Get Started</Link>
+                                        </Button>
                                     </>
                                 )}
                             </nav>

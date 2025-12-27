@@ -45,7 +45,7 @@ export function SocialShare({ url, title, className }: SocialShareProps) {
             <Button
                 variant="outline"
                 size="icon-sm"
-                className="rounded-full hover:text-[#1DA1F2] hover:border-[#1DA1F2]/20 hover:bg-[#1DA1F2]/5"
+                className="rounded-full hover:text-[#1DA1F2] hover:border-[#1DA1F2]/20 hover:bg-[#1DA1F2]/5 cursor-pointer"
                 onClick={(e) => openShareWindow(e, shareLinks.twitter)}
                 aria-label="Share on Twitter"
             >
@@ -55,7 +55,7 @@ export function SocialShare({ url, title, className }: SocialShareProps) {
             <Button
                 variant="outline"
                 size="icon-sm"
-                className="rounded-full hover:text-[#4267B2] hover:border-[#4267B2]/20 hover:bg-[#4267B2]/5"
+                className="rounded-full hover:text-[#4267B2] hover:border-[#4267B2]/20 hover:bg-[#4267B2]/5 cursor-pointer"
                 onClick={(e) => openShareWindow(e, shareLinks.facebook)}
                 aria-label="Share on Facebook"
             >
@@ -65,7 +65,7 @@ export function SocialShare({ url, title, className }: SocialShareProps) {
             <Button
                 variant="outline"
                 size="icon-sm"
-                className="rounded-full hover:text-[#0077b5] hover:border-[#0077b5]/20 hover:bg-[#0077b5]/5"
+                className="rounded-full hover:text-[#0077b5] hover:border-[#0077b5]/20 hover:bg-[#0077b5]/5 cursor-pointer"
                 onClick={(e) => openShareWindow(e, shareLinks.linkedin)}
                 aria-label="Share on LinkedIn"
             >
@@ -75,7 +75,7 @@ export function SocialShare({ url, title, className }: SocialShareProps) {
             <Button
                 variant="outline"
                 size="icon-sm"
-                className="rounded-full"
+                className="rounded-full cursor-pointer"
                 onClick={handleCopy}
                 aria-label="Copy link"
             >

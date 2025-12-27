@@ -80,17 +80,19 @@ function ResetPasswordForm() {
                         disabled={isLoading}
                         className="h-11 pr-10"
                     />
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
                     >
                         {showPassword ? (
                             <EyeOff className="h-4 w-4" />
                         ) : (
                             <Eye className="h-4 w-4" />
                         )}
-                    </button>
+                    </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
                     Must be at least 8 characters
@@ -113,7 +115,8 @@ function ResetPasswordForm() {
 
             <Button
                 type="submit"
-                className="w-full h-11 shadow-lg shadow-primary/25"
+                size="lg"
+                className="w-full cursor-pointer"
                 disabled={isLoading}
             >
                 {isLoading ? (

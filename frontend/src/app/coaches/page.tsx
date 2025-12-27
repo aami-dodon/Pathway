@@ -173,10 +173,10 @@ function CoachCard({ coach }: { coach: CoachProfile }) {
                         )}
                     </div>
 
-                    <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                    <Link href={`/coaches/${coach.slug}`} className="flex items-center gap-1 text-xs font-medium text-primary z-20">
                         View Profile
                         <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-                    </span>
+                    </Link>
                 </div>
             </CardContent>
         </Card>

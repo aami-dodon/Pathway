@@ -198,7 +198,7 @@ export default async function HomePage() {
                 <Button
                   asChild
                   size="lg"
-                  className="h-12 px-8 text-base shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+                  className="w-full sm:w-auto"
                 >
                   <Link href={data.hero.primaryButtonLink}>
                     {data.hero.primaryButtonText}
@@ -209,7 +209,7 @@ export default async function HomePage() {
                   asChild
                   variant="outline"
                   size="lg"
-                  className="h-12 px-8 text-base group"
+                  className="w-full sm:w-auto"
                 >
                   <Link href={data.hero.secondaryButtonLink}>
                     <Play className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
@@ -294,7 +294,7 @@ export default async function HomePage() {
                   <Badge variant="secondary" className="mb-3">Courses</Badge>
                   <h2 className="text-3xl font-bold tracking-tight">Popular Courses</h2>
                 </div>
-                <Button asChild variant="ghost" className="group">
+                <Button asChild variant="ghost" size="sm" className="group">
                   <Link href="/courses">
                     View All Courses
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -324,7 +324,7 @@ export default async function HomePage() {
                   <Badge variant="secondary" className="mb-3">Blog</Badge>
                   <h2 className="text-3xl font-bold tracking-tight">Latest Insights</h2>
                 </div>
-                <Button asChild variant="ghost" className="group">
+                <Button asChild variant="ghost" size="sm" className="group">
                   <Link href="/blog">
                     Read More Articles
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -441,7 +441,7 @@ export default async function HomePage() {
                 <Button
                   asChild
                   size="lg"
-                  className="mt-6 h-12 px-10 text-base shadow-lg shadow-primary/25"
+                  className="mt-6"
                 >
                   <Link href={data.cta.buttonLink}>
                     {data.cta.buttonText}

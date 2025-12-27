@@ -324,10 +324,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                                     This article is exclusive to our subscribers. Sign in or create an account to unlock full access.
                                 </p>
                                 <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                                    <Button asChild size="lg">
+                                    <Button asChild size="sm">
                                         <Link href="/login">Log in</Link>
                                     </Button>
-                                    <Button asChild variant="outline" size="lg">
+                                    <Button asChild variant="outline" size="sm">
                                         <Link href="/register">Register</Link>
                                     </Button>
                                 </div>
@@ -376,7 +376,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                                                     {author.bio}
                                                 </p>
                                             )}
-                                            <Button variant="link" asChild className="mt-2 h-auto p-0 text-primary">
+                                            <Button variant="link" size="sm" asChild className="mt-2 h-auto p-0">
                                                 <Link href={`/coaches/${author.slug}`}>View Profile →</Link>
                                             </Button>
                                         </div>

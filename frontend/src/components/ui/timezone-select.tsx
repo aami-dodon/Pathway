@@ -52,7 +52,7 @@ export function TimezoneSelect({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={cn("w-full justify-between", className)}
+                    className={cn("w-full justify-between cursor-pointer", className)}
                 >
                     {value
                         ? timezones.find((tz) => tz.value === value)?.label || value

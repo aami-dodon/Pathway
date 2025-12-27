@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Loader2, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -194,6 +195,7 @@ export default function BookingCalendar({
                 <Button
                     variant="ghost"
                     size="icon"
+                    className="cursor-pointer"
                     onClick={() =>
                         setCurrentMonth(
                             new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
@@ -211,6 +213,7 @@ export default function BookingCalendar({
                 <Button
                     variant="ghost"
                     size="icon"
+                    className="cursor-pointer"
                     onClick={() =>
                         setCurrentMonth(
                             new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
@@ -235,23 +238,19 @@ export default function BookingCalendar({
                 {days.map((day, index) => (
                     <div key={index} className="aspect-square">
                         {day && (
-                            <button
+                            <Button
+                                variant={isSelected(day) ? "default" : "ghost"}
+                                size="default"
                                 onClick={() => !isPast(day) && setSelectedDate(day)}
                                 disabled={isPast(day)}
-                                className={`w-full h-full rounded-lg text-sm font-medium transition-all
-                                    ${isPast(day)
-                                        ? "text-muted-foreground/40 cursor-not-allowed"
-                                        : "hover:bg-primary/10"
-                                    }
-                                    ${isToday(day) ? "ring-1 ring-primary" : ""}
-                                    ${isSelected(day)
-                                        ? "bg-primary text-primary-foreground hover:bg-primary"
-                                        : ""
-                                    }
-                                `}
+                                className={cn(
+                                    "w-full h-full p-0 font-medium rounded-lg cursor-pointer",
+                                    isToday(day) && !isSelected(day) && "ring-1 ring-primary",
+                                    isPast(day) && "text-muted-foreground/40"
+                                )}
                             >
                                 {day.getDate()}
-                            </button>
+                            </Button>
                         )}
                     </div>
                 ))}
@@ -279,23 +278,20 @@ export default function BookingCalendar({
                     ) : (
                         <div className="grid grid-cols-2 gap-2">
                             {slots.map((slot, index) => (
-                                <button
+                                <Button
                                     key={index}
+                                    variant={selectedSlot?.start === slot.start ? "default" : "outline"}
+                                    size="default"
                                     onClick={() => {
                                         setSelectedSlot(slot);
                                         setBookingDialogOpen(true);
                                         setBookingSuccess(false);
                                         setBookingError(null);
                                     }}
-                                    className={`px-3 py-2 text-sm rounded-lg border transition-all
-                                        ${selectedSlot?.start === slot.start
-                                            ? "border-primary bg-primary/10 text-primary"
-                                            : "border-border/50 hover:border-primary/30 hover:bg-muted/50"
-                                        }
-                                    `}
+                                    className="w-full cursor-pointer"
                                 >
                                     {formatSlotTime(slot.start)}
-                                </button>
+                                </Button>
                             ))}
                         </div>
                     )}
@@ -321,7 +317,7 @@ export default function BookingCalendar({
                             </DialogHeader>
                             <DialogFooter>
                                 <Button
-                                    className="w-full"
+                                    className="w-full cursor-pointer"
                                     onClick={() => setBookingDialogOpen(false)}
                                 >
                                     Done
@@ -415,7 +411,7 @@ export default function BookingCalendar({
 
                             <DialogFooter>
                                 <Button
-                                    variant="outline"
+                                    className="cursor-pointer"
                                     onClick={() => setBookingDialogOpen(false)}
                                 >
                                     Cancel
@@ -425,6 +421,7 @@ export default function BookingCalendar({
                                     disabled={
                                         bookingLoading || !formData.name || !formData.email
                                     }
+                                    className="cursor-pointer"
                                 >
                                     {bookingLoading ? (
                                         <>

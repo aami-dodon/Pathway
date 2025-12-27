@@ -251,7 +251,7 @@ export default function ProfilePage() {
                                 />
                             </div>
 
-                            <Button onClick={handleSave} disabled={isSaving}>
+                            <Button onClick={handleSave} disabled={isSaving} className="cursor-pointer">
                                 {isSaving ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -307,7 +307,7 @@ export default function ProfilePage() {
                                 </Select>
                             </div>
 
-                            <Button onClick={handleSave} disabled={isSaving}>
+                            <Button onClick={handleSave} disabled={isSaving} className="cursor-pointer">
                                 {isSaving ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -360,7 +360,7 @@ export default function ProfilePage() {
                                 </p>
                             </div>
 
-                            <Button onClick={handleSave} disabled={isSaving}>
+                            <Button onClick={handleSave} disabled={isSaving} className="cursor-pointer">
                                 {isSaving ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -435,6 +435,7 @@ export default function ProfilePage() {
                             <Button
                                 onClick={handleChangePassword}
                                 disabled={isChangingPassword || !currentPassword || !newPassword || !confirmNewPassword}
+                                className="cursor-pointer"
                             >
                                 {isChangingPassword ? (
                                     <>
