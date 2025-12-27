@@ -1,6 +1,5 @@
 import type { CollectionConfig } from 'payload'
 import { timezoneField } from '../../fields/timezone'
-import { isAuthenticated, isAdmin, isAdminOrOwner } from '../../access'
 import { enforceUserOwnership, preventUserChange, setJoinedAt } from '../../hooks'
 
 export const SubscriberProfile: CollectionConfig = {
@@ -11,15 +10,10 @@ export const SubscriberProfile: CollectionConfig = {
         description: 'Learner-specific profile information for subscribers',
     },
     access: {
-        // Read: Only owner can read their own profile (or admin)
-        // Public info should be exposed via API endpoints that filter fields
-        read: isAdminOrOwner('user'),
-        // Create: Any authenticated user can create their own profile
-        create: isAuthenticated,
-        // Update: Owner or admin
-        update: isAdminOrOwner('user'),
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     hooks: {
         beforeChange: [enforceUserOwnership, preventUserChange, setJoinedAt],

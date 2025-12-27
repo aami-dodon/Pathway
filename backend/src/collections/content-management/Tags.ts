@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { anyone, isAdmin, isAdminOrCreator } from '../../access'
 import { formatSlug } from '../../hooks'
 
 export const Tags: CollectionConfig = {
@@ -10,14 +9,10 @@ export const Tags: CollectionConfig = {
         description: 'Tags for content classification and discovery',
     },
     access: {
-        // Read: Public - tags are used for filtering
-        read: anyone,
-        // Create: Admin or creator roles
-        create: isAdminOrCreator,
-        // Update: Admin or creator roles
-        update: isAdminOrCreator,
-        // Delete: Admin only (to prevent orphaned content)
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     fields: [
         {

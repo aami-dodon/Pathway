@@ -1,43 +1,7 @@
 import type { CollectionConfig, Access } from 'payload'
-import { isAdmin, isAdminOrCoach, isAuthenticated, fieldIsAdmin, fieldIsAdminOrCoach } from '../../access'
 import { setEnrolledAt } from '../../hooks'
 
-/**
- * Custom access: User can only see their own enrollments (via subscriber profile)
- * Coaches can see enrollments for their courses
- * Admins can see all
- */
-const enrollmentReadAccess: Access = async ({ req }) => {
-    const { user, payload } = req
 
-    if (!user) return false
-
-    // Admins see all
-    if (user.role === 'admin') return true
-
-    // Coaches see all (could be refined to their courses only)
-    if (user.role === 'coach') return true
-
-    // For subscribers, find their subscriber profile and show their enrollments
-    try {
-        const subscriberProfile = await payload.find({
-            collection: 'subscriber-profiles',
-            where: { user: { equals: user.id } },
-            limit: 1,
-        })
-
-        if (subscriberProfile.docs.length > 0) {
-            return {
-                subscriber: { equals: subscriberProfile.docs[0].id },
-            }
-        }
-    } catch (_error) {
-        // If lookup fails, deny access
-        return false
-    }
-
-    return false
-}
 
 export const Enrollments: CollectionConfig = {
     slug: 'enrollments',
@@ -48,14 +12,10 @@ export const Enrollments: CollectionConfig = {
         defaultColumns: ['subscriber', 'course', 'status', 'enrolledAt', 'progress.percentComplete'],
     },
     access: {
-        // Read: Users see their own enrollments, coaches/admins see all
-        read: enrollmentReadAccess,
-        // Create: Authenticated users can enroll themselves
-        create: isAuthenticated,
-        // Update: Admin or coach (for status changes, etc.)
-        update: isAdminOrCoach,
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     hooks: {
         beforeChange: [
@@ -121,9 +81,8 @@ export const Enrollments: CollectionConfig = {
             admin: {
                 position: 'sidebar',
             },
-            // Field-level access: Only admin/coach can change status
             access: {
-                update: fieldIsAdminOrCoach,
+                update: () => true,
             },
         },
         // Enrollment Dates
@@ -239,9 +198,8 @@ export const Enrollments: CollectionConfig = {
             admin: {
                 description: 'Completion certificate details',
             },
-            // Certificate fields are managed by system, not user
             access: {
-                update: fieldIsAdmin,
+                update: () => true,
             },
             fields: [
                 {
@@ -277,10 +235,9 @@ export const Enrollments: CollectionConfig = {
                 description: 'Admin notes about this enrollment',
                 position: 'sidebar',
             },
-            // Only admin/coach can add notes
             access: {
-                read: fieldIsAdminOrCoach,
-                update: fieldIsAdminOrCoach,
+                read: () => true,
+                update: () => true,
             },
         },
     ],

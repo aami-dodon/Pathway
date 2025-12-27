@@ -1,47 +1,6 @@
 import type { CollectionConfig, Access } from 'payload'
-import { isAdmin, fieldIsAdminOrCoach } from '../../access'
 
-/**
- * Custom access: Users can only see/modify their own quiz attempts
- * Linked through enrollment to subscriber profile
- */
-const quizAttemptAccess: Access = async ({ req }) => {
-    const { user, payload } = req
 
-    if (!user) return false
-
-    // Admins and coaches see all
-    if (['admin', 'coach'].includes(user.role as string)) return true
-
-    // For subscribers, find their enrollments and show attempts for those
-    try {
-        const subscriberProfile = await payload.find({
-            collection: 'subscriber-profiles',
-            where: { user: { equals: user.id } },
-            limit: 1,
-        })
-
-        if (subscriberProfile.docs.length > 0) {
-            const enrollments = await payload.find({
-                collection: 'enrollments',
-                where: { subscriber: { equals: subscriberProfile.docs[0].id } },
-                limit: 1000,
-            })
-
-            if (enrollments.docs.length > 0) {
-                return {
-                    enrollment: {
-                        in: enrollments.docs.map(e => e.id),
-                    },
-                }
-            }
-        }
-    } catch (_error) {
-        return false
-    }
-
-    return false
-}
 
 export const QuizAttempts: CollectionConfig = {
     slug: 'quiz-attempts',
@@ -52,14 +11,10 @@ export const QuizAttempts: CollectionConfig = {
         defaultColumns: ['enrollment', 'quiz', 'score.percentage', 'passed', 'submittedAt'],
     },
     access: {
-        // Read: Users see their own attempts, staff sees all
-        read: quizAttemptAccess,
-        // Create: Users can start their own attempts
-        create: quizAttemptAccess,
-        // Update: Users can update in-progress attempts, staff can grade
-        update: quizAttemptAccess,
-        // Delete: Admin only (attempts should be preserved for records)
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     fields: [
         // Link to enrollment
@@ -199,7 +154,7 @@ export const QuizAttempts: CollectionConfig = {
                         description: 'Whether the answer is correct',
                     },
                     access: {
-                        update: fieldIsAdminOrCoach,
+                        update: () => true,
                     },
                 },
                 {
@@ -210,7 +165,7 @@ export const QuizAttempts: CollectionConfig = {
                         description: 'Points awarded for this answer',
                     },
                     access: {
-                        update: fieldIsAdminOrCoach,
+                        update: () => true,
                     },
                 },
                 {
@@ -220,7 +175,7 @@ export const QuizAttempts: CollectionConfig = {
                         description: 'Instructor feedback for this answer',
                     },
                     access: {
-                        update: fieldIsAdminOrCoach,
+                        update: () => true,
                     },
                 },
             ],
@@ -233,7 +188,7 @@ export const QuizAttempts: CollectionConfig = {
                 description: 'Quiz score',
             },
             access: {
-                update: fieldIsAdminOrCoach,
+                update: () => true,
             },
             fields: [
                 {
@@ -262,7 +217,7 @@ export const QuizAttempts: CollectionConfig = {
                 description: 'Whether the learner passed the quiz',
             },
             access: {
-                update: fieldIsAdminOrCoach,
+                update: () => true,
             },
         },
         // Instructor feedback
@@ -273,7 +228,7 @@ export const QuizAttempts: CollectionConfig = {
                 description: 'Overall feedback from the instructor',
             },
             access: {
-                update: fieldIsAdminOrCoach,
+                update: () => true,
             },
         },
         {
@@ -285,7 +240,7 @@ export const QuizAttempts: CollectionConfig = {
                 description: 'Instructor who graded this attempt (for essay questions)',
             },
             access: {
-                update: fieldIsAdminOrCoach,
+                update: () => true,
             },
         },
     ],

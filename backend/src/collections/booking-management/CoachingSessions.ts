@@ -1,53 +1,8 @@
 import { CollectionConfig, Access, Where, APIError } from 'payload'
 import { timezoneField } from '../../fields/timezone'
-import { anyone, isAdmin, isAdminOrCoach, fieldIsAdminOrCoach } from '../../access'
 
 
-/**
- * Custom access: Users can see their own bookings (by email or user)
- * Coaches can see bookings for their sessions
- * Admins can see all
- */
-const bookingReadAccess: Access = async ({ req }) => {
-    const { user, payload } = req
 
-    // Admins see all
-    if (user?.role === 'admin') return true
-
-    // Coaches see bookings for their sessions
-    if (user?.role === 'coach') {
-        try {
-            const coachProfile = await payload.find({
-                collection: 'coach-profiles',
-                where: { user: { equals: user.id } },
-                limit: 1,
-            })
-
-            if (coachProfile.docs.length > 0) {
-                const where: Where = {
-                    coach: { equals: coachProfile.docs[0].id },
-                }
-                return where
-            }
-        } catch {
-            return false
-        }
-    }
-
-    // Authenticated users can see their own bookings
-    if (user) {
-        const where: Where = {
-            or: [
-                { bookedByUser: { equals: user.id } },
-                { bookerEmail: { equals: user.email } },
-            ],
-        }
-        return where
-    }
-
-    // Anonymous users cannot see bookings
-    return false
-}
 
 export const CoachingSessions: CollectionConfig = {
     slug: 'coaching-sessions',
@@ -58,14 +13,10 @@ export const CoachingSessions: CollectionConfig = {
         defaultColumns: ['sessionTitle', 'coach', 'bookerName', 'scheduledAt', 'status'],
     },
     access: {
-        // Read: Own bookings, coach's bookings, or admin
-        read: bookingReadAccess,
-        // Create: Anyone can book a session (public access)
-        create: anyone,
-        // Update: Admin or coach for their sessions
-        update: isAdminOrCoach,
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     hooks: {
         beforeChange: [
@@ -349,9 +300,8 @@ export const CoachingSessions: CollectionConfig = {
             admin: {
                 position: 'sidebar',
             },
-            // Only coach or admin can update status
             access: {
-                update: fieldIsAdminOrCoach,
+                update: () => true,
             },
         },
         // Session Details
@@ -374,9 +324,8 @@ export const CoachingSessions: CollectionConfig = {
             admin: {
                 description: 'Video call link - Auto-generated using Zoom API',
             },
-            // Only coach or admin can set meeting link
             access: {
-                update: fieldIsAdminOrCoach,
+                update: () => true,
             },
         },
         {
@@ -431,10 +380,9 @@ export const CoachingSessions: CollectionConfig = {
                 description: 'Private notes from the coach',
                 position: 'sidebar',
             },
-            // Only coach or admin can view/edit coach notes
             access: {
-                read: fieldIsAdminOrCoach,
-                update: fieldIsAdminOrCoach,
+                read: () => true,
+                update: () => true,
             },
         },
         // Timestamps
@@ -459,7 +407,7 @@ export const CoachingSessions: CollectionConfig = {
                 },
             },
             access: {
-                update: fieldIsAdminOrCoach,
+                update: () => true,
             },
         },
         {

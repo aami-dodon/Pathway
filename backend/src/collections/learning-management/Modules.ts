@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isAdminOrCoach } from '../../access'
 import { formatSlug } from '../../hooks'
 export const Modules: CollectionConfig = {
     slug: 'modules',
@@ -10,25 +9,10 @@ export const Modules: CollectionConfig = {
         defaultColumns: ['title', 'order', 'isPublished', 'updatedAt'],
     },
     access: {
-        // Read: Coaches/admins see all, everyone else sees published only
-        // This allows anonymous users to view course curriculum structure for discovery
-        // Actual lesson content is protected via field-level access on Lessons
-        read: ({ req: { user } }) => {
-            // Admins and coaches see all modules (including unpublished)
-            if (user && ['admin', 'coach'].includes(user.role as string)) {
-                return true
-            }
-
-            // Everyone else (including anonymous) sees only published modules
-            // This enables course curriculum display for discovery/marketing
-            return { isPublished: { equals: true } }
-        },
-        // Create: Coaches and admins
-        create: isAdminOrCoach,
-        // Update: Coaches and admins
-        update: isAdminOrCoach,
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     fields: [
         {

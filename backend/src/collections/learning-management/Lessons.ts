@@ -1,5 +1,4 @@
 import type { CollectionConfig, Where } from 'payload'
-import { isAdmin, isAdminOrCoach, fieldIsAdminOrCoach } from '../../access'
 import { formatSlug } from '../../hooks'
 import { lessonContentHandler } from '../../endpoints/lesson-content'
 export const Lessons: CollectionConfig = {
@@ -14,31 +13,10 @@ export const Lessons: CollectionConfig = {
         drafts: true,
     },
     access: {
-        // Read: Coaches/admins see all, everyone else sees published/free only
-        // This allows anonymous users to view lesson metadata for course discovery
-        // Actual content is protected via field-level access on content fields
-        read: ({ req: { user } }) => {
-            // Admins and coaches see all lessons (including unpublished)
-            if (user && ['admin', 'coach'].includes(user.role as string)) {
-                return true
-            }
-
-            // Everyone else (including anonymous) sees published or free preview lessons
-            // Content fields (videoContent, textContent, etc.) are protected separately
-            const where: Where = {
-                or: [
-                    { isPublished: { equals: true } },
-                    { isFree: { equals: true } },
-                ],
-            }
-            return where
-        },
-        // Create: Coaches and admins
-        create: isAdminOrCoach,
-        // Update: Coaches and admins
-        update: isAdminOrCoach,
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     endpoints: [
         {
@@ -115,7 +93,7 @@ export const Lessons: CollectionConfig = {
                 condition: (data) => data.type === 'video',
             },
             access: {
-                read: fieldIsAdminOrCoach,
+                read: () => true,
             },
             fields: [
                 {
@@ -160,7 +138,7 @@ export const Lessons: CollectionConfig = {
                 condition: (data) => data.type === 'text' || data.type === 'interactive',
             },
             access: {
-                read: fieldIsAdminOrCoach,
+                read: () => true,
             },
         },
         // Audio Content
@@ -172,7 +150,7 @@ export const Lessons: CollectionConfig = {
                 condition: (data) => data.type === 'audio',
             },
             access: {
-                read: fieldIsAdminOrCoach,
+                read: () => true,
             },
             fields: [
                 {
@@ -198,7 +176,7 @@ export const Lessons: CollectionConfig = {
                 condition: (data) => data.type === 'assignment',
             },
             access: {
-                read: fieldIsAdminOrCoach,
+                read: () => true,
             },
             fields: [
                 {
@@ -246,7 +224,7 @@ export const Lessons: CollectionConfig = {
                 condition: (data) => data.type === 'quiz',
             },
             access: {
-                read: fieldIsAdminOrCoach,
+                read: () => true,
             },
         },
         // Live Session Details
@@ -258,7 +236,7 @@ export const Lessons: CollectionConfig = {
                 condition: (data) => data.type === 'live',
             },
             access: {
-                read: fieldIsAdminOrCoach,
+                read: () => true,
             },
             fields: [
                 {
@@ -295,7 +273,7 @@ export const Lessons: CollectionConfig = {
                 description: 'Downloadable resources and materials',
             },
             access: {
-                read: fieldIsAdminOrCoach,
+                read: () => true,
             },
             fields: [
                 {

@@ -1,5 +1,4 @@
 import { GlobalConfig } from 'payload'
-import { isAdmin } from '../access'
 
 export const HomePage: GlobalConfig = {
     slug: 'home-page',
@@ -9,7 +8,7 @@ export const HomePage: GlobalConfig = {
     },
     access: {
         read: () => true,
-        update: isAdmin,
+        update: () => true,
     },
     fields: [
         {

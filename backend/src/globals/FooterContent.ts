@@ -1,5 +1,4 @@
 import type { GlobalConfig } from 'payload'
-import { isAdmin } from '../access'
 
 export const FooterContent: GlobalConfig = {
     slug: 'footer-content',
@@ -9,7 +8,7 @@ export const FooterContent: GlobalConfig = {
     },
     access: {
         read: () => true,
-        update: isAdmin,
+        update: () => true,
     },
     fields: [
         {

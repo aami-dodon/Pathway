@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isAdminOrCoach } from '../../access'
 import { formatSlug, setPublishedAt } from '../../hooks'
 
 export const Courses: CollectionConfig = {
@@ -14,23 +13,10 @@ export const Courses: CollectionConfig = {
         drafts: true,
     },
     access: {
-        // Read: All published courses are publicly visible for discovery
-        // Actual content access is controlled via Enrollments
-        read: ({ req: { user } }) => {
-            // Admins and coaches see all courses (including drafts)
-            if (user && ['admin', 'coach'].includes(user.role as string)) {
-                return true
-            }
-
-            // Everyone else sees only published courses
-            return { status: { equals: 'published' } }
-        },
-        // Create: Coaches and admins only
-        create: isAdminOrCoach,
-        // Update: Coaches and admins (could be refined to instructor-only)
-        update: isAdminOrCoach,
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     hooks: {
         beforeChange: [setPublishedAt],

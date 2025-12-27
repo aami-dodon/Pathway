@@ -1,5 +1,4 @@
 import type { GlobalConfig } from 'payload'
-import { isAdmin } from '../access'
 
 export const HeaderNav: GlobalConfig = {
     slug: 'header-nav',
@@ -9,7 +8,7 @@ export const HeaderNav: GlobalConfig = {
     },
     access: {
         read: () => true,
-        update: isAdmin,
+        update: () => true,
     },
     fields: [
         {

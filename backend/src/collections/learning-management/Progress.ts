@@ -1,48 +1,6 @@
 import type { CollectionConfig, Access } from 'payload'
-import { isAdmin } from '../../access'
 
-/**
- * Custom access: Users can only see/modify their own progress
- * Progress is linked to enrollment, which is linked to subscriber profile
- */
-const progressAccess: Access = async ({ req }) => {
-    const { user, payload } = req
 
-    if (!user) return false
-
-    // Admins and coaches see all
-    if (['admin', 'coach'].includes(user.role as string)) return true
-
-    // For subscribers, find their enrollments and show progress for those
-    try {
-        const subscriberProfile = await payload.find({
-            collection: 'subscriber-profiles',
-            where: { user: { equals: user.id } },
-            limit: 1,
-        })
-
-        if (subscriberProfile.docs.length > 0) {
-            // Find all enrollments for this subscriber
-            const enrollments = await payload.find({
-                collection: 'enrollments',
-                where: { subscriber: { equals: subscriberProfile.docs[0].id } },
-                limit: 1000,
-            })
-
-            if (enrollments.docs.length > 0) {
-                return {
-                    enrollment: {
-                        in: enrollments.docs.map(e => e.id),
-                    },
-                }
-            }
-        }
-    } catch (_error) {
-        return false
-    }
-
-    return false
-}
 
 export const Progress: CollectionConfig = {
     slug: 'progress',
@@ -53,14 +11,10 @@ export const Progress: CollectionConfig = {
         defaultColumns: ['enrollment', 'lesson', 'status', 'completedAt'],
     },
     access: {
-        // Read: Users see their own progress, staff sees all
-        read: progressAccess,
-        // Create: Users can create their own progress records
-        create: progressAccess,
-        // Update: Users can update their own progress
-        update: progressAccess,
-        // Delete: Admin only (progress should be preserved)
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     fields: [
         // Link to enrollment

@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isAdminOrCreator, isPublishedOrAdmin } from '../../access'
 import { formatSlug, setPublishedAt } from '../../hooks'
 
 export const Pages: CollectionConfig = {
@@ -14,14 +13,10 @@ export const Pages: CollectionConfig = {
         drafts: true,
     },
     access: {
-        // Read: Published pages are public, drafts visible to admins/creators
-        read: isPublishedOrAdmin,
-        // Create: Admin or creator roles
-        create: isAdminOrCreator,
-        // Update: Admin or creator roles
-        update: isAdminOrCreator,
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     hooks: {
         beforeChange: [setPublishedAt],

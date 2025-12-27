@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { isAuthenticated, isAdmin, isAdminOrOwner } from '../../access'
 import { populateCreatedBy } from '../../hooks'
 
 export const MediaPrivate: CollectionConfig = {
@@ -13,14 +12,10 @@ export const MediaPrivate: CollectionConfig = {
         description: 'Private media library served via signed URLs',
     },
     access: {
-        // Read: Owner or admin can view private media
-        read: isAdminOrOwner('createdBy'),
-        // Create: Only authenticated users can upload
-        create: isAuthenticated,
-        // Update: Owner or admin can update
-        update: isAdminOrOwner('createdBy'),
-        // Delete: Only admins can delete media
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     hooks: {
         beforeChange: [populateCreatedBy],

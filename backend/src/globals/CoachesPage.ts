@@ -1,5 +1,4 @@
 import type { GlobalConfig } from 'payload'
-import { isAdmin } from '../access'
 
 export const CoachesPage: GlobalConfig = {
     slug: 'coaches-page',
@@ -9,7 +8,7 @@ export const CoachesPage: GlobalConfig = {
     },
     access: {
         read: () => true,
-        update: isAdmin,
+        update: () => true,
     },
     fields: [
         {

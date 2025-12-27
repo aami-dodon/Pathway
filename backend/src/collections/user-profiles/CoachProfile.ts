@@ -1,6 +1,5 @@
 import type { CollectionConfig } from 'payload'
 import { timezoneField } from '../../fields/timezone'
-import { anyone, isAdmin, isAdminOrCoach, isAdminOrOwner } from '../../access'
 import { enforceUserOwnership, formatSlug, preventUserChange } from '../../hooks'
 
 export const CoachProfile: CollectionConfig = {
@@ -11,14 +10,10 @@ export const CoachProfile: CollectionConfig = {
         description: 'Public and professional coach information for content authoring and LMS',
     },
     access: {
-        // Read: Public - coach profiles are publicly visible
-        read: anyone,
-        // Create: Only admins and coaches can create coach profiles
-        create: isAdminOrCoach,
-        // Update: Owner (via user field) or admin
-        update: isAdminOrOwner('user'),
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     hooks: {
         beforeChange: [enforceUserOwnership, preventUserChange],

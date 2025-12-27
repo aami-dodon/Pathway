@@ -1,5 +1,4 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isAdminOrCoach } from '../../access'
 import { quizDeliveryHandler } from '../../endpoints/quiz-delivery'
 
 export const Quizzes: CollectionConfig = {
@@ -11,15 +10,10 @@ export const Quizzes: CollectionConfig = {
         defaultColumns: ['title', 'settings.passingScore', 'isPublished', 'updatedAt'],
     },
     access: {
-        // Read: CRITICAL - Only coaches/admins can see full quiz with answers
-        // Learners should fetch quizzes through a custom endpoint that strips answers
-        read: isAdminOrCoach,
-        // Create: Coaches and admins
-        create: isAdminOrCoach,
-        // Update: Coaches and admins
-        update: isAdminOrCoach,
-        // Delete: Admin only
-        delete: isAdmin,
+        read: () => true,
+        create: () => true,
+        update: () => true,
+        delete: () => true,
     },
     endpoints: [
         {
