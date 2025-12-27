@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { GraduationCap, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,9 @@ const benefits = [
 
 export default function RegisterPage() {
     const router = useRouter();
-    const { login } = useAuth(); // Keep login if used, or remove useAuth if not needed. Checking usage below.
+    const searchParams = useSearchParams();
+    const redirectTo = searchParams.get("redirect");
+    const { login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -67,7 +69,7 @@ export default function RegisterPage() {
             }
 
             toast.success("Account created! Please sign in.");
-            router.push("/login");
+            router.push(redirectTo ? `/login?redirect=${redirectTo}` : "/login");
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Registration failed");
         } finally {
@@ -215,7 +217,7 @@ export default function RegisterPage() {
                                     Already have an account?{" "}
                                 </span>
                                 <Link
-                                    href="/login"
+                                    href={redirectTo ? `/login?redirect=${redirectTo}` : "/login"}
                                     className="font-medium text-primary hover:underline"
                                 >
                                     Sign in

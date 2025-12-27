@@ -42,13 +42,14 @@ export function SearchInput({ placeholder = "Search...", className }: SearchInpu
     };
 
     return (
-        <div className={`relative ${className}`}>
+        <div className={`relative ${className} opacity-50 cursor-not-allowed`}>
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
                 value={text}
                 onChange={handleChange}
                 placeholder={placeholder}
                 className="pl-9"
+                disabled
             />
         </div>
     );

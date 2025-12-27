@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { HeaderNavData, FooterContentData, api } from "@/lib/api";
 
@@ -75,7 +76,10 @@ export default async function RootLayout({
           <AuthProvider>
             <div className="relative min-h-screen flex flex-col">
               <Header navigationLinks={headerNav?.navigationLinks} />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1">
+                <Breadcrumbs />
+                {children}
+              </main>
               <Footer footerData={footerContent || undefined} />
             </div>
             <Toaster position="top-right" />

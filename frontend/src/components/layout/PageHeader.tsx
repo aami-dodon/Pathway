@@ -8,8 +8,8 @@ interface PageHeaderProps {
 
 export function PageHeader({ badge, title, description }: PageHeaderProps) {
     return (
-        <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background flex flex-col justify-center min-h-[320px] sm:min-h-[400px]">
-            <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background flex flex-col justify-center min-h-[280px] sm:min-h-[350px]">
+            <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
                     <Badge variant="secondary" className="mb-4">
                         {badge}

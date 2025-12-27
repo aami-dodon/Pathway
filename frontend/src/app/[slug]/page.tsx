@@ -167,14 +167,6 @@ export default async function StaticPage({ params }: StaticPageProps) {
             {/* Hero Section */}
             <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background">
                 <div className="container mx-auto px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-                    {/* Back Button */}
-                    <Button variant="ghost" asChild className="mb-8 -ml-4">
-                        <Link href="/">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Home
-                        </Link>
-                    </Button>
-
                     <div className="mx-auto max-w-3xl">
                         {/* Title */}
                         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">

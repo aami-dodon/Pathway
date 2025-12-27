@@ -85,7 +85,7 @@ export interface Post {
     content?: unknown;
     category?: Category | string;
     tags?: (Tag | string)[];
-    accessLevel: 'public' | 'subscribers';
+    isSubscriberOnly: boolean;
     publishedAt?: string;
     status: 'draft' | 'published' | 'archived';
     seo?: {

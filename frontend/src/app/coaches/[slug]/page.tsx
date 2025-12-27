@@ -79,15 +79,6 @@ export default async function CoachProfilePage({ params }: PageProps) {
             {/* Hero Section */}
             <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background">
                 <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
-                    {/* Back Link */}
-                    <Link
-                        href="/coaches"
-                        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Coaches
-                    </Link>
-
                     {/* Profile Header */}
                     <div className="flex flex-col md:flex-row gap-8 items-start">
                         <Avatar className="h-40 w-40 ring-4 ring-background shadow-xl">

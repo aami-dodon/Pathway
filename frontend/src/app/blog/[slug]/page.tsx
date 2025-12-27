@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Post, CoachProfile, Category, Tag as TagType, PaginatedResponse, API_BASE_URL } from "@/lib/api";
 import { SocialShare } from "@/components/social-share";
+import { AuthNudge } from "@/components/auth-nudge";
 
 export const dynamic = "force-dynamic";
 
@@ -83,7 +84,11 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
             description: post.seo?.metaDescription || post.excerpt,
             type: "article",
             publishedTime: post.publishedAt,
-            images: post.featuredImage ? [{ url: post.featuredImage.url }] : [],
+            images: post.isSubscriberOnly && post.featuredImagePrivate
+                ? [{ url: post.featuredImagePrivate.url }]
+                : post.featuredImage
+                    ? [{ url: post.featuredImage.url }]
+                    : [],
         },
     };
 }
@@ -208,129 +213,113 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://pathway.com"}/blog/${post.slug}`;
 
     return (
-        <article className="min-h-screen">
-            {/* Hero Section */}
-            <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background">
-                <div className="container mx-auto px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-                    {/* Back Button */}
-                    <Button variant="ghost" asChild className="mb-8 -ml-4">
-                        <Link href="/blog">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Blog
-                        </Link>
-                    </Button>
-
-                    <div className="mx-auto max-w-3xl">
-                        {/* Category Badge */}
-                        {category && (
-                            <Badge variant="secondary" className="mb-4">
-                                {category.name}
-                            </Badge>
+        <article className="min-h-screen bg-gradient-to-b from-muted/50 to-background pb-20">
+            <div className="container mx-auto px-4 pt-18 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-border/40 bg-card shadow-sm">
+                    {/* Hero Section (Top of Card) */}
+                    <div className="relative min-h-[400px] sm:min-h-[500px] flex items-end justify-center text-center">
+                        {/* Background Image */}
+                        {(post.featuredImage || post.featuredImagePrivate) && (
+                            <>
+                                <img
+                                    src={post.isSubscriberOnly ? post.featuredImagePrivate?.url : post.featuredImage?.url}
+                                    alt=""
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                />
+                                {/* Gradient Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
+                            </>
                         )}
 
-                        {/* Access Level */}
-                        {post.accessLevel === "subscribers" && (
-                            <Badge variant="outline" className="mb-4 ml-2 border-primary/30 text-primary">
-                                Subscribers Only
-                            </Badge>
+                        {/* Fallback gradient if no image */}
+                        {!post.featuredImage && !post.featuredImagePrivate && (
+                            <div className="absolute inset-0 bg-gradient-to-b from-muted/50 to-background" />
                         )}
 
-                        {/* Title */}
-                        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-                            {post.title}
-                        </h1>
+                        {/* Hero Content */}
+                        <div className="relative z-10 w-full px-6 py-12">
+                            {/* Category Badge */}
+                            {category && (
+                                <Badge variant="secondary" className="mb-4">
+                                    {category.name}
+                                </Badge>
+                            )}
 
-                        {/* Excerpt */}
-                        {post.excerpt && (
-                            <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-                                {post.excerpt}
-                            </p>
-                        )}
+                            {/* Access Level */}
+                            {post.isSubscriberOnly && (
+                                <Badge variant="outline" className="mb-4 ml-2 border-primary/30 text-primary bg-background/80 backdrop-blur-sm">
+                                    Subscribers Only
+                                </Badge>
+                            )}
 
-                        {/* Meta Info */}
-                        <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-                            {/* Author */}
-                            {author && (
-                                <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10">
-                                        {author.profilePhoto && (
-                                            <AvatarImage src={author.profilePhoto.url} alt={author.displayName} />
-                                        )}
-                                        <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm">
-                                            {author.displayName
-                                                .split(" ")
-                                                .map((n) => n.charAt(0))
-                                                .join("")
-                                                .slice(0, 2)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="font-medium text-foreground">{author.displayName}</p>
-                                        <p className="text-xs">Author</p>
+                            {/* Title */}
+                            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+                                {post.title}
+                            </h1>
+
+                            {/* Excerpt */}
+                            {post.excerpt && (
+                                <p className="mt-4 text-lg text-muted-foreground leading-relaxed line-clamp-3">
+                                    {post.excerpt}
+                                </p>
+                            )}
+
+                            {/* Meta Info */}
+                            <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+                                {/* Author */}
+                                {author && (
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-10 w-10 border-2 border-background">
+                                            {author.profilePhoto && (
+                                                <AvatarImage src={author.profilePhoto.url} alt={author.displayName} />
+                                            )}
+                                            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-sm">
+                                                {author.displayName
+                                                    .split(" ")
+                                                    .map((n) => n.charAt(0))
+                                                    .join("")
+                                                    .slice(0, 2)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="text-left font-medium">
+                                            <p className="text-foreground">{author.displayName}</p>
+                                            <p className="text-xs">Author</p>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Date */}
-                            {publishedDate && (
+                                {/* Date */}
+                                {publishedDate && (
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="h-4 w-4" />
+                                        {publishedDate}
+                                    </div>
+                                )}
+
+                                {/* Reading Time */}
                                 <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    {publishedDate}
+                                    <Clock className="h-4 w-4" />
+                                    5 min read
                                 </div>
-                            )}
+                            </div>
 
-                            {/* Reading Time (estimate) */}
-                            <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4" />
-                                5 min read
+                            {/* Social Share */}
+                            <div className="mt-8 flex justify-center">
+                                <SocialShare url={shareUrl} title={post.title} />
                             </div>
                         </div>
-
-                        {/* Social Share */}
-                        <div className="mt-8">
-                            <SocialShare url={shareUrl} title={post.title} />
-                        </div>
                     </div>
-                </div>
-            </section>
 
-            {/* Featured Image */}
-            {post.featuredImage && (
-                <section className="border-b border-border/40">
-                    <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-                        <div className="mx-auto max-w-4xl overflow-hidden rounded-xl">
-                            <img
-                                src={post.featuredImage.url}
-                                alt={post.title}
-                                className="w-full h-auto object-cover aspect-video"
-                            />
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* Content */}
-            <section className="py-12 sm:py-16">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mx-auto max-w-3xl">
-
-                        {(!post.content && post.accessLevel === 'subscribers') ? (
-                            <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-8 text-center sm:p-12">
-                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-                                    <Lock className="h-8 w-8 text-destructive" />
-                                </div>
-                                <h2 className="mb-3 text-2xl font-bold">Subscribers Only Content</h2>
-                                <p className="mb-8 text-muted-foreground">
-                                    This article is exclusive to our subscribers. Sign in or create an account to unlock full access.
-                                </p>
-                                <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                                    <Button asChild size="sm">
-                                        <Link href="/login">Log in</Link>
-                                    </Button>
-                                    <Button asChild variant="outline" size="sm">
-                                        <Link href="/register">Register</Link>
-                                    </Button>
-                                </div>
+                    {/* Main Content (Bottom of Card) */}
+                    <div className="p-8 sm:p-12">
+                        {(!post.content && post.isSubscriberOnly) ? (
+                            <div className="mx-auto max-w-lg">
+                                <AuthNudge
+                                    title="Exclusive Subscriber Content"
+                                    description="This article is exclusive to our subscribers. Sign in or create an account to unlock full access to deep dives, frameworks, and actionable growth strategies."
+                                    redirectUrl={`/blog/${post.slug}`}
+                                    className="p-8 sm:p-10"
+                                />
                             </div>
                         ) : (
                             <RichTextContent content={post.content} />
@@ -355,9 +344,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         {author && (
                             <>
                                 <Separator className="my-8" />
-                                <div className="rounded-xl bg-muted/50 p-6">
-                                    <div className="flex items-start gap-4">
-                                        <Avatar className="h-16 w-16 ring-2 ring-background">
+                                <div className="rounded-xl bg-muted/30 p-6">
+                                    <div className="flex items-center gap-4">
+                                        <Avatar className="h-16 w-16 ring-2 ring-background shadow-sm">
                                             {author.profilePhoto && (
                                                 <AvatarImage src={author.profilePhoto.url} alt={author.displayName} />
                                             )}
@@ -370,13 +359,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1">
-                                            <h3 className="font-semibold">{author.displayName}</h3>
+                                            <h3 className="font-semibold text-lg">{author.displayName}</h3>
                                             {author.bio && (
-                                                <p className="mt-1 text-sm text-muted-foreground line-clamp-3">
+                                                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
                                                     {author.bio}
                                                 </p>
                                             )}
-                                            <Button variant="link" size="sm" asChild className="mt-2 h-auto p-0">
+                                            <Button variant="link" size="sm" asChild className="mt-2 h-auto p-0 font-medium">
                                                 <Link href={`/coaches/${author.slug}`}>View Profile →</Link>
                                             </Button>
                                         </div>
@@ -386,7 +375,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         )}
                     </div>
                 </div>
-            </section>
+            </div>
         </article>
     );
 }

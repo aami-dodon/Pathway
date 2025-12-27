@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/components/providers/auth-provider";
 import { toast } from "sonner";
 
+import { useSearchParams } from "next/navigation";
+
 const benefits = [
     "Track your learning progress",
     "Resume courses where you left off",
@@ -20,7 +22,10 @@ const benefits = [
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectTo = searchParams.get("redirect");
     const { login } = useAuth();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -42,6 +47,8 @@ export default function LoginPage() {
 
             if (user.isFirstLogin) {
                 router.push("/profile");
+            } else if (redirectTo) {
+                router.push(redirectTo);
             } else {
                 router.push("/");
             }

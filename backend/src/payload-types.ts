@@ -1325,9 +1325,9 @@ export interface Post {
   category?: (number | null) | Category;
   tags?: (number | Tag)[] | null;
   /**
-   * Who can view this content
+   * Restrict this post to subscribers only
    */
-  accessLevel: 'public' | 'subscribers';
+  isSubscriberOnly?: boolean | null;
   /**
    * Publication date for the post
    */
@@ -3092,7 +3092,7 @@ export interface PostsSelect<T extends boolean = true> {
   content?: T;
   category?: T;
   tags?: T;
-  accessLevel?: T;
+  isSubscriberOnly?: T;
   publishedAt?: T;
   isPublished?: T;
   seo?:

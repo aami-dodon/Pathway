@@ -7,7 +7,7 @@ export const Posts: CollectionConfig = {
         group: 'Content Management',
         useAsTitle: 'title',
         description: 'Blog posts and articles',
-        defaultColumns: ['title', 'author', 'isPublished', 'accessLevel', 'updatedAt'],
+        defaultColumns: ['title', 'author', 'isPublished', 'isSubscriberOnly', 'updatedAt'],
     },
     access: {
         read: () => true,
@@ -55,7 +55,7 @@ export const Posts: CollectionConfig = {
             relationTo: 'media',
             admin: {
                 description: 'Featured image for the post (public media)',
-                condition: (data) => data?.accessLevel !== 'subscribers',
+                condition: (data) => !data?.isSubscriberOnly,
             },
         },
         {
@@ -64,7 +64,7 @@ export const Posts: CollectionConfig = {
             relationTo: 'media-private',
             admin: {
                 description: 'Featured image for the post (private media for subscribers)',
-                condition: (data) => data?.accessLevel === 'subscribers',
+                condition: (data) => data?.isSubscriberOnly,
             },
         },
         {
@@ -79,7 +79,13 @@ export const Posts: CollectionConfig = {
             type: 'richText',
             required: true,
             access: {
-                read: () => true,
+                read: ({ req, data }) => {
+                    // If it's not a subscriber-only post, anyone can read it
+                    if (!data?.isSubscriberOnly) return true;
+
+                    // If it is subscriber-only, require a logged-in user
+                    return !!req.user;
+                },
             },
         },
         // Categorization
@@ -97,17 +103,12 @@ export const Posts: CollectionConfig = {
         },
         // Access Control
         {
-            name: 'accessLevel',
-            type: 'select',
-            required: true,
-            defaultValue: 'public',
-            options: [
-                { label: 'Free / Public', value: 'public' },
-                { label: 'Subscribers Only', value: 'subscribers' },
-            ],
+            name: 'isSubscriberOnly',
+            type: 'checkbox',
+            defaultValue: false,
             admin: {
                 position: 'sidebar',
-                description: 'Who can view this content',
+                description: 'Restrict this post to subscribers only',
             },
         },
         // Publishing
@@ -159,7 +160,7 @@ export const Posts: CollectionConfig = {
                     relationTo: 'media',
                     admin: {
                         description: 'Open Graph image for social sharing (public)',
-                        condition: (data) => data?.accessLevel !== 'subscribers',
+                        condition: (data) => !data?.isSubscriberOnly,
                     },
                 },
                 {
@@ -168,7 +169,7 @@ export const Posts: CollectionConfig = {
                     relationTo: 'media-private',
                     admin: {
                         description: 'Open Graph image for social sharing (private)',
-                        condition: (data) => data?.accessLevel === 'subscribers',
+                        condition: (data) => data?.isSubscriberOnly,
                     },
                 },
             ],

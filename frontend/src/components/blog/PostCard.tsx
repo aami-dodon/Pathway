@@ -20,9 +20,9 @@ export function PostCard({ post }: { post: Post }) {
             <Card className="h-full overflow-hidden border-border/50 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group-hover:-translate-y-1">
                 {/* Featured Image */}
                 <div className="relative aspect-video overflow-hidden bg-muted">
-                    {post.featuredImage ? (
+                    {(post.featuredImage || post.featuredImagePrivate) ? (
                         <img
-                            src={post.featuredImage.url}
+                            src={post.isSubscriberOnly ? post.featuredImagePrivate?.url : post.featuredImage?.url}
                             alt={post.title}
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
@@ -33,7 +33,7 @@ export function PostCard({ post }: { post: Post }) {
                             </span>
                         </div>
                     )}
-                    {post.accessLevel === "subscribers" && (
+                    {post.isSubscriberOnly && (
                         <Badge
                             variant="secondary"
                             className="absolute right-3 top-3 bg-background/80 backdrop-blur-sm"
@@ -45,7 +45,7 @@ export function PostCard({ post }: { post: Post }) {
 
                 <CardContent className="p-6">
                     <Badge variant="outline" className="mb-3 text-xs">
-                        {post.accessLevel === "public" ? "Free" : "Premium"}
+                        {post.isSubscriberOnly ? "Premium" : "Free"}
                     </Badge>
 
                     <h3 className="line-clamp-2 text-lg font-semibold tracking-tight transition-colors group-hover:text-primary">

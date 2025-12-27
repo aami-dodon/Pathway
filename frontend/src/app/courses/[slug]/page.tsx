@@ -41,6 +41,7 @@ import {
     API_BASE_URL,
 } from "@/lib/api";
 import { SocialShare } from "@/components/social-share";
+import { AuthNudge } from "@/components/auth-nudge";
 
 
 
@@ -323,14 +324,6 @@ export default async function CoursePage({ params }: CoursePageProps) {
             {/* Hero Section */}
             <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background">
                 <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-                    {/* Back Button */}
-                    <Button variant="ghost" asChild className="mb-8 -ml-4">
-                        <Link href="/courses">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Courses
-                        </Link>
-                    </Button>
-
                     <div className="grid gap-8 lg:grid-cols-3 lg:gap-12">
                         {/* Course Info */}
                         <div className="lg:col-span-2">
@@ -434,27 +427,12 @@ export default async function CoursePage({ params }: CoursePageProps) {
                                     </Button>
 
                                     {!isAuthenticated && (
-                                        <div className="mt-4 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-                                            <div className="flex items-start gap-3">
-                                                <Lock className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                                                <div className="flex-1">
-                                                    <p className="text-sm font-medium text-foreground mb-3">
-                                                        Login Required to Enroll
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground mb-3">
-                                                        Please sign in or create an account to enroll in this course.
-                                                    </p>
-                                                    <div className="flex flex-col gap-2 sm:flex-row">
-                                                        <Button asChild size="sm" className="flex-1">
-                                                            <Link href="/login">Log in</Link>
-                                                        </Button>
-                                                        <Button asChild variant="outline" size="sm" className="flex-1">
-                                                            <Link href="/register">Register</Link>
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <AuthNudge
+                                            title="Login Required to Enroll"
+                                            description="Please sign in or create an account to enroll in this course."
+                                            redirectUrl={`/courses/${course.slug}`}
+                                            className="mt-4"
+                                        />
                                     )}
 
                                     <div className="mt-6 space-y-3 text-sm">

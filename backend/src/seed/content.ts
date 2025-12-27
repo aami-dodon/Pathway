@@ -33,14 +33,12 @@ const tagsData = [
     { name: 'Networking', slug: 'networking' },
 ]
 
-type AccessLevel = 'public' | 'subscribers'
-
-const postsData: { title: string; slug: string; excerpt: string; accessLevel: AccessLevel; categorySlug: string; tagSlugs: string[]; content: string }[] = [
+const postsData: { title: string; slug: string; excerpt: string; isSubscriberOnly: boolean; categorySlug: string; tagSlugs: string[]; content: string }[] = [
     {
         title: '10 Essential Leadership Skills for the Modern Workplace',
         slug: 'essential-leadership-skills-modern-workplace',
         excerpt: 'Discover the key leadership competencies that drive success in today\'s rapidly evolving business environment.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'leadership',
         tagSlugs: ['beginner', 'how-to'],
         content: `
@@ -83,7 +81,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'The Art of Giving Constructive Feedback',
         slug: 'art-of-giving-constructive-feedback',
         excerpt: 'Learn how to deliver feedback that motivates and develops your team members.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'leadership',
         tagSlugs: ['deep-dive', 'frameworks'],
         content: `
@@ -108,7 +106,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Navigating Your First Career Transition',
         slug: 'navigating-first-career-transition',
         excerpt: 'A comprehensive guide to successfully changing careers while minimizing risks.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'career-development',
         tagSlugs: ['beginner', 'how-to', 'case-study'],
         content: `
@@ -136,7 +134,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Building Your Personal Brand in Tech',
         slug: 'building-personal-brand-tech',
         excerpt: 'Strategic approaches to establishing yourself as a thought leader in the technology industry.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'career-development',
         tagSlugs: ['advanced', 'deep-dive'],
         content: `
@@ -159,7 +157,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'From Side Hustle to Startup: A Founder\'s Journey',
         slug: 'side-hustle-to-startup-founders-journey',
         excerpt: 'Real stories from entrepreneurs who turned their passion projects into successful businesses.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'entrepreneurship',
         tagSlugs: ['case-study', 'interview'],
         content: `
@@ -179,7 +177,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Fundraising 101: Preparing for Your First Pitch',
         slug: 'fundraising-101-preparing-first-pitch',
         excerpt: 'Everything you need to know before approaching investors for seed funding.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'entrepreneurship',
         tagSlugs: ['beginner', 'how-to', 'frameworks'],
         content: `
@@ -202,7 +200,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Mindfulness Practices for Busy Professionals',
         slug: 'mindfulness-practices-busy-professionals',
         excerpt: 'Simple techniques to reduce stress and increase focus during your workday.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'wellness',
         tagSlugs: ['quick-tips', 'mindfulness'],
         content: `
@@ -222,7 +220,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Building Sustainable Work-Life Balance',
         slug: 'building-sustainable-work-life-balance',
         excerpt: 'Long-term strategies for maintaining well-being while pursuing ambitious career goals.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'wellness',
         tagSlugs: ['deep-dive', 'mindfulness', 'remote-work'],
         content: `
@@ -242,7 +240,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'AI Tools Every Professional Should Know',
         slug: 'ai-tools-every-professional-should-know',
         excerpt: 'A curated list of AI-powered tools that can supercharge your productivity.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'technology',
         tagSlugs: ['tools', 'ai', 'quick-tips'],
         content: `
@@ -265,7 +263,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Future of Work: Trends Shaping 2025 and Beyond',
         slug: 'future-of-work-trends-2025',
         excerpt: 'Expert predictions on how technology will transform the workplace.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'technology',
         tagSlugs: ['research', 'ai', 'remote-work', 'opinion'],
         content: `
@@ -285,7 +283,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Mastering the Art of Public Speaking',
         slug: 'mastering-art-public-speaking',
         excerpt: 'Proven techniques to overcome stage fright and deliver compelling presentations.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'communication',
         tagSlugs: ['beginner', 'how-to'],
         content: `
@@ -305,7 +303,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Executive Presence: Commanding Any Room',
         slug: 'executive-presence-commanding-any-room',
         excerpt: 'Advanced strategies for projecting authority and influence in high-stakes situations.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'communication',
         tagSlugs: ['advanced', 'deep-dive', 'frameworks'],
         content: `
@@ -325,7 +323,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'The Pomodoro Technique: A Complete Guide',
         slug: 'pomodoro-technique-complete-guide',
         excerpt: 'How to use time-boxing to dramatically increase your daily output.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'productivity',
         tagSlugs: ['beginner', 'how-to', 'tools'],
         content: `
@@ -348,7 +346,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Building a Second Brain: Knowledge Management',
         slug: 'building-second-brain-knowledge-management',
         excerpt: 'Create a personal knowledge system that amplifies your thinking and creativity.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'productivity',
         tagSlugs: ['advanced', 'deep-dive', 'tools', 'frameworks'],
         content: `
@@ -371,7 +369,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Investment Basics for Beginners',
         slug: 'investment-basics-beginners',
         excerpt: 'Start your investment journey with these fundamental concepts and strategies.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'finance',
         tagSlugs: ['beginner', 'how-to'],
         content: `
@@ -391,7 +389,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Building Wealth Through Diversification',
         slug: 'building-wealth-through-diversification',
         excerpt: 'Advanced portfolio strategies for long-term financial growth.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'finance',
         tagSlugs: ['advanced', 'deep-dive', 'research'],
         content: `
@@ -411,7 +409,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Remote Team Management Best Practices',
         slug: 'remote-team-management-best-practices',
         excerpt: 'Lessons learned from leading distributed teams across time zones.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'leadership',
         tagSlugs: ['remote-work', 'how-to', 'case-study'],
         content: `
@@ -431,7 +429,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'The Science of Motivation',
         slug: 'science-of-motivation',
         excerpt: 'Understanding what drives human behavior and how to apply it.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'leadership',
         tagSlugs: ['research', 'deep-dive', 'frameworks'],
         content: `
@@ -451,7 +449,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Networking in the Digital Age',
         slug: 'networking-digital-age',
         excerpt: 'Build meaningful professional relationships online and offline.',
-        accessLevel: 'public',
+        isSubscriberOnly: false,
         categorySlug: 'career-development',
         tagSlugs: ['networking', 'how-to', 'quick-tips'],
         content: `
@@ -471,7 +469,7 @@ const postsData: { title: string; slug: string; excerpt: string; accessLevel: Ac
         title: 'Salary Negotiation Masterclass',
         slug: 'salary-negotiation-masterclass',
         excerpt: 'Proven scripts and strategies for your next compensation discussion.',
-        accessLevel: 'subscribers',
+        isSubscriberOnly: true,
         categorySlug: 'career-development',
         tagSlugs: ['advanced', 'frameworks', 'deep-dive'],
         content: `
@@ -747,8 +745,7 @@ export async function seedPosts(payload: Payload, coachProfiles: any[], categori
                 content: createRichText(postData.content),
                 category: category?.id,
                 tags: postTags.map(t => t.id),
-                accessLevel: postData.accessLevel,
-                axisLevel: postData.accessLevel,
+                isSubscriberOnly: postData.isSubscriberOnly,
                 isPublished: true,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 publishedAt: existing.docs.length > 0 ? (existing.docs[0] as any).publishedAt : new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
