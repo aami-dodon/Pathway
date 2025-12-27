@@ -82,6 +82,21 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      graphics: {
+        Logo: '/components/Logo#Logo',
+        Icon: '/components/Icon#Icon',
+      },
+    },
+    meta: {
+      titleSuffix: '- Pathway',
+      icons: [
+        {
+          url: '/favicon.svg',
+          type: 'image/svg+xml',
+        },
+      ],
+    },
   },
   email: nodemailerAdapter({
     defaultFromAddress: process.env.EMAIL_FROM || '',
