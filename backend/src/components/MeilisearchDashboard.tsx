@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Gutter } from '@payloadcms/ui'
+import { Gutter, Button } from '@payloadcms/ui'
 
 export const MeilisearchDashboard: React.FC = () => {
     const [status, setStatus] = useState<any>(null)
@@ -99,40 +99,29 @@ export const MeilisearchDashboard: React.FC = () => {
                     <p>Unable to retrieve Meilisearch status.</p>
                 )}
 
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <button
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <Button
                         onClick={handleReindex}
                         disabled={reindexing || !status?.connected}
-                        className="btn btn--style-primary"
-                        style={{
-                            padding: '10px 20px',
-                            cursor: (reindexing || !status?.connected) ? 'not-allowed' : 'pointer',
-                            opacity: (reindexing || !status?.connected) ? 0.6 : 1
-                        }}
+                        buttonStyle="primary"
                     >
                         {reindexing ? 'Reindexing...' : 'Full Reindex All'}
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                         onClick={handleClear}
                         disabled={reindexing || !status?.connected}
-                        className="btn btn--style-secondary"
-                        style={{
-                            padding: '10px 20px',
-                            cursor: (reindexing || !status?.connected) ? 'not-allowed' : 'pointer',
-                            opacity: (reindexing || !status?.connected) ? 0.6 : 1
-                        }}
+                        buttonStyle="secondary"
                     >
                         Clear All Indexes
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                         onClick={fetchStatus}
-                        className="btn btn--style-secondary"
-                        style={{ padding: '10px 20px', cursor: 'pointer' }}
+                        buttonStyle="secondary"
                     >
                         Refresh Status
-                    </button>
+                    </Button>
                 </div>
 
                 {message && (
