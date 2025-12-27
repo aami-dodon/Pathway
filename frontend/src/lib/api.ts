@@ -11,6 +11,7 @@ export interface User {
     role: 'subscriber' | 'creator' | 'coach' | 'admin';
     createdAt: string;
     updatedAt: string;
+    isFirstLogin?: boolean;
 }
 
 export interface CoachProfile {

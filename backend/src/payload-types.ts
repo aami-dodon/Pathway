@@ -176,6 +176,7 @@ export interface User {
    * Uncheck to block user login
    */
   isActive?: boolean | null;
+  isFirstLogin?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -2923,6 +2924,7 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   role?: T;
   isActive?: T;
+  isFirstLogin?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

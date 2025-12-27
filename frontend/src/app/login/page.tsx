@@ -28,14 +28,25 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!email || !password) {
+            toast.error("Please fill in all fields");
+            return;
+        }
+
         setIsLoading(true);
 
         try {
-            await login(email, password);
+            const { user } = await login(email, password);
             toast.success("Welcome back!");
-            router.push("/");
+
+            if (user.isFirstLogin) {
+                router.push("/profile");
+            } else {
+                router.push("/");
+            }
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Login failed");
+            toast.error("Invalid email or password");
         } finally {
             setIsLoading(false);
         }

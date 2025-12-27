@@ -41,6 +41,12 @@ export default function RegisterPage() {
             return;
         }
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -57,7 +63,7 @@ export default function RegisterPage() {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.errors?.[0]?.message || "Registration failed");
+                throw new Error(error.errors?.[0]?.message || error.message || "Registration failed");
             }
 
             toast.success("Account created! Please sign in.");

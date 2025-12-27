@@ -17,6 +17,12 @@ export default function ForgotPasswordPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -24,7 +30,7 @@ export default function ForgotPasswordPage() {
             setIsSubmitted(true);
             toast.success("Password reset email sent");
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to send reset email");
+            toast.error("Failed to send reset email");
         } finally {
             setIsLoading(false);
         }

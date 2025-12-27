@@ -32,23 +32,6 @@ export const Users: CollectionConfig = {
             method: 'post',
             handler: async (req) => {
                 try {
-                    // Attempt standard logout
-                    await req.payload.auth({
-                        headers: req.headers,
-                        req, // Pass the request object
-                    })
-                    // Since payload.auth() authenticates, we assume standard logout endpoint logic
-                    // Actually, we should call the auth operation directly if exposed, or just rely on cookie clearing.
-                    // But Payload endpoints are tricky. 
-                    // Let's just return success and let the browser clear the cookie via the header set by Payload response?
-                    // Wait, if we return our own response, we must handle the cookie clearing ourselves!
-                    // Payload's default logout handler does helpful things.
-
-                    // BETTER APPROACH: Just catch the error from the standard strategy?
-                    // We can't easily "wrap" the default endpoint logic because it's internal.
-                    // But we can invoke the logout operation.
-
-                    // Actually, if we just return 200 OK and clear the cookie, that's enough.
                     const cookiePrefix = req.payload.config.cookiePrefix || 'payload'
                     const cookieName = `${cookiePrefix}-token`
 
@@ -59,8 +42,7 @@ export const Users: CollectionConfig = {
                         }
                     })
 
-                } catch (_error) {
-                    // Fallback: clear cookie anyway
+                } catch (error) {
                     const cookiePrefix = req.payload.config.cookiePrefix || 'payload'
                     const cookieName = `${cookiePrefix}-token`
 
@@ -114,6 +96,14 @@ export const Users: CollectionConfig = {
             admin: {
                 position: 'sidebar',
                 description: 'Uncheck to block user login',
+            },
+        },
+        {
+            name: 'isFirstLogin',
+            type: 'checkbox',
+            defaultValue: true,
+            admin: {
+                hidden: true,
             },
         },
     ],
