@@ -92,9 +92,8 @@ export default buildConfig({
       titleSuffix: '- Pathway',
       icons: [
         {
-          rel: 'icon',
-          type: 'image/svg+xml',
           url: '/favicon.svg',
+          type: 'image/svg+xml',
         },
       ],
     },
