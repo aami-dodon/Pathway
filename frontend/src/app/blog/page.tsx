@@ -6,6 +6,9 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Post, CoachProfile, PaginatedResponse, API_BASE_URL, BlogPageData, api } from "@/lib/api";
+import { SidebarFilter } from "@/components/filters/SidebarFilter";
+import { MobileFilterDrawer } from "@/components/filters/MobileFilterDrawer";
+import { BlogFilters } from "@/components/blog/BlogFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +21,58 @@ async function getBlogPageData(): Promise<BlogPageData | null> {
     }
 }
 
-async function getPosts(): Promise<Post[]> {
+async function getPosts(searchParams: { [key: string]: string | string[] | undefined }): Promise<Post[]> {
     try {
+        const params: any = {
+            limit: 12,
+            where: {
+                isPublished: { equals: true },
+            },
+        };
+
+        // Handle Search
+        if (searchParams.search) {
+            params.where.title = { like: searchParams.search };
+        }
+
+        // Handle Category (support multiple)
+        if (searchParams.category) {
+            const categories = (searchParams.category as string).split(',');
+            params.where.category = { in: categories };
+        }
+
+        // Handle Tags (support multiple)
+        if (searchParams.tags) {
+            const tags = (searchParams.tags as string).split(',');
+            params.where.tags = { in: tags };
+        }
+
+        const queryString = new URLSearchParams();
+        if (params.limit) queryString.set('limit', params.limit.toString());
+
+        // Construct 'where' query manually for nested objects if needed, 
+        // or rely on a query builder. standard Payload query params structure:
+        // where[field][operator]=value
+
+        if (searchParams.search) {
+            queryString.set('where[title][like]', searchParams.search as string);
+        }
+
+        if (searchParams.category) {
+            // "in" operator expects comma separated values
+            queryString.set('where[category][in]', searchParams.category as string);
+        }
+
+        if (searchParams.tags) {
+            queryString.set('where[tags][in]', searchParams.tags as string);
+        }
+
+        queryString.set('where[isPublished][equals]', 'true');
+
         const response = await fetch(
-            `${API_BASE_URL}/api/posts?limit=12&where[isPublished][equals]=true`,
+            `${API_BASE_URL}/api/posts?${queryString.toString()}`,
             {
-                next: { revalidate: 60 }, // Cache for 60 seconds
+                next: { revalidate: 0 }, // Disable cache for filtering
             }
         );
 
@@ -59,33 +108,18 @@ function PostCardSkeleton() {
 
 
 
-async function PostsGrid() {
-    const posts = await getPosts();
 
-    if (posts.length === 0) {
-        return (
-            <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
-                <div className="rounded-2xl bg-muted/50 p-8">
-                    <h3 className="text-lg font-semibold">No posts yet</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        Check back soon for new content from our experts.
-                    </p>
-                </div>
-            </div>
-        );
-    }
 
-    return (
-        <>
-            {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
-            ))}
-        </>
-    );
-}
-
-export default async function BlogPage() {
+export default async function BlogPage(props: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+    const searchParams = await props.searchParams;
     const pageData = await getBlogPageData();
+    const posts = await getPosts(searchParams);
+
+    // Fetch filter data
+    const categoriesRes = await api.getCategories();
+    const tagsRes = await api.getTags();
 
     // Fallback data
     const data = pageData || {
@@ -115,21 +149,39 @@ export default async function BlogPage() {
                 </div>
             </section>
 
-            {/* Posts Grid */}
-            <section className="py-16 sm:py-24">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                        <Suspense
-                            fallback={
-                                <>
-                                    {Array.from({ length: 6 }).map((_, i) => (
-                                        <PostCardSkeleton key={i} />
-                                    ))}
-                                </>
-                            }
-                        >
-                            <PostsGrid />
-                        </Suspense>
+            {/* Main Content */}
+            <section className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Mobile Filters */}
+                    <div className="lg:hidden mb-6">
+                        <MobileFilterDrawer>
+                            <BlogFilters categories={categoriesRes.docs} tags={tagsRes.docs} />
+                        </MobileFilterDrawer>
+                    </div>
+
+                    {/* Desktop Sidebar */}
+                    <SidebarFilter>
+                        <BlogFilters categories={categoriesRes.docs} tags={tagsRes.docs} />
+                    </SidebarFilter>
+
+                    {/* Content Grid */}
+                    <div className="flex-1">
+                        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                            {posts.length > 0 ? (
+                                posts.map((post) => (
+                                    <PostCard key={post.id} post={post} />
+                                ))
+                            ) : (
+                                <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
+                                    <div className="rounded-2xl bg-muted/50 p-8">
+                                        <h3 className="text-lg font-semibold">No posts found</h3>
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            Try adjusting your filters or search terms.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </section>

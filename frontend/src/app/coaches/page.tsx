@@ -13,6 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CoachProfile, PaginatedResponse, API_BASE_URL, CoachesPageData, api } from "@/lib/api";
+import { SidebarFilter } from "@/components/filters/SidebarFilter";
+import { MobileFilterDrawer } from "@/components/filters/MobileFilterDrawer";
+import { CoachFilters } from "@/components/coaches/CoachFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +28,22 @@ async function getCoachesPageData(): Promise<CoachesPageData | null> {
     }
 }
 
-async function getCoaches(): Promise<CoachProfile[]> {
+async function getCoaches(searchParams: { [key: string]: string | string[] | undefined }): Promise<CoachProfile[]> {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/coach-profiles?limit=20`, {
-            next: { revalidate: 60 }, // Cache for 60 seconds
+        const queryString = new URLSearchParams();
+        queryString.set('limit', '20');
+        queryString.set('where[isActive][equals]', 'true');
+
+        if (searchParams.search) {
+            queryString.set('where[displayName][like]', searchParams.search as string);
+        }
+
+        if (searchParams.expertise) {
+            queryString.set('where[expertise.area][in]', searchParams.expertise as string);
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/coach-profiles?${queryString.toString()}`, {
+            next: { revalidate: 0 },
         });
 
         if (!response.ok) {
@@ -37,7 +52,7 @@ async function getCoaches(): Promise<CoachProfile[]> {
         }
 
         const data: PaginatedResponse<CoachProfile> = await response.json();
-        return data.docs.filter((coach) => coach.isActive);
+        return data.docs;
     } catch (error) {
         console.error("Failed to fetch coaches:", error);
         return [];
@@ -183,33 +198,14 @@ function CoachCard({ coach }: { coach: CoachProfile }) {
     );
 }
 
-async function CoachesGrid() {
-    const coaches = await getCoaches();
 
-    if (coaches.length === 0) {
-        return (
-            <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
-                <div className="rounded-2xl bg-muted/50 p-8">
-                    <h3 className="text-lg font-semibold">No coaches available yet</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        Check back soon for our expert coaches.
-                    </p>
-                </div>
-            </div>
-        );
-    }
 
-    return (
-        <>
-            {coaches.map((coach) => (
-                <CoachCard key={coach.id} coach={coach} />
-            ))}
-        </>
-    );
-}
-
-export default async function CoachesPage() {
+export default async function CoachesPage(props: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+    const searchParams = await props.searchParams;
     const pageData = await getCoachesPageData();
+    const coaches = await getCoaches(searchParams);
 
     // Fallback data
     const data = pageData || {
@@ -238,21 +234,39 @@ export default async function CoachesPage() {
                 </div>
             </section>
 
-            {/* Coaches Grid */}
-            <section className="py-16 sm:py-24">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        <Suspense
-                            fallback={
-                                <>
-                                    {Array.from({ length: 6 }).map((_, i) => (
-                                        <CoachCardSkeleton key={i} />
-                                    ))}
-                                </>
-                            }
-                        >
-                            <CoachesGrid />
-                        </Suspense>
+            {/* Main Content */}
+            <section className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Mobile Filters */}
+                    <div className="lg:hidden mb-6">
+                        <MobileFilterDrawer>
+                            <CoachFilters />
+                        </MobileFilterDrawer>
+                    </div>
+
+                    {/* Desktop Sidebar */}
+                    <SidebarFilter>
+                        <CoachFilters />
+                    </SidebarFilter>
+
+                    {/* Content Grid */}
+                    <div className="flex-1">
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                            {coaches.length > 0 ? (
+                                coaches.map((coach) => (
+                                    <CoachCard key={coach.id} coach={coach} />
+                                ))
+                            ) : (
+                                <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
+                                    <div className="rounded-2xl bg-muted/50 p-8">
+                                        <h3 className="text-lg font-semibold">No coaches found</h3>
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            Try adjusting your filters or search terms.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </section>

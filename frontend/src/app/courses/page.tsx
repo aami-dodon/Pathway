@@ -6,6 +6,9 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Course, CoachProfile, PaginatedResponse, API_BASE_URL, CoursesPageData, api } from "@/lib/api";
+import { SidebarFilter } from "@/components/filters/SidebarFilter";
+import { MobileFilterDrawer } from "@/components/filters/MobileFilterDrawer";
+import { CourseFilters } from "@/components/courses/CourseFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -20,12 +23,38 @@ async function getCoursesPageData(): Promise<CoursesPageData | null> {
 
 
 
-async function getCourses(): Promise<Course[]> {
+async function getCourses(searchParams: { [key: string]: string | string[] | undefined }): Promise<Course[]> {
     try {
+        const params: any = {
+            limit: 20,
+            depth: 2,
+            where: {
+                isPublished: { equals: true },
+            },
+        };
+
+        const queryString = new URLSearchParams();
+        if (params.limit) queryString.set('limit', params.limit.toString());
+        if (params.depth) queryString.set('depth', params.depth.toString());
+
+        if (searchParams.search) {
+            queryString.set('where[title][like]', searchParams.search as string);
+        }
+
+        if (searchParams.category) {
+            queryString.set('where[category][in]', searchParams.category as string);
+        }
+
+        if (searchParams.difficulty) {
+            queryString.set('where[difficulty][in]', searchParams.difficulty as string);
+        }
+
+        queryString.set('where[isPublished][equals]', 'true');
+
         const response = await fetch(
-            `${API_BASE_URL}/api/courses?where[isPublished][equals]=true&depth=2&limit=20`,
+            `${API_BASE_URL}/api/courses?${queryString.toString()}`,
             {
-                next: { revalidate: 60 },
+                next: { revalidate: 0 },
             }
         );
 
@@ -64,34 +93,15 @@ function CourseCardSkeleton() {
 
 
 
-async function CoursesGrid() {
-    const courses = await getCourses();
 
-    if (courses.length === 0) {
-        return (
-            <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
-                <div className="rounded-2xl bg-muted/50 p-8">
-                    <GraduationCap className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold">No courses available yet</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        Check back soon for new courses from our experts.
-                    </p>
-                </div>
-            </div>
-        );
-    }
 
-    return (
-        <>
-            {courses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-            ))}
-        </>
-    );
-}
-
-export default async function CoursesPage() {
+export default async function CoursesPage(props: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+    const searchParams = await props.searchParams;
     const pageData = await getCoursesPageData();
+    const courses = await getCourses(searchParams);
+    const categoriesRes = await api.getCategories();
 
     // Fallback data
     const data = pageData || {
@@ -120,21 +130,41 @@ export default async function CoursesPage() {
                 </div>
             </section>
 
-            {/* Courses Grid */}
-            <section className="py-16 sm:py-24">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                        <Suspense
-                            fallback={
-                                <>
-                                    {Array.from({ length: 6 }).map((_, i) => (
-                                        <CourseCardSkeleton key={i} />
-                                    ))}
-                                </>
-                            }
-                        >
-                            <CoursesGrid />
-                        </Suspense>
+            {/* Main Content */}
+            <section className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Mobile Filters */}
+                    <div className="lg:hidden mb-6">
+                        <MobileFilterDrawer>
+                            <CourseFilters categories={categoriesRes.docs} />
+                        </MobileFilterDrawer>
+                    </div>
+
+                    {/* Desktop Sidebar */}
+                    <SidebarFilter>
+                        <CourseFilters categories={categoriesRes.docs} />
+                    </SidebarFilter>
+
+
+                    {/* Content Grid */}
+                    <div className="flex-1">
+                        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                            {courses.length > 0 ? (
+                                courses.map((course) => (
+                                    <CourseCard key={course.id} course={course} />
+                                ))
+                            ) : (
+                                <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
+                                    <div className="rounded-2xl bg-muted/50 p-8">
+                                        <GraduationCap className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                                        <h3 className="text-lg font-semibold">No courses found</h3>
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            Try adjusting your filters or search terms.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </section>
