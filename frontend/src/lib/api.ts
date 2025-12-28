@@ -781,6 +781,11 @@ class ApiClient {
         return this.request(`/api/lessons/${id}`);
     }
 
+    // Free Lesson Preview (Can be accessed without authentication)
+    async getFreeLessonPreview(id: string): Promise<Lesson> {
+        return this.request(`/api/lessons/${id}/content`);
+    }
+
     // Contact Submissions
     async submitContactForm(data: { firstName: string; lastName: string; email: string; message: string }): Promise<ContactSubmission> {
         const response = await this.request<{ doc: ContactSubmission }>('/api/contact-submissions', {

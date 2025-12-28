@@ -4,10 +4,6 @@ export const lessonContentHandler: PayloadHandler = async (req) => {
     const { payload, user } = req
     const id = req.routeParams?.id as string | undefined
 
-    if (!user) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     try {
         // 1. Fetch Lesson
         const lesson = await payload.findByID({
@@ -20,14 +16,24 @@ export const lessonContentHandler: PayloadHandler = async (req) => {
             return Response.json({ error: 'Lesson not found' }, { status: 404 })
         }
 
-        // 2. Check Publishing Status (unless staff)
+        // 2. Check if lesson is free - allow unauthenticated access for free lessons
+        if (lesson.isFree && lesson.isPublished) {
+            return Response.json(lesson)
+        }
+
+        // 3. For non-free lessons, require authentication
+        if (!user) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        // 4. Check Publishing Status (unless staff)
         const isStaff = ['admin', 'coach'].includes(user.role as string)
         if (!isStaff && !lesson.isPublished) {
             return Response.json({ error: 'Lesson not found' }, { status: 404 })
         }
 
-        // 3. Check Access
-        if (isStaff || lesson.isFree) {
+        // 5. Staff can access any lesson
+        if (isStaff) {
             return Response.json(lesson)
         }
 
