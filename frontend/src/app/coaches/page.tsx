@@ -9,6 +9,7 @@ import {
     MapPin,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -206,10 +207,16 @@ function CoachCard({ coach }: { coach: CoachProfile }) {
                         )}
                     </div>
 
-                    <Link href={`/coaches/${coach.slug}`} className="flex items-center gap-1 text-xs font-medium text-primary z-20">
-                        View Profile
-                        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link href={`/coaches/${coach.slug}`} className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
+                            View Profile
+                        </Link>
+                        <Button variant="default" size="sm" asChild className="h-8 text-xs font-semibold px-4 cursor-pointer">
+                            <Link href={`/coaches/${coach.slug}#booking`}>
+                                Book Session
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
             </CardContent>
         </Card>
@@ -229,8 +236,8 @@ export default async function CoachesPage(props: {
     const data = pageData || {
         hero: {
             badge: 'Our Coaches',
-            title: 'Learn from the Best',
-            description: 'Connect with experienced professionals ready to guide your journey to success.',
+            title: 'Book a 1:1 Coaching Session',
+            description: 'Connect with industry experts for personalized guidance, technical mentorship, and career advice.',
         },
     };
     return (

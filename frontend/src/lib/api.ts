@@ -719,7 +719,7 @@ class ApiClient {
         const searchParams = new URLSearchParams({
             'where[course][equals]': courseId,
             'where[subscriber][equals]': subscriberId,
-            'where[status][equals]': 'active',
+            'where[status][in]': 'active,completed',
         });
         return this.request(`/api/enrollments?${searchParams.toString()}`);
     }
@@ -727,10 +727,21 @@ class ApiClient {
     async getMyEnrollments(subscriberId: string): Promise<PaginatedResponse<any>> {
         const searchParams = new URLSearchParams({
             'where[subscriber][equals]': subscriberId,
-            'where[status][equals]': 'active',
+            'where[status][in]': 'active,completed',
             'depth': '2',
         });
         return this.request(`/api/enrollments?${searchParams.toString()}`);
+    }
+
+    async updateEnrollment(id: string, data: any): Promise<any> {
+        return this.request(`/api/enrollments/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        });
+    }
+
+    async getEnrollmentById(id: string): Promise<any> {
+        return this.request(`/api/enrollments/${id}`);
     }
 
     // Progress

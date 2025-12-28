@@ -35,9 +35,9 @@ interface HeaderProps {
 export function Header({ navigationLinks }: HeaderProps) {
     const navigation = navigationLinks || [
         { name: "Home", href: "/" },
-        { name: "Blog", href: "/blog" },
         { name: "Courses", href: "/courses" },
-        { name: "Coaches", href: "/coaches" },
+        { name: "1:1 Coaching", href: "/coaches" },
+        { name: "Blog", href: "/blog" },
     ];
     const pathname = usePathname();
     const router = useRouter();

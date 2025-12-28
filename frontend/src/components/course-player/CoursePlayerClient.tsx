@@ -24,6 +24,16 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { RichTextContent } from "@/components/RichTextContent";
 import { Card } from "@/components/ui/card";
+import confetti from 'canvas-confetti';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { Trophy, Home, ArrowRight } from "lucide-react";
 
 interface CoursePlayerProps {
     course: Course;
@@ -43,6 +53,7 @@ export function CoursePlayerClient({
     const [progressMap, setProgressMap] = useState<Record<string, any>>({});
     const [isLoading, setIsLoading] = useState(false);
     const [isVideoStarted, setIsVideoStarted] = useState(false);
+    const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
 
     useEffect(() => {
         setIsVideoStarted(false);
@@ -108,7 +119,34 @@ export function CoursePlayerClient({
             if (currentIndex < allLessons.length - 1) {
                 setActiveLesson(allLessons[currentIndex + 1]);
             } else {
+                // Course completed!
                 toast.success("Course Completed! Congratulations!");
+
+                // Update enrollment status
+                try {
+                    await api.updateEnrollment(enrollmentId, {
+                        status: 'completed',
+                        completedAt: new Date().toISOString(),
+                        progress: {
+                            percentComplete: 100,
+                            lessonsCompleted: allLessons.length,
+                            totalLessons: allLessons.length,
+                            lastAccessedAt: new Date().toISOString()
+                        }
+                    });
+                } catch (err) {
+                    console.error("Failed to update enrollment status", err);
+                }
+
+                // Trigger celebration
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#f59e0b', '#fbbf24', '#ffffff']
+                });
+
+                setIsCompletionModalOpen(true);
             }
 
         } catch (error) {
@@ -164,7 +202,7 @@ export function CoursePlayerClient({
                                         >
                                             <span className="shrink-0 mt-0.5">
                                                 {isLessonCompleted ? (
-                                                    <CheckCircle2 className={cn("h-4 w-4", isSelected ? "text-primary" : "text-green-500")} />
+                                                    <CheckCircle2 className={cn("h-4 w-4", isSelected ? "text-primary" : "text-primary")} />
                                                 ) : (
                                                     <div className={cn("h-4 w-4 rounded-full border-2", isSelected ? "border-primary" : "border-muted-foreground/30")} />
                                                 )}
@@ -246,7 +284,7 @@ export function CoursePlayerClient({
                                         {/* Video Warning Overlay (Top Right) */}
                                         {!(activeLesson.videoContent?.videoUrl || activeLesson.videoContent?.videoFile?.url) && (
                                             <div className="absolute top-4 right-4 z-40 group/warning">
-                                                <AlertTriangle className="h-5 w-5 text-white/30 hover:text-amber-500 transition-colors cursor-help" />
+                                                <AlertTriangle className="h-5 w-5 text-white/30 hover:text-primary transition-colors cursor-help" />
                                                 <div className="absolute top-full right-0 mt-2 w-max max-w-[200px] p-2 bg-black/80 backdrop-blur-md text-white text-[11px] rounded-lg shadow-xl border border-white/10 opacity-0 group-hover/warning:opacity-100 transition-opacity pointer-events-none">
                                                     Video content is currently unavailable.
                                                 </div>
@@ -387,7 +425,7 @@ export function CoursePlayerClient({
                                         "h-10 px-6 rounded-xl font-medium transition-all",
                                         isCompleted
                                             ? "bg-zinc-800 text-zinc-400 cursor-default"
-                                            : "bg-amber-500 hover:bg-amber-600 text-black shadow-lg shadow-amber-500/20"
+                                            : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                                     )}
                                 >
                                     {isLoading ? "Saving..." : isCompleted ? (
@@ -444,7 +482,55 @@ export function CoursePlayerClient({
                     <CourseMoreDetails course={course} />
                 </div>
             </section>
-        </div >
+
+            {/* Course Completion Modal */}
+            <Dialog open={isCompletionModalOpen} onOpenChange={setIsCompletionModalOpen}>
+                <DialogContent className="sm:max-w-md bg-zinc-950 border-white/10 text-white">
+                    <DialogHeader className="flex flex-col items-center justify-center text-center pt-6">
+                        <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 animate-bounce">
+                            <Trophy className="h-10 w-10 text-primary" />
+                        </div>
+                        <DialogTitle className="text-2xl font-bold tracking-tight">
+                            Course Completed!
+                        </DialogTitle>
+                        <DialogDescription className="text-zinc-400 mt-2">
+                            Congratulations on completing <strong>{course.title}</strong>!
+                            You&apos;ve successfully finished all lessons.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                        <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium">100% Complete</p>
+                                    <p className="text-xs text-zinc-500">{allLessons.length} Lessons Finished</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="flex sm:flex-col gap-2 pt-2">
+                        <Button
+                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12 rounded-xl"
+                            onClick={() => router.push('/my-courses')}
+                        >
+                            <Home className="mr-2 h-4 w-4" /> Go to My Courses
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="w-full border-white/10 hover:bg-white/5 h-12 rounded-xl"
+                            onClick={() => setIsCompletionModalOpen(false)}
+                        >
+                            Review Course Material
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }
 

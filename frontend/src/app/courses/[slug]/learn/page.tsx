@@ -56,8 +56,8 @@ async function getEnrollmentData(courseId: string) {
 
         if (!subscriberId) return null;
 
-        // Get Enrollment
-        const enrollmentRes = await fetch(`${API_BASE_URL}/api/enrollments?where[course][equals]=${courseId}&where[subscriber][equals]=${subscriberId}&where[status][equals]=active`, {
+        // Get Enrollment (Active or Completed)
+        const enrollmentRes = await fetch(`${API_BASE_URL}/api/enrollments?where[course][equals]=${courseId}&where[subscriber][equals]=${subscriberId}&where[status][in]=active,completed`, {
             headers: { 'Content-Type': 'application/json', Cookie: cookie },
             cache: 'no-store'
         });

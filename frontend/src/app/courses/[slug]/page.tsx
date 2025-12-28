@@ -41,7 +41,6 @@ import {
     API_BASE_URL,
 } from "@/lib/api";
 import { SocialShare } from "@/components/social-share";
-import { AuthNudge } from "@/components/auth-nudge";
 import { EnrollmentAction } from "@/components/courses/EnrollmentAction";
 import { CourseMoreDetails } from "@/components/courses/CourseMoreDetails";
 
@@ -117,8 +116,8 @@ async function getUserAndEnrollmentStatus(courseId: string) {
 
         if (!subscriberId) return { user, subscriberId: null, isEnrolled: false };
 
-        // Check Enrollment
-        const enrollmentRes = await fetch(`${API_BASE_URL}/api/enrollments?where[course][equals]=${courseId}&where[subscriber][equals]=${subscriberId}&where[status][equals]=active`, {
+        // Check Enrollment (Active or Completed)
+        const enrollmentRes = await fetch(`${API_BASE_URL}/api/enrollments?where[course][equals]=${courseId}&where[subscriber][equals]=${subscriberId}&where[status][in]=active,completed`, {
             headers: {
                 'Content-Type': 'application/json',
                 Cookie: cookie
@@ -127,13 +126,13 @@ async function getUserAndEnrollmentStatus(courseId: string) {
         });
 
         const enrollmentData = await enrollmentRes.json();
-        const isEnrolled = enrollmentData.docs && enrollmentData.docs.length > 0;
+        const enrollment = enrollmentData.docs?.[0] || null;
 
-        return { user, subscriberId, isEnrolled };
+        return { user, subscriberId, enrollment };
 
     } catch (error) {
         console.error("Failed to check authentication details:", error);
-        return { user: null, subscriberId: null, isEnrolled: false };
+        return { user: null, subscriberId: null, enrollment: null };
     }
 }
 
@@ -208,7 +207,8 @@ export default async function CoursePage({ params }: CoursePageProps) {
         notFound();
     }
 
-    const { user, subscriberId, isEnrolled } = await getUserAndEnrollmentStatus(course.id);
+    const { user, subscriberId, enrollment } = await getUserAndEnrollmentStatus(course.id);
+    const isEnrolled = !!enrollment;
     const isAuthenticated = !!user;
     const instructor = course.instructor as CoachProfile | undefined;
     const modules = (course.modules || []) as Module[];
@@ -247,6 +247,21 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
     return (
         <div className="min-h-screen">
+            {/* Completion Banner */}
+            {enrollment?.status === 'completed' && (
+                <div className="bg-primary/10 border-b border-primary/20 py-3">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span>You have successfully completed this course!</span>
+                            <Link href="/my-courses" className="underline ml-2 hover:text-primary/80">
+                                View all my courses
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Hero Section */}
             <section className="border-b border-border/40 bg-gradient-to-b from-muted/50 to-background">
                 <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
@@ -348,17 +363,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
                                         isOpen={course.enrollment?.isOpen !== false}
                                         isAuthenticated={isAuthenticated}
                                         isEnrolled={isEnrolled}
+                                        enrollmentStatus={enrollment?.status}
                                         subscriberId={subscriberId || undefined}
                                     />
 
-                                    {!isAuthenticated && (
-                                        <AuthNudge
-                                            title="Login Required to Enroll"
-                                            description="Please sign in or create an account to enroll in this course."
-                                            redirectUrl={`/courses/${course.slug}`}
-                                            className="mt-4"
-                                        />
-                                    )}
 
                                     <div className="mt-6 space-y-3 text-sm">
                                         <div className="flex items-center justify-between">

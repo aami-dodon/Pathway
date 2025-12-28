@@ -10,15 +10,19 @@ import {
   Star,
   Quote,
   LucideIcon,
+  Video,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { PostCard } from "@/components/blog/PostCard";
 import { ContactForm } from "@/components/home/ContactForm";
 import { ScrollAnimation } from "@/components/ui/scroll-animation";
 import { TextReveal } from "@/components/ui/text-reveal";
+import { cn } from "@/lib/utils";
 import { API_BASE_URL, PaginatedResponse, Course, Post, HomePageData, api } from "@/lib/api";
 
 const iconMap: Record<string, LucideIcon> = {
@@ -76,8 +80,8 @@ const fallbackData: HomePageData = {
     description: "Join thousands of learners accessing premium courses, insightful content, and personalized coaching from industry-leading experts.",
     primaryButtonText: "Explore Courses",
     primaryButtonLink: "/courses",
-    secondaryButtonText: "Read Latest Posts",
-    secondaryButtonLink: "/blog",
+    secondaryButtonText: "Book 1:1 Session",
+    secondaryButtonLink: "/coaches",
   },
   stats: [
     { value: "10K+", label: "Active Learners" },
@@ -314,35 +318,105 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Featured Blogs Section */}
-      {posts.length > 0 && (
-        <section className="py-24 sm:py-32">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Coaching Section */}
+      <section className="py-24 sm:py-32 relative overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.05),transparent)]" />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center mb-16">
             <ScrollAnimation>
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-12">
-                <div className="text-center sm:text-left">
-                  <Badge variant="secondary" className="mb-3">Blog</Badge>
-                  <h2 className="text-3xl font-bold tracking-tight">Latest Insights</h2>
-                </div>
-                <Button asChild variant="ghost" size="sm" className="group">
-                  <Link href="/blog">
-                    Read More Articles
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </Button>
-              </div>
+              <Badge variant="secondary" className="mb-4">1:1 Coaching</Badge>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-5xl mb-6">
+                Personalized Guidance from <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Industry Experts</span>
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Connect with mentors who have been where you want to go. Our coaches provide tailored advice,
+                career guidance, and technical mentorship to help you reach your full potential faster.
+              </p>
             </ScrollAnimation>
-
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {posts.map((post, index) => (
-                <ScrollAnimation key={post.id} delay={index * 0.1}>
-                  <PostCard post={post} />
-                </ScrollAnimation>
-              ))}
-            </div>
           </div>
-        </section>
-      )}
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {[
+              {
+                icon: Video,
+                title: "Live Video Sessions",
+                desc: "Focused 30-minute 1:1 calls tailored to your specific goals and challenges.",
+                color: "bg-primary/10 text-primary"
+              },
+              {
+                icon: Calendar,
+                title: "Flexible Scheduling",
+                desc: "Book sessions that fit your busy schedule across multiple timezones globally.",
+                color: "bg-primary/10 text-primary"
+              },
+              {
+                icon: CheckCircle2,
+                title: "Actionable Feedback",
+                desc: "Walk away with a clear roadmap and specific steps to take your next career leap.",
+                color: "bg-primary/10 text-primary"
+              },
+            ].map((item, i) => (
+              <ScrollAnimation key={i} delay={i * 0.1}>
+                <Card className="h-full border-border/50 bg-background/50 backdrop-blur-sm hover:border-primary/30 transition-all group">
+                  <CardContent className="p-8">
+                    <div className={cn("mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-110", item.color)}>
+                      <item.icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
+            ))}
+          </div>
+
+          <div className="flex justify-center">
+            <ScrollAnimation delay={0.4}>
+              <Button asChild size="lg" className="group h-12 px-8 text-base cursor-pointer shadow-lg shadow-primary/20">
+                <Link href="/coaches">
+                  Find Your Perfect Coach
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+            </ScrollAnimation>
+          </div>
+        </div>
+      </section>
+
+
+      {/* Featured Blogs Section */}
+      {
+        posts.length > 0 && (
+          <section className="py-24 sm:py-32">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+              <ScrollAnimation>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-12">
+                  <div className="text-center sm:text-left">
+                    <Badge variant="secondary" className="mb-3">Blog</Badge>
+                    <h2 className="text-3xl font-bold tracking-tight">Latest Insights</h2>
+                  </div>
+                  <Button asChild variant="ghost" size="sm" className="group">
+                    <Link href="/blog">
+                      Read More Articles
+                      <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </Button>
+                </div>
+              </ScrollAnimation>
+
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {posts.map((post, index) => (
+                  <ScrollAnimation key={post.id} delay={index * 0.1}>
+                    <PostCard post={post} />
+                  </ScrollAnimation>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      }
 
       {/* Testimonials Section */}
       <section className="py-24 sm:py-32 bg-muted/30 border-y border-border/40 backdrop-blur-sm">

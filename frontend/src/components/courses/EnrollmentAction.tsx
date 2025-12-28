@@ -14,6 +14,7 @@ interface EnrollmentActionProps {
     isOpen: boolean;
     isAuthenticated: boolean;
     isEnrolled: boolean;
+    enrollmentStatus?: 'active' | 'completed' | 'paused' | 'expired' | 'cancelled';
     subscriberId?: string; // Required for enrollment
 }
 
@@ -23,6 +24,7 @@ export function EnrollmentAction({
     isOpen,
     isAuthenticated,
     isEnrolled,
+    enrollmentStatus,
     subscriberId,
 }: EnrollmentActionProps) {
     const router = useRouter();
@@ -50,15 +52,22 @@ export function EnrollmentAction({
 
     if (isEnrolled) {
         return (
-            <Button
-                size="lg"
-                className="w-full cursor-pointer"
-                asChild
-            >
-                <Link href={`/courses/${courseSlug}/learn`}>
-                    Continue Learning
-                </Link>
-            </Button>
+            <div className="space-y-3">
+                <Button
+                    size="lg"
+                    className="w-full cursor-pointer"
+                    asChild
+                >
+                    <Link href={`/courses/${courseSlug}/learn`}>
+                        {enrollmentStatus === 'completed' ? "Review Course" : "Continue Learning"}
+                    </Link>
+                </Button>
+                {enrollmentStatus === 'completed' && (
+                    <p className="text-center text-xs text-primary font-medium">
+                        You've completed this course!
+                    </p>
+                )}
+            </div>
         );
     }
 

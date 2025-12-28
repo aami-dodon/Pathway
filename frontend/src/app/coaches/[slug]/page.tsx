@@ -290,7 +290,7 @@ export default async function CoachProfilePage({ params }: PageProps) {
                         </div>
 
                         {/* Right Column - Booking */}
-                        <div className="lg:col-span-1">
+                        <div id="booking" className="lg:col-span-1">
                             <div className="sticky top-24">
                                 <Card className="border-primary/20 shadow-lg">
                                     <CardHeader>
