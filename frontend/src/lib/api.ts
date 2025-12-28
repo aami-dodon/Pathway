@@ -385,12 +385,26 @@ export interface FooterContentData {
         name: string;
         href: string;
     }[];
-    socialLinks: {
+}
+
+export interface SiteSettingsData {
+    maintenanceMode: {
+        isEnabled: boolean;
+        title?: string;
+        description?: string;
+        expectedLaunchDate?: string;
+        showNewsletter?: boolean;
+    };
+    socialLinks?: {
         twitter?: string;
-        github?: string;
         linkedin?: string;
+        instagram?: string;
+        github?: string;
     };
 }
+
+
+
 
 export interface PaginatedResponse<T> {
     docs: T[];

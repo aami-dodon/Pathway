@@ -8,7 +8,9 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
-import { HeaderNavData, FooterContentData, api } from "@/lib/api";
+import { HeaderNavData, FooterContentData, SiteSettingsData, api } from "@/lib/api";
+import { ComingSoon } from "@/components/ComingSoon";
+
 
 const inter = Inter({
   variable: "--font-inter",
@@ -57,6 +59,16 @@ async function getFooterContent(): Promise<FooterContentData | null> {
   }
 }
 
+async function getSiteSettings(): Promise<SiteSettingsData | null> {
+  try {
+    return await api.getGlobal<SiteSettingsData>('site-settings', { cache: 'no-store' });
+  } catch (error) {
+    console.error("Failed to fetch site settings:", error);
+    return null;
+  }
+}
+
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -64,6 +76,10 @@ export default async function RootLayout({
 }>) {
   const headerNav = await getHeaderNav();
   const footerContent = await getFooterContent();
+  const siteSettings = await getSiteSettings();
+
+  const isMaintenanceMode = siteSettings?.maintenanceMode?.isEnabled ?? false;
+
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -76,16 +92,28 @@ export default async function RootLayout({
         >
           <DynamicFavicon />
           <AuthProvider>
-            <div className="relative min-h-screen flex flex-col">
-              <Header navigationLinks={headerNav?.navigationLinks} />
-              <main className="flex-1">
-                <Breadcrumbs />
-                {children}
-              </main>
-              <Footer footerData={footerContent || undefined} />
-            </div>
+            {isMaintenanceMode && siteSettings ? (
+              <ComingSoon
+                data={siteSettings.maintenanceMode}
+                socialLinks={siteSettings.socialLinks}
+              />
+            ) : (
+              <div className="relative min-h-screen flex flex-col">
+                <Header navigationLinks={headerNav?.navigationLinks} />
+                <main className="flex-1">
+                  <Breadcrumbs />
+                  {children}
+                </main>
+                <Footer
+                  footerData={footerContent || undefined}
+                  socialLinks={siteSettings?.socialLinks}
+                />
+              </div>
+            )}
+
             <Toaster position="top-right" />
           </AuthProvider>
+
         </ThemeProvider>
       </body>
     </html>

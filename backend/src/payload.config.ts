@@ -41,6 +41,8 @@ import { CoachesPage } from './globals/CoachesPage'
 import { HeaderNav } from './globals/HeaderNav'
 import { FooterContent } from './globals/FooterContent'
 import { MeilisearchAdmin } from './globals/MeilisearchAdmin'
+import { SiteSettings } from './globals/SiteSettings'
+
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -167,6 +169,8 @@ export default buildConfig({
     HeaderNav,
     FooterContent,
     MeilisearchAdmin,
+    SiteSettings,
+
   ],
   endpoints: [...searchEndpoints, ...meilisearchAdminEndpoints],
   editor: lexicalEditor(),

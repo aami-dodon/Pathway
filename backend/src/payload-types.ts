@@ -127,6 +127,7 @@ export interface Config {
     'header-nav': HeaderNav;
     'footer-content': FooterContent;
     'meilisearch-admin': MeilisearchAdmin;
+    'site-settings': SiteSetting;
   };
   globalsSelect: {
     'home-page': HomePageSelect<false> | HomePageSelect<true>;
@@ -136,6 +137,7 @@ export interface Config {
     'header-nav': HeaderNavSelect<false> | HeaderNavSelect<true>;
     'footer-content': FooterContentSelect<false> | FooterContentSelect<true>;
     'meilisearch-admin': MeilisearchAdminSelect<false> | MeilisearchAdminSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
   };
   locale: null;
   user: User & {
@@ -3769,11 +3771,6 @@ export interface FooterContent {
     href: string;
     id?: string | null;
   }[];
-  socialLinks?: {
-    twitter?: string | null;
-    github?: string | null;
-    linkedin?: string | null;
-  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3784,6 +3781,28 @@ export interface FooterContent {
 export interface MeilisearchAdmin {
   id: number;
   lastReindex?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  maintenanceMode?: {
+    isEnabled?: boolean | null;
+    title?: string | null;
+    description?: string | null;
+    expectedLaunchDate?: string | null;
+    showNewsletter?: boolean | null;
+  };
+  socialLinks?: {
+    twitter?: string | null;
+    linkedin?: string | null;
+    instagram?: string | null;
+    github?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -3943,13 +3962,6 @@ export interface FooterContentSelect<T extends boolean = true> {
         href?: T;
         id?: T;
       };
-  socialLinks?:
-    | T
-    | {
-        twitter?: T;
-        github?: T;
-        linkedin?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -3960,6 +3972,32 @@ export interface FooterContentSelect<T extends boolean = true> {
  */
 export interface MeilisearchAdminSelect<T extends boolean = true> {
   lastReindex?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  maintenanceMode?:
+    | T
+    | {
+        isEnabled?: T;
+        title?: T;
+        description?: T;
+        expectedLaunchDate?: T;
+        showNewsletter?: T;
+      };
+  socialLinks?:
+    | T
+    | {
+        twitter?: T;
+        linkedin?: T;
+        instagram?: T;
+        github?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

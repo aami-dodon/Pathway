@@ -60,36 +60,5 @@ export const FooterContent: GlobalConfig = {
                 },
             ],
         },
-        {
-            name: 'socialLinks',
-            type: 'group',
-            label: 'Social Media Links',
-            fields: [
-                {
-                    name: 'twitter',
-                    type: 'text',
-                    label: 'Twitter URL',
-                    admin: {
-                        placeholder: 'https://twitter.com/yourhandle',
-                    },
-                },
-                {
-                    name: 'github',
-                    type: 'text',
-                    label: 'GitHub URL',
-                    admin: {
-                        placeholder: 'https://github.com/yourorg',
-                    },
-                },
-                {
-                    name: 'linkedin',
-                    type: 'text',
-                    label: 'LinkedIn URL',
-                    admin: {
-                        placeholder: 'https://linkedin.com/company/yourcompany',
-                    },
-                },
-            ],
-        },
     ],
 }

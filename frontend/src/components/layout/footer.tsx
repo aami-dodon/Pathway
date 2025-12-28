@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Github, Twitter, Linkedin, Send } from "lucide-react";
+import { Github, Twitter, Linkedin, Send, Instagram } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { api, SiteSettingsData } from "@/lib/api";
 import { toast } from "sonner";
 
 interface FooterProps {
@@ -14,15 +14,11 @@ interface FooterProps {
         description: string;
         companyLinks: { name: string; href: string }[];
         legalLinks: { name: string; href: string }[];
-        socialLinks: {
-            twitter?: string;
-            github?: string;
-            linkedin?: string;
-        };
     };
+    socialLinks?: SiteSettingsData["socialLinks"];
 }
 
-export function Footer({ footerData }: FooterProps) {
+export function Footer({ footerData, socialLinks }: FooterProps) {
     const [email, setEmail] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -55,15 +51,11 @@ export function Footer({ footerData }: FooterProps) {
             { name: "Terms of Service", href: "/terms" },
             { name: "Cookie Policy", href: "/cookies" },
         ],
-        socialLinks: {
-            twitter: 'https://twitter.com',
-            github: 'https://github.com',
-            linkedin: 'https://linkedin.com',
-        },
     };
+
     return (
         <footer className="border-t border-border/40 bg-muted/30">
-            <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+            <div className="container mx-auto px-4 pt-12 pb-0 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
                     {/* Brand */}
                     <div className="md:col-span-1">
@@ -72,35 +64,53 @@ export function Footer({ footerData }: FooterProps) {
                             {data.description}
                         </p>
                         <div className="mt-6 flex gap-4">
-                            <a
-                                href={data.socialLinks.twitter || 'https://twitter.com'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <Twitter className="h-5 w-5" />
-                                <span className="sr-only">Twitter</span>
-                            </a>
-                            <a
-                                href={data.socialLinks.github || 'https://github.com'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <Github className="h-5 w-5" />
-                                <span className="sr-only">GitHub</span>
-                            </a>
-                            <a
-                                href={data.socialLinks.linkedin || 'https://linkedin.com'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <Linkedin className="h-5 w-5" />
-                                <span className="sr-only">LinkedIn</span>
-                            </a>
+                            {socialLinks?.twitter && (
+                                <a
+                                    href={socialLinks.twitter}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <Twitter className="h-5 w-5" />
+                                    <span className="sr-only">Twitter</span>
+                                </a>
+                            )}
+                            {socialLinks?.github && (
+                                <a
+                                    href={socialLinks.github}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <Github className="h-5 w-5" />
+                                    <span className="sr-only">GitHub</span>
+                                </a>
+                            )}
+                            {socialLinks?.linkedin && (
+                                <a
+                                    href={socialLinks.linkedin}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <Linkedin className="h-5 w-5" />
+                                    <span className="sr-only">LinkedIn</span>
+                                </a>
+                            )}
+                            {socialLinks?.instagram && (
+                                <a
+                                    href={socialLinks.instagram}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <Instagram className="h-5 w-5" />
+                                    <span className="sr-only">Instagram</span>
+                                </a>
+                            )}
                         </div>
                     </div>
+
 
 
 
@@ -172,8 +182,8 @@ export function Footer({ footerData }: FooterProps) {
                     </div>
                 </div>
 
-                <div className="mt-12 border-t border-border/40 pt-8">
-                    <p className="text-center text-sm text-muted-foreground">
+                <div className="mt-8 border-t border-border/40 py-4">
+                    <p className="text-left text-sm text-muted-foreground opacity-70">
                         © {new Date().getFullYear()} Pathway. All rights reserved.
                     </p>
                 </div>
