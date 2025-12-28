@@ -217,7 +217,7 @@ export function CoursePlayerClient({
                     <div className="grid gap-4 lg:grid-cols-4 lg:gap-6 h-[calc(100vh-250px)] min-h-[600px]">
 
                         {/* Main Content Area (Left 3/4) */}
-                        <div className="lg:col-span-3 flex flex-col h-full bg-background rounded-xl border border-border/50 shadow-sm overflow-hidden relative">
+                        <div className="lg:col-span-3 flex flex-col h-full bg-zinc-950 rounded-xl border border-white/5 shadow-2xl overflow-hidden relative">
                             {/* Scrollable Content Container */}
                             <ScrollArea className="flex-1 relative">
                                 {/* Video/Media - Full Width at Top */}
@@ -267,15 +267,16 @@ export function CoursePlayerClient({
                                                     )}
                                                 </div>
 
-                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                {/* Play Button Container - Forced Center */}
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                                                     <button
-                                                        className="pointer-events-auto group/play transition-all hover:scale-105 active:scale-95"
+                                                        className="pointer-events-auto group/play transition-all hover:scale-110 active:scale-95"
                                                         onClick={() => setIsVideoStarted(true)}
                                                     >
                                                         <div className="relative">
-                                                            <div className="absolute inset-0 bg-white/5 blur-3xl rounded-full opacity-0 group-hover/play:opacity-100 transition-opacity" />
+                                                            <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full opacity-0 group-hover/play:opacity-100 transition-opacity" />
                                                             <PlayCircle
-                                                                className="h-12 w-12 md:h-16 md:w-16 text-white/80 transition-colors group-hover/play:text-white relative z-10"
+                                                                className="h-16 w-16 md:h-20 md:w-20 text-white/90 transition-colors group-hover/play:text-white relative z-10"
                                                                 strokeWidth={1}
                                                             />
                                                         </div>
@@ -287,7 +288,7 @@ export function CoursePlayerClient({
                                 )}
 
                                 {/* Content Body */}
-                                <div className="p-6 sm:p-8 max-w-none">
+                                <div className="p-6 sm:p-8 max-w-none text-zinc-100">
                                     {activeLesson.type !== 'video' && (
                                         <div className="flex items-center justify-between mb-6">
                                             <h1 className="text-2xl font-bold tracking-tight">{activeLesson.title}</h1>
@@ -367,23 +368,27 @@ export function CoursePlayerClient({
                             </ScrollArea>
 
                             {/* Floating Navigation Overlay */}
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-xl border border-border shadow-2xl rounded-2xl p-2 flex items-center gap-2 z-30 min-w-[300px] sm:min-w-[400px] justify-between">
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-2xl p-1.5 flex items-center gap-1 z-30 min-w-[320px] sm:min-w-[420px] justify-between transition-all">
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     disabled={allLessons.indexOf(activeLesson) === 0}
                                     onClick={() => setActiveLesson(allLessons[allLessons.indexOf(activeLesson) - 1])}
-                                    className="rounded-xl h-10 px-3 hover:bg-muted/50"
+                                    className="rounded-xl h-10 px-4 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-20"
                                 >
-                                    <ChevronLeft className="mr-1 h-4 w-4" /> <span className="hidden sm:inline">Prev</span>
+                                    <ChevronLeft className="mr-1.5 h-4 w-4" /> <span className="hidden sm:inline font-medium">Prev</span>
                                 </Button>
 
                                 <Button
                                     onClick={handleMarkComplete}
                                     size="sm"
                                     disabled={isLoading || isCompleted}
-                                    variant={isCompleted ? "secondary" : "default"}
-                                    className="h-10 px-6 rounded-xl font-medium"
+                                    className={cn(
+                                        "h-10 px-6 rounded-xl font-medium transition-all",
+                                        isCompleted
+                                            ? "bg-zinc-800 text-zinc-400 cursor-default"
+                                            : "bg-amber-500 hover:bg-amber-600 text-black shadow-lg shadow-amber-500/20"
+                                    )}
                                 >
                                     {isLoading ? "Saving..." : isCompleted ? (
                                         <div className="flex items-center gap-2">
@@ -400,9 +405,9 @@ export function CoursePlayerClient({
                                     size="sm"
                                     disabled={allLessons.indexOf(activeLesson) === allLessons.length - 1}
                                     onClick={() => setActiveLesson(allLessons[allLessons.indexOf(activeLesson) + 1])}
-                                    className="rounded-xl h-10 px-3 hover:bg-muted/50"
+                                    className="rounded-xl h-10 px-4 text-zinc-400 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-20"
                                 >
-                                    <span className="hidden sm:inline">Next</span> <ChevronRight className="ml-1 h-4 w-4" />
+                                    <span className="hidden sm:inline font-medium">Next</span> <ChevronRight className="ml-1.5 h-4 w-4" />
                                 </Button>
                             </div>
                         </div>
