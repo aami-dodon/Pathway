@@ -13,7 +13,7 @@ import {
     DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { API_BASE_URL } from "@/lib/api";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface SearchHit {
@@ -89,21 +89,14 @@ export function GlobalSearch() {
 
         setIsLoading(true);
         try {
-            const url = new URL(`${API_BASE_URL}/api/search`);
-            url.searchParams.set("q", searchQuery);
-            url.searchParams.set("limit", "5");
-
-            const response = await fetch(url.toString());
-            if (response.ok) {
-                const data = await response.json();
-                if (data.results) {
-                    setResults({
-                        posts: data.results.posts || [],
-                        courses: data.results.courses || [],
-                        coaches: data.results.coaches || [],
-                        pages: data.results.pages || [],
-                    });
-                }
+            const data = await api.search({ q: searchQuery, limit: 5 });
+            if (data.results) {
+                setResults({
+                    posts: data.results.posts || [],
+                    courses: data.results.courses || [],
+                    coaches: data.results.coaches || [],
+                    pages: data.results.pages || [],
+                });
             }
         } catch (error) {
             console.error("Search failed:", error);

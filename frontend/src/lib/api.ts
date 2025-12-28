@@ -625,6 +625,16 @@ class ApiClient {
         return this.request(`/api/availability?${searchParams.toString()}`);
     }
 
+    // Search
+    async search(params: { q: string; index?: string; limit?: number }): Promise<any> {
+        const searchParams = new URLSearchParams();
+        searchParams.set("q", params.q);
+        if (params.index) searchParams.set("index", params.index);
+        if (params.limit) searchParams.set("limit", params.limit.toString());
+
+        return this.request(`/api/search?${searchParams.toString()}`);
+    }
+
     // Globals
     async getGlobal<T>(slug: string, options?: RequestInit): Promise<T> {
         return this.request(`/api/globals/${slug}`, options);

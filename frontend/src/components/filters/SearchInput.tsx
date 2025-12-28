@@ -5,7 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, X, Loader2 } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
 import { Input } from "@/components/ui/input";
-import { API_BASE_URL } from "@/lib/api";
+import { api } from "@/lib/api";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -70,29 +70,24 @@ export function SearchInput({
         setIsLoading(true);
         try {
             const searchIndex = getSearchIndex();
-            const url = new URL(`${API_BASE_URL}/api/search`);
-            url.searchParams.set("q", query);
-            if (searchIndex) {
-                url.searchParams.set("index", searchIndex);
-            }
-            url.searchParams.set("limit", "5");
+            const data = await api.search({
+                q: query,
+                index: searchIndex,
+                limit: 5
+            });
 
-            const response = await fetch(url.toString());
-            if (response.ok) {
-                const data = await response.json();
-                // Handle both single index and multi-index results
-                if (data.hits) {
-                    setResults(data.hits);
-                } else if (data.results) {
-                    // Flatten multi-index results
-                    const allHits: SearchHit[] = [];
-                    Object.values(data.results).forEach((hits: any) => {
-                        allHits.push(...hits);
-                    });
-                    setResults(allHits.slice(0, 5));
-                }
-                setIsOpen(true);
+            // Handle both single index and multi-index results
+            if (data.hits) {
+                setResults(data.hits);
+            } else if (data.results) {
+                // Flatten multi-index results
+                const allHits: SearchHit[] = [];
+                Object.values(data.results).forEach((hits: any) => {
+                    allHits.push(...hits);
+                });
+                setResults(allHits.slice(0, 5));
             }
+            setIsOpen(true);
         } catch (error) {
             console.error("Search failed:", error);
         } finally {
