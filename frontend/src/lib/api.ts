@@ -203,6 +203,39 @@ export interface Lesson {
     };
     isFree: boolean;
     isPublished: boolean;
+
+    // Content Fields
+    videoContent?: {
+        videoUrl?: string;
+        videoFile?: Media;
+        transcript?: any;
+        captions?: Media;
+    };
+    textContent?: any;
+    audioContent?: {
+        audioFile?: Media;
+        transcript?: any;
+    };
+    assignmentContent?: {
+        instructions?: any;
+        dueInDays?: number;
+        submissionType?: 'file' | 'text' | 'link';
+        maxPoints?: number;
+    };
+    quiz?: any;
+    liveSession?: {
+        scheduledAt?: string;
+        meetingUrl?: string;
+        recordingUrl?: string;
+    };
+    resources?: {
+        title: string;
+        file: Media;
+        description?: string;
+        id?: string;
+    }[];
+    completionCriteria?: 'view' | 'video-complete' | 'quiz-pass' | 'assignment-submit' | 'manual';
+
     createdAt: string;
     updatedAt: string;
 }
@@ -638,6 +671,77 @@ class ApiClient {
     // Globals
     async getGlobal<T>(slug: string, options?: RequestInit): Promise<T> {
         return this.request(`/api/globals/${slug}`, options);
+    }
+
+
+    // Enrollments
+    async createEnrollment(courseId: string, subscriberId: string): Promise<any> {
+        return this.request('/api/enrollments', {
+            method: 'POST',
+            body: JSON.stringify({
+                course: courseId,
+                subscriber: subscriberId,
+                status: 'active',
+                enrolledAt: new Date().toISOString(),
+            }),
+        });
+    }
+
+    async getEnrollment(courseId: string, subscriberId: string): Promise<PaginatedResponse<any>> {
+        const searchParams = new URLSearchParams({
+            'where[course][equals]': courseId,
+            'where[subscriber][equals]': subscriberId,
+            'where[status][equals]': 'active',
+        });
+        return this.request(`/api/enrollments?${searchParams.toString()}`);
+    }
+
+    async getMyEnrollments(subscriberId: string): Promise<PaginatedResponse<any>> {
+        const searchParams = new URLSearchParams({
+            'where[subscriber][equals]': subscriberId,
+            'where[status][equals]': 'active',
+            'depth': '2',
+        });
+        return this.request(`/api/enrollments?${searchParams.toString()}`);
+    }
+
+    // Progress
+    async getEnrollmentProgress(enrollmentId: string): Promise<PaginatedResponse<any>> {
+        const searchParams = new URLSearchParams({
+            'where[enrollment][equals]': enrollmentId,
+            'limit': '1000',
+        });
+        return this.request(`/api/progress?${searchParams.toString()}`);
+    }
+
+    async getProgress(enrollmentId: string, lessonId: string): Promise<PaginatedResponse<any>> {
+        const searchParams = new URLSearchParams({
+            'where[enrollment][equals]': enrollmentId,
+            'where[lesson][equals]': lessonId,
+        });
+        return this.request(`/api/progress?${searchParams.toString()}`);
+    }
+
+    async updateProgress(data: { enrollment: string; lesson: string; status: string; completedAt?: string }): Promise<any> {
+        // First check if progress exists
+        const existing = await this.getProgress(data.enrollment, data.lesson);
+
+        if (existing.docs.length > 0) {
+            return this.request(`/api/progress/${existing.docs[0].id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data),
+            });
+        }
+
+        return this.request('/api/progress', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    }
+
+    // Lessons (Authenticated Access)
+    async getLessonContent(id: string): Promise<Lesson> {
+        return this.request(`/api/lessons/${id}`);
     }
 }
 
