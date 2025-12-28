@@ -11,6 +11,12 @@ interface LogoProps {
      */
     size?: "sm" | "md" | "lg";
     /**
+     * Color variant of the logo
+     * - primary: Uses primary color (default)
+     * - secondary: Uses secondary/muted colors
+     */
+    variant?: "primary" | "secondary";
+    /**
      * Whether to show the "Pathway" text next to the icon
      */
     showText?: boolean;
@@ -44,26 +50,44 @@ const sizeConfig = {
 
 export function Logo({
     size = "md",
+    variant = "primary",
     showText = true,
     asLink = true,
     className,
 }: LogoProps) {
     const config = sizeConfig[size];
 
+    const variantStyles = {
+        primary: {
+            container: "bg-gradient-to-br from-primary to-primary/70 shadow-primary/25",
+            icon: "text-primary-foreground",
+            text: "bg-gradient-to-r from-foreground to-foreground/70",
+        },
+        secondary: {
+            container: "bg-gradient-to-br from-secondary to-secondary/70 shadow-secondary/25 border border-border/50",
+            icon: "text-secondary-foreground",
+            text: "bg-gradient-to-r from-muted-foreground to-muted-foreground/70",
+        },
+    };
+
+    const styles = variantStyles[variant];
+
     const logoContent = (
         <>
             <div
                 className={cn(
-                    "relative flex items-center justify-center bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/25 transition-transform group-hover:scale-105",
+                    "relative flex items-center justify-center shadow-lg transition-transform group-hover:scale-105",
+                    styles.container,
                     config.container
                 )}
             >
-                <GraduationCap className={cn("text-primary-foreground", config.icon)} />
+                <GraduationCap className={cn(styles.icon, config.icon)} />
             </div>
             {showText && (
                 <span
                     className={cn(
-                        "font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent",
+                        "font-bold bg-clip-text text-transparent",
+                        styles.text,
                         config.text
                     )}
                 >

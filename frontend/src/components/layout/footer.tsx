@@ -59,7 +59,7 @@ export function Footer({ footerData, socialLinks }: FooterProps) {
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
                     {/* Brand */}
                     <div className="md:col-span-1">
-                        <Logo size="sm" />
+                        <Logo size="sm" variant="secondary" />
                         <p className="mt-4 text-sm text-muted-foreground max-w-xs">
                             {data.description}
                         </p>

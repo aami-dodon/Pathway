@@ -406,7 +406,7 @@ export function CoursePlayerClient({
                             </ScrollArea>
 
                             {/* Floating Navigation Overlay */}
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-2xl p-1.5 flex items-center gap-1 z-30 min-w-[320px] sm:min-w-[420px] justify-between transition-all">
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-2xl p-1.5 flex items-center gap-1 z-30 w-[calc(100%-2rem)] max-w-[420px] justify-between transition-all">
                                 <Button
                                     variant="ghost"
                                     size="sm"

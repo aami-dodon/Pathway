@@ -191,7 +191,7 @@ function ProfileContent() {
 
             {/* Tabs */}
             <Tabs defaultValue="profile" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-[500px]">
                     <TabsTrigger value="profile" className="gap-2">
                         <User className="h-4 w-4" />
                         Profile
