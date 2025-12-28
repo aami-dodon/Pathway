@@ -15,6 +15,8 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Pathway - Learn from Expert Coaches",
   description: "Discover courses, read expert insights, and book coaching sessions to accelerate your growth.",

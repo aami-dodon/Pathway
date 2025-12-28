@@ -87,7 +87,7 @@ export interface Post {
     tags?: (Tag | string)[];
     isSubscriberOnly: boolean;
     publishedAt?: string;
-    status: 'draft' | 'published' | 'archived';
+    isPublished: boolean;
     seo?: {
         metaTitle?: string;
         metaDescription?: string;
@@ -117,7 +117,7 @@ export interface Page {
     slug: string;
     author?: CoachProfile | User | string;
     content?: unknown;
-    status: 'draft' | 'published' | 'archived';
+    isPublished: boolean;
     publishedAt?: string;
     seo?: {
         metaTitle?: string;
@@ -155,7 +155,7 @@ export interface Course {
         endDate?: string;
     };
     accessLevel?: 'public' | 'subscribers';
-    status: 'draft' | 'published' | 'archived';
+    isPublished: boolean;
     publishedAt?: string;
     category?: Category | string;
     tags?: (Tag | string)[];
@@ -518,11 +518,13 @@ class ApiClient {
     }
 
     // Posts
-    async getPosts(params?: { page?: number; limit?: number; status?: string }): Promise<PaginatedResponse<Post>> {
+    async getPosts(params?: { page?: number; limit?: number; isPublished?: boolean }): Promise<PaginatedResponse<Post>> {
         const searchParams = new URLSearchParams();
         if (params?.page) searchParams.set('page', params.page.toString());
         if (params?.limit) searchParams.set('limit', params.limit.toString());
-        if (params?.status) searchParams.set('where[status][equals]', params.status);
+        if (params?.isPublished !== undefined) {
+            searchParams.set('where[isPublished][equals]', params.isPublished.toString());
+        }
         const query = searchParams.toString();
         return this.request(`/api/posts${query ? `?${query}` : ''}`);
     }
@@ -562,11 +564,13 @@ class ApiClient {
     }
 
     // Pages
-    async getPages(params?: { page?: number; limit?: number; status?: string }): Promise<PaginatedResponse<Page>> {
+    async getPages(params?: { page?: number; limit?: number; isPublished?: boolean }): Promise<PaginatedResponse<Page>> {
         const searchParams = new URLSearchParams();
         if (params?.page) searchParams.set('page', params.page.toString());
         if (params?.limit) searchParams.set('limit', params.limit.toString());
-        if (params?.status) searchParams.set('where[status][equals]', params.status);
+        if (params?.isPublished !== undefined) {
+            searchParams.set('where[isPublished][equals]', params.isPublished.toString());
+        }
         const query = searchParams.toString();
         return this.request(`/api/pages${query ? `?${query}` : ''}`);
     }
@@ -574,7 +578,7 @@ class ApiClient {
     async getPageBySlug(slug: string): Promise<Page | null> {
         const params = new URLSearchParams();
         params.set('where[slug][equals]', slug);
-        params.set('where[status][equals]', 'published');
+        params.set('where[isPublished][equals]', 'true');
         params.set('limit', '1');
         const response = await this.request<PaginatedResponse<Page>>(
             `/api/pages?${params.toString()}`

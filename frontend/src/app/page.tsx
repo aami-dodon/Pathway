@@ -46,7 +46,7 @@ async function getFeaturedCourses(): Promise<Course[]> {
 async function getFeaturedPosts(): Promise<Post[]> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/posts?where[status][equals]=published&limit=3`,
+      `${API_BASE_URL}/api/posts?where[isPublished][equals]=true&limit=3`,
       { next: { revalidate: 60 } }
     );
     if (!response.ok) return [];

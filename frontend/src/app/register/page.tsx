@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GraduationCap, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
@@ -19,7 +19,7 @@ const benefits = [
     "Join our community",
 ];
 
-export default function RegisterPage() {
+function RegisterContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get("redirect");
@@ -230,3 +230,16 @@ export default function RegisterPage() {
         </div>
     );
 }
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        }>
+            <RegisterContent />
+        </Suspense>
+    );
+}
+
