@@ -1,25 +1,61 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { MapPin, Mail, Phone, Send, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+
+const formSchema = z.object({
+    firstName: z.string().min(2, "First name must be at least 2 characters"),
+    lastName: z.string().min(2, "Last name must be at least 2 characters"),
+    email: z.string().email("Please enter a valid email address"),
+    message: z.string().min(10, "Message must be at least 10 characters"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export function ContactForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
 
-    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
+    const form = useForm<FormValues>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            message: "",
+        },
+    });
+
+    async function onSubmit(data: FormValues) {
         setIsLoading(true);
-
-        // Simulate network request
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setIsLoading(false);
-        setIsSent(true);
+        try {
+            await api.submitContactForm(data);
+            setIsSent(true);
+            toast.success("Message sent successfully!");
+            form.reset();
+        } catch (error: any) {
+            console.error("Failed to send message:", error);
+            toast.error(error.message || "Failed to send message. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -100,49 +136,78 @@ export function ContactForm() {
                             </Button>
                         </div>
                     ) : (
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="space-y-2">
-                                    <label htmlFor="first-name" className="text-sm font-medium">
-                                        First Name
-                                    </label>
-                                    <Input id="first-name" required placeholder="John" />
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="firstName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>First Name</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="John" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="lastName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Last Name</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Doe" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
                                 </div>
-                                <div className="space-y-2">
-                                    <label htmlFor="last-name" className="text-sm font-medium">
-                                        Last Name
-                                    </label>
-                                    <Input id="last-name" required placeholder="Doe" />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label htmlFor="email" className="text-sm font-medium">
-                                    Email
-                                </label>
-                                <Input id="email" type="email" required placeholder="john@example.com" />
-                            </div>
-                            <div className="space-y-2">
-                                <label htmlFor="message" className="text-sm font-medium">
-                                    Message
-                                </label>
-                                <Textarea
-                                    id="message"
-                                    required
-                                    placeholder="How can we help you?"
-                                    className="min-h-[150px]"
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="john@example.com" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                            </div>
-                            <Button type="submit" size="lg" className="w-full cursor-pointer" disabled={isLoading}>
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Sending...
-                                    </>
-                                ) : (
-                                    "Send Message"
-                                )}
-                            </Button>
-                        </form>
+                                <FormField
+                                    control={form.control}
+                                    name="message"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Message</FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    placeholder="How can we help you?"
+                                                    className="min-h-[150px]"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" size="lg" className="w-full cursor-pointer" disabled={isLoading}>
+                                    {isLoading ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Sending...
+                                        </>
+                                    ) : (
+                                        "Send Message"
+                                    )}
+                                </Button>
+                            </form>
+                        </Form>
                     )}
                 </CardContent>
             </Card>

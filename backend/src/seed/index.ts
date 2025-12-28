@@ -17,6 +17,7 @@ import { seedEnrollments, seedProgress, seedQuizAttempts } from './enrollments.j
 import { seedCoachingSessions } from './bookings.js'
 import { seedHomePage } from './home-page.js'
 import { seedSiteContent } from './site-content.js'
+import { seedContactSubmissions } from './contact-submissions.js'
 
 async function seed() {
     const nodeEnv = process.env.NODE_ENV || 'development'
@@ -93,6 +94,11 @@ async function seed() {
         await seedSiteContent(payload)
         console.log('✅ Site Content seeded\n')
 
+        // Phase 9: Seed Contact Submissions
+        console.log('📦 Phase 9: Seeding Contact Submissions...')
+        const submissions = await seedContactSubmissions(payload)
+        console.log('✅ Contact Submissions seeded\n')
+
         console.log('🎉 Demo data seeding complete!')
         console.log('\n📊 Summary:')
         console.log(`   - Users: ${users.length}`)
@@ -105,6 +111,7 @@ async function seed() {
         console.log(`   - Lessons: ${lessons.length}`)
         console.log(`   - Quizzes: ${quizzes.length}`)
         console.log(`   - Enrollments: ${enrollments.length}`)
+        console.log(`   - Contact Submissions: ${submissions.length}`)
 
     } catch (error) {
         console.error('❌ Seeding failed:', error)

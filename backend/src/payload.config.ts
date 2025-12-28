@@ -31,6 +31,9 @@ import {
 // Booking Management collections
 import { CoachingSessions } from './collections/booking-management'
 
+// Form Submissions collections
+import { ContactSubmissions } from './collections/form-submissions'
+
 // Global configs
 import { HomePage } from './globals/HomePage'
 import { BlogPage } from './globals/BlogPage'
@@ -154,6 +157,8 @@ export default buildConfig({
     QuizAttempts,
     // Booking Management
     CoachingSessions,
+    // Form Submissions
+    ContactSubmissions,
   ],
   globals: [
     HomePage,

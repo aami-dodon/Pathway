@@ -271,6 +271,16 @@ export interface CoachingSession {
     updatedAt: string;
 }
 
+export interface ContactSubmission {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    message: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface AvailableSlot {
     start: string;
     end: string;
@@ -742,6 +752,15 @@ class ApiClient {
     // Lessons (Authenticated Access)
     async getLessonContent(id: string): Promise<Lesson> {
         return this.request(`/api/lessons/${id}`);
+    }
+
+    // Contact Submissions
+    async submitContactForm(data: { firstName: string; lastName: string; email: string; message: string }): Promise<ContactSubmission> {
+        const response = await this.request<{ doc: ContactSubmission }>('/api/contact-submissions', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+        return response.doc;
     }
 }
 
