@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port ${PORT:-9007}",
+    "dev": "node -r dotenv/config scripts/dev_wrapper.cjs",
     "build": "next build",
-    "start": "next start --port ${PORT:-9007}",
-    "serve": "PORT=9007 node .next/standalone/server.js",
+    "start": "node -r dotenv/config scripts/start_wrapper.cjs",
+    "serve": "node -r dotenv/config scripts/serve_wrapper.cjs",
     "lint": "eslint"
   },
   "dependencies": {
@@ -47,6 +47,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "tailwindcss": "^4",
