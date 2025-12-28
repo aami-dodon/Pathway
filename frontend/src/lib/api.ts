@@ -281,6 +281,14 @@ export interface ContactSubmission {
     updatedAt: string;
 }
 
+export interface NewsletterSubscriber {
+    id: string;
+    email: string;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface AvailableSlot {
     start: string;
     end: string;
@@ -369,10 +377,6 @@ export interface HeaderNavData {
 
 export interface FooterContentData {
     description: string;
-    productLinks: {
-        name: string;
-        href: string;
-    }[];
     companyLinks: {
         name: string;
         href: string;
@@ -759,6 +763,15 @@ class ApiClient {
         const response = await this.request<{ doc: ContactSubmission }>('/api/contact-submissions', {
             method: 'POST',
             body: JSON.stringify(data),
+        });
+        return response.doc;
+    }
+
+    // Newsletter Subscriptions
+    async subscribeToNewsletter(email: string): Promise<NewsletterSubscriber> {
+        const response = await this.request<{ doc: NewsletterSubscriber }>('/api/newsletter-subscribers', {
+            method: 'POST',
+            body: JSON.stringify({ email, active: true }),
         });
         return response.doc;
     }

@@ -28,11 +28,10 @@ import {
   QuizAttempts,
 } from './collections/learning-management'
 
-// Booking Management collections
-import { CoachingSessions } from './collections/booking-management'
+
 
 // Form Submissions collections
-import { ContactSubmissions } from './collections/form-submissions'
+import { ContactSubmissions, NewsletterSubscribers, CoachingSessions } from './collections/form-submissions'
 
 // Global configs
 import { HomePage } from './globals/HomePage'
@@ -155,10 +154,10 @@ export default buildConfig({
     Enrollments,
     Progress,
     QuizAttempts,
-    // Booking Management
-    CoachingSessions,
     // Form Submissions
     ContactSubmissions,
+    NewsletterSubscribers,
+    CoachingSessions,
   ],
   globals: [
     HomePage,

@@ -1,11 +1,17 @@
+"use client";
+
 import Link from "next/link";
-import { Github, Twitter, Linkedin } from "lucide-react";
+import { useState } from "react";
+import { Github, Twitter, Linkedin, Send } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 interface FooterProps {
     footerData?: {
         description: string;
-        productLinks: { name: string; href: string }[];
         companyLinks: { name: string; href: string }[];
         legalLinks: { name: string; href: string }[];
         socialLinks: {
@@ -17,13 +23,28 @@ interface FooterProps {
 }
 
 export function Footer({ footerData }: FooterProps) {
+    const [email, setEmail] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubscribe = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email) return;
+
+        setIsLoading(true);
+        try {
+            await api.subscribeToNewsletter(email);
+            toast.success("Successfully subscribed to newsletter!");
+            setEmail("");
+        } catch (error: any) {
+            console.error("Newsletter subscription error:", error);
+            toast.error(error.message || "Failed to subscribe. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const data = footerData || {
         description: 'Learn from expert coaches and accelerate your personal and professional growth.',
-        productLinks: [
-            { name: "Courses", href: "/courses" },
-            { name: "Blog", href: "/blog" },
-            { name: "Coaches", href: "/coaches" },
-        ],
         companyLinks: [
             { name: "About", href: "/about" },
             { name: "Careers", href: "/careers" },
@@ -43,9 +64,9 @@ export function Footer({ footerData }: FooterProps) {
     return (
         <footer className="border-t border-border/40 bg-muted/30">
             <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
                     {/* Brand */}
-                    <div className="col-span-2 md:col-span-1">
+                    <div className="md:col-span-1">
                         <Logo size="sm" />
                         <p className="mt-4 text-sm text-muted-foreground max-w-xs">
                             {data.description}
@@ -81,22 +102,7 @@ export function Footer({ footerData }: FooterProps) {
                         </div>
                     </div>
 
-                    {/* Product Links */}
-                    <div>
-                        <h3 className="text-sm font-semibold">Product</h3>
-                        <ul className="mt-4 space-y-3">
-                            {data.productLinks.map((link) => (
-                                <li key={link.name}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        {link.name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+
 
                     {/* Company Links */}
                     <div>
@@ -130,6 +136,39 @@ export function Footer({ footerData }: FooterProps) {
                                 </li>
                             ))}
                         </ul>
+                    </div>
+
+                    {/* Newsletter */}
+                    <div className="col-span-1 md:col-span-2 lg:col-span-1">
+                        <h3 className="text-sm font-semibold text-foreground">Subscribe to our newsletter</h3>
+                        <p className="mt-4 text-sm text-muted-foreground">
+                            Get the latest updates on courses, coaching, and insights directly in your inbox.
+                        </p>
+                        <form onSubmit={handleSubscribe} className="mt-6 flex flex-col gap-2">
+                            <div className="relative">
+                                <Input
+                                    type="email"
+                                    placeholder="Enter your email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="bg-background pr-12"
+                                />
+                                <Button
+                                    type="submit"
+                                    size="icon"
+                                    variant="ghost"
+                                    className="absolute right-1 top-1 h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    disabled={isLoading}
+                                >
+                                    <Send className="h-4 w-4" />
+                                    <span className="sr-only">Subscribe</span>
+                                </Button>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                                By subscribing, you agree to our Terms and Privacy Policy.
+                            </p>
+                        </form>
                     </div>
                 </div>
 

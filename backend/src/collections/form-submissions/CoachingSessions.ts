@@ -1,4 +1,4 @@
-import { CollectionConfig, Access, Where, APIError } from 'payload'
+import { CollectionConfig, APIError } from 'payload'
 import { timezoneField } from '../../fields/timezone'
 
 
@@ -7,7 +7,7 @@ import { timezoneField } from '../../fields/timezone'
 export const CoachingSessions: CollectionConfig = {
     slug: 'coaching-sessions',
     admin: {
-        group: 'Booking Management',
+        group: 'Form Submissions',
         useAsTitle: 'sessionTitle',
         description: '1:1 coaching session bookings with coaches',
         defaultColumns: ['sessionTitle', 'coach', 'bookerName', 'scheduledAt', 'status'],

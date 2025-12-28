@@ -21,26 +21,6 @@ export const FooterContent: GlobalConfig = {
             },
         },
         {
-            name: 'productLinks',
-            type: 'array',
-            label: 'Product Links',
-            required: true,
-            fields: [
-                {
-                    name: 'name',
-                    type: 'text',
-                    required: true,
-                    admin: { width: '50%' },
-                },
-                {
-                    name: 'href',
-                    type: 'text',
-                    required: true,
-                    admin: { width: '50%' },
-                },
-            ],
-        },
-        {
             name: 'companyLinks',
             type: 'array',
             label: 'Company Links',

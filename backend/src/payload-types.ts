@@ -82,8 +82,9 @@ export interface Config {
     enrollments: Enrollment;
     progress: Progress;
     'quiz-attempts': QuizAttempt;
-    'coaching-sessions': CoachingSession;
     'contact-submissions': ContactSubmission;
+    'newsletter-subscribers': NewsletterSubscriber;
+    'coaching-sessions': CoachingSession;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -106,8 +107,9 @@ export interface Config {
     enrollments: EnrollmentsSelect<false> | EnrollmentsSelect<true>;
     progress: ProgressSelect<false> | ProgressSelect<true>;
     'quiz-attempts': QuizAttemptsSelect<false> | QuizAttemptsSelect<true>;
-    'coaching-sessions': CoachingSessionsSelect<false> | CoachingSessionsSelect<true>;
     'contact-submissions': ContactSubmissionsSelect<false> | ContactSubmissionsSelect<true>;
+    'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
+    'coaching-sessions': CoachingSessionsSelect<false> | CoachingSessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -2263,6 +2265,33 @@ export interface QuizAttempt {
   createdAt: string;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-submissions".
+ */
+export interface ContactSubmission {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  message: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-subscribers".
+ */
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  /**
+   * Whether this subscriber is actively receiving emails
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * 1:1 coaching session bookings with coaches
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2785,19 +2814,6 @@ export interface CoachingSession {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "contact-submissions".
- */
-export interface ContactSubmission {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  message: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -2881,12 +2897,16 @@ export interface PayloadLockedDocument {
         value: number | QuizAttempt;
       } | null)
     | ({
-        relationTo: 'coaching-sessions';
-        value: number | CoachingSession;
-      } | null)
-    | ({
         relationTo: 'contact-submissions';
         value: number | ContactSubmission;
+      } | null)
+    | ({
+        relationTo: 'newsletter-subscribers';
+        value: number | NewsletterSubscriber;
+      } | null)
+    | ({
+        relationTo: 'coaching-sessions';
+        value: number | CoachingSession;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -3477,6 +3497,28 @@ export interface QuizAttemptsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-submissions_select".
+ */
+export interface ContactSubmissionsSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  email?: T;
+  message?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-subscribers_select".
+ */
+export interface NewsletterSubscribersSelect<T extends boolean = true> {
+  email?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "coaching-sessions_select".
  */
 export interface CoachingSessionsSelect<T extends boolean = true> {
@@ -3507,18 +3549,6 @@ export interface CoachingSessionsSelect<T extends boolean = true> {
   confirmedAt?: T;
   cancelledAt?: T;
   cancellationReason?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "contact-submissions_select".
- */
-export interface ContactSubmissionsSelect<T extends boolean = true> {
-  firstName?: T;
-  lastName?: T;
-  email?: T;
-  message?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3729,11 +3759,6 @@ export interface FooterContent {
    * Short description displayed under the logo
    */
   description: string;
-  productLinks: {
-    name: string;
-    href: string;
-    id?: string | null;
-  }[];
   companyLinks: {
     name: string;
     href: string;
@@ -3904,13 +3929,6 @@ export interface HeaderNavSelect<T extends boolean = true> {
  */
 export interface FooterContentSelect<T extends boolean = true> {
   description?: T;
-  productLinks?:
-    | T
-    | {
-        name?: T;
-        href?: T;
-        id?: T;
-      };
   companyLinks?:
     | T
     | {
