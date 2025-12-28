@@ -3,7 +3,7 @@
 const isServer = typeof window === 'undefined';
 export const API_BASE_URL = isServer
     ? (process.env.INTERNAL_API_URL || 'http://localhost:9006')
-    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9006');
+    : ''; // Use relative URL on client to leverage Next.js proxy (rewrites)
 
 export interface User {
     id: string;
