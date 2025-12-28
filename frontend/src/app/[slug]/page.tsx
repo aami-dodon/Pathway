@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Page, PaginatedResponse, API_BASE_URL } from "@/lib/api";
+import { RichTextContent } from "@/components/RichTextContent";
 
 export const dynamic = "force-dynamic";
 
@@ -57,102 +58,6 @@ export async function generateMetadata({ params }: StaticPageProps) {
     };
 }
 
-// Helper to render rich text content
-function RichTextContent({ content }: { content: unknown }) {
-    if (!content) return null;
-
-    // Handle Payload's Lexical rich text format
-    if (typeof content === "object" && content !== null && "root" in content) {
-        const root = (content as { root: { children: unknown[] } }).root;
-        return (
-            <div className="prose prose-slate dark:prose-invert max-w-none">
-                {renderLexicalNodes(root.children)}
-            </div>
-        );
-    }
-
-    // Fallback for simple text
-    if (typeof content === "string") {
-        return <div className="prose prose-slate dark:prose-invert max-w-none">{content}</div>;
-    }
-
-    return null;
-}
-
-function renderLexicalNodes(nodes: unknown[]): React.ReactNode {
-    if (!Array.isArray(nodes)) return null;
-
-    return nodes.map((node, index) => {
-        const typedNode = node as {
-            type: string;
-            text?: string;
-            format?: number;
-            children?: unknown[];
-            tag?: string;
-            listType?: string;
-            url?: string;
-        };
-
-        switch (typedNode.type) {
-            case "paragraph":
-                return (
-                    <p key={index}>
-                        {typedNode.children && renderLexicalNodes(typedNode.children)}
-                    </p>
-                );
-            case "heading": {
-                const tag = typedNode.tag || "h2";
-                const validTags = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
-                const HeadingTag = (validTags.includes(tag as typeof validTags[number]) ? tag : "h2") as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-                return (
-                    <HeadingTag key={index}>
-                        {typedNode.children && renderLexicalNodes(typedNode.children)}
-                    </HeadingTag>
-                );
-            }
-            case "text":
-                let text: React.ReactNode = typedNode.text || "";
-                const format = typedNode.format || 0;
-                if (format & 1) text = <strong key={`bold-${index}`}>{text}</strong>;
-                if (format & 2) text = <em key={`italic-${index}`}>{text}</em>;
-                if (format & 8) text = <u key={`underline-${index}`}>{text}</u>;
-                if (format & 16) text = <code key={`code-${index}`}>{text}</code>;
-                return <span key={index}>{text}</span>;
-            case "list":
-                const ListTag = typedNode.listType === "number" ? "ol" : "ul";
-                return (
-                    <ListTag key={index}>
-                        {typedNode.children && renderLexicalNodes(typedNode.children)}
-                    </ListTag>
-                );
-            case "listitem":
-                return (
-                    <li key={index}>
-                        {typedNode.children && renderLexicalNodes(typedNode.children)}
-                    </li>
-                );
-            case "link":
-                return (
-                    <a key={index} href={typedNode.url} className="text-primary hover:underline">
-                        {typedNode.children && renderLexicalNodes(typedNode.children)}
-                    </a>
-                );
-            case "quote":
-                return (
-                    <blockquote key={index}>
-                        {typedNode.children && renderLexicalNodes(typedNode.children)}
-                    </blockquote>
-                );
-            case "linebreak":
-                return <br key={index} />;
-            default:
-                if (typedNode.children) {
-                    return <span key={index}>{renderLexicalNodes(typedNode.children)}</span>;
-                }
-                return null;
-        }
-    });
-}
 
 export default async function StaticPage({ params }: StaticPageProps) {
     const { slug } = await params;

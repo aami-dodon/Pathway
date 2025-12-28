@@ -84,6 +84,23 @@ function renderLexicalNodes(nodes: unknown[]): React.ReactNode {
                         {typedNode.children && renderLexicalNodes(typedNode.children)}
                     </a>
                 );
+            case "upload":
+                const uploadNode = typedNode as {
+                    value?: {
+                        url?: string;
+                        alt?: string;
+                    };
+                };
+                if (!uploadNode.value?.url) return null;
+                return (
+                    <div key={index} className="my-8 overflow-hidden rounded-2xl border border-border/40 shadow-sm">
+                        <img
+                            src={uploadNode.value.url}
+                            alt={uploadNode.value.alt || ""}
+                            className="w-full h-auto object-cover"
+                        />
+                    </div>
+                );
             case "linebreak":
                 return <br key={index} />;
             default:

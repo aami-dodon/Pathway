@@ -20,9 +20,9 @@ export function PostCard({ post }: { post: Post }) {
             <Card className="h-full overflow-hidden border-border/50 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group-hover:-translate-y-1">
                 {/* Featured Image */}
                 <div className="relative aspect-video overflow-hidden bg-muted">
-                    {(post.featuredImage || post.featuredImagePrivate) ? (
+                    {post.featuredImage ? (
                         <img
-                            src={post.isSubscriberOnly ? post.featuredImagePrivate?.url : post.featuredImage?.url}
+                            src={post.featuredImage.url}
                             alt={post.title}
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />

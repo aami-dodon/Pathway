@@ -80,7 +80,6 @@ export interface Post {
     slug: string;
     author: CoachProfile | string;
     featuredImage?: Media;
-    featuredImagePrivate?: Media;
     excerpt?: string;
     content?: unknown;
     category?: Category | string;
@@ -92,7 +91,6 @@ export interface Post {
         metaTitle?: string;
         metaDescription?: string;
         ogImage?: Media;
-        ogImagePrivate?: Media;
     };
     createdAt: string;
     updatedAt: string;

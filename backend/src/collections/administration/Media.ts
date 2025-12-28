@@ -16,13 +16,26 @@ const signerClient = new S3Client({
     },
 })
 
-async function generateSignedUrl(filename: string, data: any, req: any) {
+async function generateSignedUrl(filename: string, doc: any, req: any) {
     if (!filename) return undefined;
+
+    // Permissions check for subscriber-only media
+    if (doc.isSubscriberOnly) {
+        // req.user might be missing if not logged in
+        if (!req.user) {
+            return undefined;
+        }
+
+        // Allowed roles for subscriber content
+        const allowedRoles = ['admin', 'coach', 'creator', 'subscriber'];
+        if (!allowedRoles.includes(req.user.role)) {
+            return undefined;
+        }
+    }
 
     // Determine expiration based on rules
     let expiresIn = 900; // Default public (15 min)
-
-    if (data.isSubscriberOnly) {
+    if (doc.isSubscriberOnly) {
         expiresIn = 600; // 10 min
     }
 
@@ -33,7 +46,6 @@ async function generateSignedUrl(filename: string, data: any, req: any) {
         });
 
         // Generate signed URL using the CDN client
-        // This will create a URL like https://cdn.dodon.in/... with a signature valid for that host
         return await getSignedUrl(signerClient, command, { expiresIn });
     } catch (err) {
         console.error('Error generating signed URL:', err);

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/providers/auth-provider";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 import { useSearchParams } from "next/navigation";
@@ -45,8 +46,17 @@ function LoginContent() {
             const { user } = await login(email, password);
             toast.success("Welcome back!");
 
+            // Handle redirection
             if (user.isFirstLogin) {
-                router.push("/profile");
+                // Update isFirstLogin to false in the background
+                api.updateUser(user.id, { isFirstLogin: false }).catch(err =>
+                    console.error("Failed to update isFirstLogin flag:", err)
+                );
+
+                const profileUrl = redirectTo
+                    ? `/profile?redirect=${encodeURIComponent(redirectTo)}`
+                    : "/profile";
+                router.push(profileUrl);
             } else if (redirectTo) {
                 router.push(redirectTo);
             } else {

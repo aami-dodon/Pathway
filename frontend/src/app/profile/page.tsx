@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
     User,
     Mail,
@@ -29,9 +29,11 @@ import { api, SubscriberProfile } from "@/lib/api";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { toast } from "sonner";
 
-export default function ProfilePage() {
+function ProfileContent() {
     const router = useRouter();
     const { user, isLoading: authLoading } = useAuth();
+    const searchParams = useSearchParams();
+    const redirectTo = searchParams.get("redirect");
     const [profile, setProfile] = useState<SubscriberProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -102,6 +104,12 @@ export default function ProfilePage() {
                 },
             });
             toast.success("Profile updated successfully");
+
+            if (redirectTo) {
+                setTimeout(() => {
+                    router.push(redirectTo);
+                }, 1500);
+            }
         } catch (error) {
             toast.error("Failed to update profile");
         } finally {
@@ -451,5 +459,24 @@ export default function ProfilePage() {
                 </TabsContent>
             </Tabs>
         </div>
+    );
+}
+
+export default function ProfilePage() {
+    return (
+        <Suspense fallback={
+            <div className="container mx-auto px-4 py-12 max-w-4xl">
+                <div className="flex items-center gap-4 mb-8">
+                    <Skeleton className="h-20 w-20 rounded-full" />
+                    <div>
+                        <Skeleton className="h-8 w-48 mb-2" />
+                        <Skeleton className="h-4 w-32" />
+                    </div>
+                </div>
+                <Skeleton className="h-96 w-full rounded-xl" />
+            </div>
+        }>
+            <ProfileContent />
+        </Suspense>
     );
 }
