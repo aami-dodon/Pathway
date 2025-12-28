@@ -56,9 +56,11 @@ export function Header({ navigationLinks }: HeaderProps) {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-            <nav className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+            <nav className="container mx-auto flex h-16 items-center px-4 sm:px-6 lg:px-8">
                 {/* Logo */}
-                <Logo size="md" />
+                <div className="flex-1 flex items-center">
+                    <Logo size="md" />
+                </div>
 
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex md:items-center md:gap-1">
@@ -82,7 +84,7 @@ export function Header({ navigationLinks }: HeaderProps) {
                 </div>
 
                 {/* Right Section */}
-                <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center justify-end gap-2 text-right">
                     {/* Global Search */}
                     <GlobalSearch />
 
@@ -181,7 +183,7 @@ export function Header({ navigationLinks }: HeaderProps) {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="w-80 pt-12">
-                            <nav className="flex flex-col gap-1">
+                            <nav className="flex flex-col gap-1 text-left">
                                 {navigation.map((item) => (
                                     <Link
                                         key={item.name}
