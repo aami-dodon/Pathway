@@ -173,8 +173,9 @@ function CoachCard({ coach }: { coach: CoachProfile }) {
                 )}
 
                 {/* Social Links & CTA */}
-                <div className="mt-6 flex items-center justify-between relative z-20">
-                    <div className="flex gap-2">
+                <div className="mt-6 flex flex-col gap-4 relative z-20">
+                    {/* Social Links */}
+                    <div className="flex gap-3">
                         {coach.socialLinks?.website && (
                             <a
                                 href={coach.socialLinks.website}
@@ -207,6 +208,7 @@ function CoachCard({ coach }: { coach: CoachProfile }) {
                         )}
                     </div>
 
+                    {/* Action Buttons */}
                     <div className="flex items-center gap-3">
                         <Link href={`/coaches/${coach.slug}`} className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
                             View Profile
