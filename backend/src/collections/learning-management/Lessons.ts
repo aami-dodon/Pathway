@@ -104,7 +104,7 @@ export const Lessons: CollectionConfig = {
                     name: 'videoFile',
 
                     type: 'upload',
-                    relationTo: 'media-private',
+                    relationTo: 'media',
                     admin: {
                         description: 'Uploaded video file',
                     },
@@ -119,7 +119,7 @@ export const Lessons: CollectionConfig = {
                 {
                     name: 'captions',
                     type: 'upload',
-                    relationTo: 'media-private',
+                    relationTo: 'media',
                     admin: {
                         description: 'Captions/subtitles file (VTT format)',
                     },
@@ -153,7 +153,7 @@ export const Lessons: CollectionConfig = {
                 {
                     name: 'audioFile',
                     type: 'upload',
-                    relationTo: 'media-private',
+                    relationTo: 'media',
                 },
                 {
                     name: 'transcript',
@@ -281,7 +281,7 @@ export const Lessons: CollectionConfig = {
                 {
                     name: 'file',
                     type: 'upload',
-                    relationTo: 'media-private',
+                    relationTo: 'media',
                     required: true,
                 },
                 {

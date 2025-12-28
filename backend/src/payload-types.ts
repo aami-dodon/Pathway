@@ -69,7 +69,6 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
-    'media-private': MediaPrivate;
     'coach-profiles': CoachProfile;
     'subscriber-profiles': SubscriberProfile;
     categories: Category;
@@ -93,7 +92,6 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
-    'media-private': MediaPrivateSelect<false> | MediaPrivateSelect<true>;
     'coach-profiles': CoachProfilesSelect<false> | CoachProfilesSelect<true>;
     'subscriber-profiles': SubscriberProfilesSelect<false> | SubscriberProfilesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
@@ -198,7 +196,7 @@ export interface User {
   password?: string | null;
 }
 /**
- * Media library for images, videos, and documents
+ * Unified media library with access control and signed URLs
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
@@ -210,33 +208,13 @@ export interface Media {
    */
   alt: string;
   /**
-   * User who uploaded this media
+   * Restrict this media to subscribers only.
    */
-  createdBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * Private media library served via signed URLs
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media-private".
- */
-export interface MediaPrivate {
-  id: number;
+  isSubscriberOnly?: boolean | null;
   /**
-   * Alt text for accessibility
+   * Used for organizing media in storage
    */
-  alt: string;
+  category: 'images' | 'videos' | 'documents';
   /**
    * User who uploaded this media
    */
@@ -252,6 +230,32 @@ export interface MediaPrivate {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    tablet?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * Public and professional coach information for content authoring and LMS
@@ -1298,13 +1302,9 @@ export interface Post {
    */
   author: number | CoachProfile;
   /**
-   * Featured image for the post (public media)
+   * Featured image for the post
    */
   featuredImage?: (number | null) | Media;
-  /**
-   * Featured image for the post (private media for subscribers)
-   */
-  featuredImagePrivate?: (number | null) | MediaPrivate;
   /**
    * Short summary shown in post listings
    */
@@ -1351,13 +1351,9 @@ export interface Post {
      */
     metaDescription?: string | null;
     /**
-     * Open Graph image for social sharing (public)
+     * Open Graph image for social sharing
      */
     ogImage?: (number | null) | Media;
-    /**
-     * Open Graph image for social sharing (private)
-     */
-    ogImagePrivate?: (number | null) | MediaPrivate;
   };
   updatedAt: string;
   createdAt: string;
@@ -1686,7 +1682,7 @@ export interface Lesson {
     /**
      * Uploaded video file
      */
-    videoFile?: (number | null) | MediaPrivate;
+    videoFile?: (number | null) | Media;
     /**
      * Video transcript for accessibility
      */
@@ -1708,7 +1704,7 @@ export interface Lesson {
     /**
      * Captions/subtitles file (VTT format)
      */
-    captions?: (number | null) | MediaPrivate;
+    captions?: (number | null) | Media;
   };
   /**
    * Text-based lesson content
@@ -1732,7 +1728,7 @@ export interface Lesson {
    * Audio lesson content
    */
   audioContent?: {
-    audioFile?: (number | null) | MediaPrivate;
+    audioFile?: (number | null) | Media;
     /**
      * Audio transcript for accessibility
      */
@@ -1811,7 +1807,7 @@ export interface Lesson {
   resources?:
     | {
         title: string;
-        file: number | MediaPrivate;
+        file: number | Media;
         description?: string | null;
         id?: string | null;
       }[]
@@ -2818,10 +2814,6 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
-        relationTo: 'media-private';
-        value: number | MediaPrivate;
-      } | null)
-    | ({
         relationTo: 'coach-profiles';
         value: number | CoachProfile;
       } | null)
@@ -2950,6 +2942,8 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  isSubscriberOnly?: T;
+  category?: T;
   createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2962,25 +2956,40 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media-private_select".
- */
-export interface MediaPrivateSelect<T extends boolean = true> {
-  alt?: T;
-  createdBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        tablet?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3089,7 +3098,6 @@ export interface PostsSelect<T extends boolean = true> {
   slug?: T;
   author?: T;
   featuredImage?: T;
-  featuredImagePrivate?: T;
   excerpt?: T;
   content?: T;
   category?: T;
@@ -3103,7 +3111,6 @@ export interface PostsSelect<T extends boolean = true> {
         metaTitle?: T;
         metaDescription?: T;
         ogImage?: T;
-        ogImagePrivate?: T;
       };
   updatedAt?: T;
   createdAt?: T;

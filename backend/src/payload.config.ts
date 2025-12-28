@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 // Administration collections
-import { Users, MediaPublic, MediaPrivate } from './collections/administration'
+import { Users, Media } from './collections/administration'
 
 // User Profiles - separate from CMS for LMS reuse
 import { CoachProfile, SubscriberProfile } from './collections/user-profiles'
@@ -53,9 +53,7 @@ const s3BaseConfig = {
   },
 }
 
-const publicFileURL = (process.env.S3_FILE_URL || '').replace(/\/$/, '')
-const hasPublicBucket = Boolean(process.env.S3_BUCKET)
-const hasPrivateBucket = Boolean(process.env.S3_PRIVATE_BUCKET)
+const hasBucket = Boolean(process.env.S3_BUCKET)
 
 import { translateDatabaseError } from './hooks/errorTranslation'
 import { searchEndpoints } from './endpoints/search'
@@ -136,8 +134,7 @@ export default buildConfig({
   collections: [
     // Administration
     Users,
-    MediaPublic,
-    MediaPrivate,
+    Media,
     // User Profiles
     CoachProfile,
     SubscriberProfile,
@@ -180,25 +177,11 @@ export default buildConfig({
   sharp,
   plugins: [
     s3Storage({
-      enabled: hasPublicBucket,
-      acl: 'public-read',
+      enabled: hasBucket,
       bucket: process.env.S3_BUCKET || '',
       config: s3BaseConfig,
       collections: {
         media: {
-          generateFileURL: ({ filename, prefix }) => {
-            const fileKey = [prefix, filename].filter(Boolean).join('/')
-            return publicFileURL && fileKey ? `${publicFileURL}/${fileKey}` : fileKey
-          },
-        },
-      },
-    }),
-    s3Storage({
-      enabled: hasPrivateBucket,
-      bucket: process.env.S3_PRIVATE_BUCKET || '',
-      config: s3BaseConfig,
-      collections: {
-        'media-private': {
           disableLocalStorage: true,
         },
       },
