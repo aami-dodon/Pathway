@@ -20,6 +20,9 @@ def download_video(url: str, output_path: Path):
     """
     Downloads video using yt-dlp to the specified output path.
     """
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    cookies_path = base_dir / "cookies.txt"
+
     ydl_opts = {
         # Select best single file with video and audio to avoid FFmpeg merging
         'format': 'best[ext=mp4]/best',
@@ -27,6 +30,9 @@ def download_video(url: str, output_path: Path):
         'overwrite': True,
         'quiet': True,
     }
+
+    if cookies_path.exists():
+        ydl_opts['cookiefile'] = str(cookies_path)
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
