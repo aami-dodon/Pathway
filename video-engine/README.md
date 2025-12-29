@@ -6,6 +6,17 @@ Standalone Python project for video processing.
 
 - Python 3.10+
 - Poetry
+- FFmpeg (System dependency)
+
+### Installing FFmpeg
+- **macOS (Homebrew):**
+  ```bash
+  brew install ffmpeg
+  ```
+- **Windows (Winget):**
+  ```bash
+  winget install ffmpeg
+  ```
 
 ## Setup and Running
 
@@ -25,7 +36,7 @@ Standalone Python project for video processing.
 - `GET /health`
 - Response: `{ "status": "ok" }`
 
-### Render (Download Only)
+### Render
 - `POST /render`
 - Request Body:
   ```json
@@ -36,21 +47,27 @@ Standalone Python project for video processing.
     }
   }
   ```
+- Behavior:
+  1. Downloads video from URL.
+  2. Crops to 9:16 vertical aspect ratio (1080x1920).
+  3. Limits duration to 30 seconds.
 - Response:
   ```json
   {
-    "status": "downloaded",
-    "local_path": "outputs/input.mp4"
+    "status": "processed",
+    "input": "outputs/input.mp4",
+    "output": "outputs/output.mp4"
   }
   ```
-- This endpoint currently only downloads the video from the provided URL to `outputs/input.mp4`. No processing is performed.
 
 ## Project Structure
 
 - `app/`: FastAPI application code.
   - `api/`: API route handlers.
     - `health.py`: Health check endpoint.
-    - `render.py`: Render endpoint (currently download-only).
+    - `render.py`: Render endpoint (download + crop).
   - `pipeline/`: Video processing logic (placeholder).
 - `outputs/`: Directory for generated video files.
+  - `input.mp4`: Raw downloaded video.
+  - `output.mp4`: Processed vertical video.
 - `pyproject.toml`: Poetry project configuration.

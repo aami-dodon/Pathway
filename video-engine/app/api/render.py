@@ -41,11 +41,56 @@ def download_video(url: str, output_path: Path):
         logger.error(f"Download failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
+import subprocess
+
+def check_ffmpeg():
+    """
+    Checks if FFmpeg is installed and available in the system PATH.
+    """
+    try:
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logger.error("FFmpeg not found. Please install FFmpeg.")
+        raise HTTPException(status_code=500, detail="FFmpeg not configured on server")
+
+def process_video(input_path: Path, output_path: Path):
+    """
+    Crops video to 9:16 (1080x1920), limits to 30s.
+    """
+    # scale to fill 1080x1920, then crop to 1080x1920 centered
+    filter_complex = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920:x=(iw-ow)/2:y=(ih-oh)/2"
+    
+    cmd = [
+        "ffmpeg",
+        "-y",               # Overwrite output
+        "-i", str(input_path),
+        "-t", "30",         # Limit to 30 seconds
+        "-vf", filter_complex,
+        "-c:v", "libx264",
+        "-c:a", "aac",
+        "-r", "30",         # FPS 30
+        "-pix_fmt", "yuv420p", # Ensure compatibility
+        str(output_path)
+    ]
+    
+    logger.info(f"Running FFmpeg: {' '.join(cmd)}")
+    print(f"Running FFmpeg: {' '.join(cmd)}")
+    
+    try:
+        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr.decode() if e.stderr else str(e)
+        logger.error(f"FFmpeg failed: {error_msg}")
+        raise HTTPException(status_code=500, detail=f"Video processing failed: {error_msg}")
+
 @router.post("/render")
 async def render_video(request: RenderRequest):
     """
-    Downloads video from URL.
+    Downloads video from URL and processes it to vertical format.
     """
+    # check ffmpeg first
+    check_ffmpeg()
+
     # Log the received payload
     logger.info(f"Received render payload: {request.dict()}")
     print(f"Received render payload: {request.dict()}")
@@ -58,17 +103,26 @@ async def render_video(request: RenderRequest):
     output_dir = base_dir / "outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    output_file = output_dir / "input.mp4"
+    input_file = output_dir / "input.mp4"
+    output_file = output_dir / "output.mp4"
     
-    print(f"Downloading from {request.source.value} to {output_file}")
+    print(f"Downloading from {request.source.value} to {input_file}")
     
     # Download video
-    download_video(request.source.value, output_file)
+    download_video(request.source.value, input_file)
+
+    if not input_file.exists():
+         raise HTTPException(status_code=500, detail="File was not created after download")
+    
+    # Process video
+    print(f"Processing video to {output_file}")
+    process_video(input_file, output_file)
 
     if not output_file.exists():
-         raise HTTPException(status_code=500, detail="File was not created after download")
+        raise HTTPException(status_code=500, detail="Output file was not created after processing")
 
     return {
-        "status": "downloaded",
-        "local_path": "outputs/input.mp4"
+        "status": "processed",
+        "input": "outputs/input.mp4",
+        "output": "outputs/output.mp4"
     }
