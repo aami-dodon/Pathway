@@ -27,17 +27,25 @@ class VideoWorkflow:
         
         # 1. Content Generation
         print("   📝 Generating content with Gemini...")
-        blog = self.llm.generate_blog(input_text)
-        script = self.llm.generate_video_script(input_text)
+        content = self.llm.generate_content(input_text)
         
+        # Save all three outputs
         blog_path = self.outputs_dir / "blog.txt"
-        blog_path.write_text(blog)
+        blog_path.write_text(content["blog"])
         print(f"      ✅ Blog generated: {blog_path.name}")
         
-        # 2. Speech Generation
+        excerpt_path = self.outputs_dir / "excerpt.txt"
+        excerpt_path.write_text(content["excerpt"])
+        print(f"      ✅ Excerpt generated: {excerpt_path.name}")
+        
+        speech_script_path = self.outputs_dir / "speech_script.txt"
+        speech_script_path.write_text(content["speech"])
+        print(f"      ✅ Speech script generated: {speech_script_path.name}")
+        
+        # 2. Speech Generation (using the speech script, NOT the full blog)
         print("   🎤 Generating speech with ElevenLabs...")
         audio_path = self.outputs_dir / "voice.mp3"
-        self.tts.text_to_speech(script, audio_path)
+        self.tts.text_to_speech(content["speech"], audio_path)
         print(f"      ✅ Audio generated: {audio_path.name}")
         
         # 3. Subtitle Generation

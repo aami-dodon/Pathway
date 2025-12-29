@@ -84,12 +84,32 @@ class VideoProcessor:
         # Escape paths for ffmpeg
         def esc(p): return str(p).replace("\\", "/").replace(":", "\\:")
         
+        # Get video dimensions for percentage calculations
+        probe_cmd = [
+            "ffprobe", "-v", "error", "-select_streams", "v:0",
+            "-show_entries", "stream=width,height",
+            "-of", "json", str(input_path)
+        ]
+        probe_result = subprocess.run(probe_cmd, capture_output=True, text=True)
+        video_info = json.loads(probe_result.stdout)
+        video_width = int(video_info['streams'][0]['width'])
+        
+        # Calculate logo width (support both px and %)
+        logo_width_config = template['logo'].get('width', '30%')
+        if isinstance(logo_width_config, str) and '%' in str(logo_width_config):
+            # Percentage-based width
+            pct = float(str(logo_width_config).replace('%', ''))
+            logo_width = int(video_width * (pct / 100))
+        else:
+            # Fixed pixel width
+            logo_width = int(logo_width_config)
+        
         filter_complex = (
             f"[0:v]ass='{esc(ass_path)}'[v_sub]; " # Subtitles
             f"[v_sub][1:v]overlay=0:0:enable='between(t,0,3)'[v_intro]; " # Intro animation
             f"[v_intro][2:v]overlay=0:0:enable='between(t,{outro_start},{duration})'[v_outro]; " # Outro animation
             f"[v_outro][3:v]overlay=0:H-h[v_grad]; " # Gradient at bottom
-            f"[{4}:v]scale={template['logo']['width']}:-1[logo_s]; " # Scale logo
+            f"[{4}:v]scale={logo_width}:-1[logo_s]; " # Scale logo
             f"[v_grad][logo_s]overlay=W-w-60:60[v_final]" # Logo top-right
         )
         

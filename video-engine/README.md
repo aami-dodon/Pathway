@@ -27,7 +27,7 @@ Standalone Python project for automated video generation using AI.
 ### 1. Asset Generation
 Generate brand-specific logos, gradients, and animations based on `packages/brand`:
 ```bash
-poetry run python app/generate_vfx.py
+poetry run python app/scripts/generate_vfx.py
 ```
 
 ### 2. Automated Workflow
@@ -43,11 +43,19 @@ This script will:
 5. Merge everything with a **3s intro and 3s outro buffer**.
 6. Apply branding (Logo, Gradient, Animations).
 
+### 3. Utility Scripts
+List available and tier-compatible models and voices:
+```bash
+poetry run python app/scripts/list_models.py
+```
+Outputs are saved as JSON files in the `data/` directory.
+
 ## Project Structure
 - `app/`:
   - `services/`: Core logic for LLM, TTS, STT, Downloading, and Processing.
-  - `generate_vfx.py`: Branding asset generator.
+  - `scripts/`: Utility scripts (e.g., `list_models.py`, `generate_vfx.py`).
   - `workflow.py`: Main orchestration script.
+- `data/`: JSON references for models and voices.
 - `assets/`: 
   - `animations/`: Generated intro/outro webm files.
   - `fonts/`: Typography assets.

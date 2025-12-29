@@ -13,7 +13,7 @@ from moviepy import ImageClip
 from moviepy.video.fx import FadeIn, FadeOut
 
 # Paths
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ROOT_DIR = BASE_DIR.parent
 THEME_CSS = ROOT_DIR / "packages" / "brand" / "theme.css"
 METADATA_TS = ROOT_DIR / "packages" / "brand" / "src" / "metadata.ts"
@@ -197,54 +197,79 @@ def generate_gradients():
     print("   ✅ Portrait gradients generated (1080x1920)")
 
 def generate_animations(brand_data):
-    """Creates fancy, modern intro/outro animations using moviepy and brand assets"""
-    print("🎬 Generating modern kinetic animations...")
+    """Creates simple, fast intro/outro animations"""
+    print("🎬 Generating animations...")
+    print("   📦 Importing MoviePy modules...")
     
-    from moviepy import ColorClip, CompositeVideoClip
+    from moviepy import ColorClip, CompositeVideoClip, TextClip
+    print("   ✅ MoviePy imported")
+    
+    # Load settings for website URL
+    settings = {}
+    settings_path = BASE_DIR / "data" / "settings.json"
+    if settings_path.exists():
+        import json
+        with open(settings_path) as f:
+            settings = json.load(f)
+    
+    website_url = settings.get("website_url", "preppathway.com")
     
     # Paths
     logo_path = LOGO_DIR / "logo.png"
     full_logo_path = LOGO_DIR / "logo-full-dark.png"
     
     duration = 3
-    primary_rgb = tuple(int(brand_data['primary_hex'].lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+    print(f"   🎨 Brand: {brand_data['name']}")
+    print(f"   🌐 Website: {website_url}")
 
-    # Load assets
-    logo = ImageClip(str(logo_path)).resized(height=300).with_duration(duration)
-    full_logo = ImageClip(str(full_logo_path)).resized(width=800).with_duration(duration)
 
-    # --- INTRO: "The Premium Reveal" ---
-    # Background: Solid dark with brand-colored flash
-    bg = ColorClip(size=(1080, 1920), color=(10, 10, 10)).with_duration(duration)
+    # --- INTRO: Simple Full Logo Fade ---
+    print("\n   🎬 Creating INTRO animation (full logo)...")
     
-    # Kinetic Logo: Fade and Slight Slide
-    animated_logo = (logo
-        .with_position(("center", "center"))
-        .with_start(0.5)
-        .with_effects([FadeIn(0.8)])
-    )
+    bg_dark = ColorClip(size=(1080, 1920), color=(5, 5, 5)).with_duration(duration)
     
-    # Modern Element: Brand colored accent bar
-    accent_bar = ColorClip(size=(300, 6), color=primary_rgb).with_duration(1.5).with_position(("center", 1120))
-    accent_bar = accent_bar.with_start(1.0).with_effects([FadeIn(0.5)])
+    # Full logo centered with fade in only
+    full_logo = ImageClip(str(full_logo_path)).resized(width=700).with_duration(duration)
+    full_logo = full_logo.with_position(("center", "center")).with_effects([FadeIn(0.8)])
     
-    intro_clip = CompositeVideoClip([bg, animated_logo, accent_bar])
-    intro_clip.write_videofile(str(ANIM_DIR / "intro_overlay.webm"), fps=24, codec="libvpx-vp9", audio=False, logger=None)
+    intro_clip = CompositeVideoClip([bg_dark, full_logo])
+    
+    print("   📹 Rendering intro animation...")
+    print("      ⏳ Encoding with VP9 codec at 24fps (this takes ~20-30 seconds)...")
+    intro_clip.write_videofile(str(ANIM_DIR / "intro_overlay.webm"), fps=24, codec="libvpx-vp9", audio=False, logger='bar')
+    print("      ✅ Intro complete!")
 
-    # --- OUTRO: "Social Identity" ---
+
+    # --- OUTRO: Square Logo + Website URL ---
+    print("\n   🎬 Creating OUTRO animation (logo + website)...")
+    
     bg_outro = ColorClip(size=(1080, 1920), color=(5, 5, 5)).with_duration(duration)
     
-    # Full logo enters with a clean fade
-    animated_full_logo = (full_logo
-        .with_position(("center", "center"))
-        .with_effects([FadeIn(1.0), FadeOut(1.0)])
-    )
+    # Square logo at top-center - stays visible (only fade in)
+    square_logo = ImageClip(str(logo_path)).resized(height=250).with_duration(duration)
+    square_logo = square_logo.with_position(("center", 700)).with_effects([FadeIn(0.8)])
     
-    # Geometric flourish
-    flourish = ColorClip(size=(500, 2), color=primary_rgb).with_duration(duration).with_position(("center", 1050))
+    # Website URL text below logo using TextClip
+    try:
+        font_file = FONTS_DIR / f"{brand_data['fontFamily']}-Bold.ttf"
+        url_text = TextClip(
+            text=website_url,
+            font_size=50,
+            color='white',
+            font=str(font_file) if font_file.exists() else 'Arial-Bold',
+            duration=duration
+        )
+        url_text = url_text.with_position(("center", 1000)).with_effects([FadeIn(1.0), FadeOut(0.8)])
+        
+        outro_clip = CompositeVideoClip([bg_outro, square_logo, url_text])
+    except Exception as e:
+        print(f"      ⚠️  TextClip failed: {e}, using logo only")
+        outro_clip = CompositeVideoClip([bg_outro, square_logo])
     
-    outro_clip = CompositeVideoClip([bg_outro, animated_full_logo, flourish.with_effects([FadeIn(1.5)])])
-    outro_clip.write_videofile(str(ANIM_DIR / "outro_overlay.webm"), fps=24, codec="libvpx-vp9", audio=False, logger=None)
+    print("   📹 Rendering outro animation...")
+    print("      ⏳ Encoding with VP9 codec at 24fps (this takes ~20-30 seconds)...")
+    outro_clip.write_videofile(str(ANIM_DIR / "outro_overlay.webm"), fps=24, codec="libvpx-vp9", audio=False, logger='bar')
+    print("      ✅ Outro complete!")
     
     print("   ✅ Premium 9:16 animations generated")
 
@@ -302,7 +327,8 @@ def update_templates(font_path):
 
     # Update the dynamic asset paths
     config["text"]["typography"]["font"] = f"fonts/{font_path.name}"
-    config["logo"]["file"] = "logo/logo.png"
+    config["logo"]["file"] = "logo/logo-full-dark.png"
+    config["logo"]["width"] = "30%"  # 30% of video width (responsive)
     config["intro"]["file"] = "animations/intro_overlay.webm"
     config["outro"]["file"] = "animations/outro_overlay.webm"
     config["gradient"]["file"] = "overlays/gradient-bottom.png"
