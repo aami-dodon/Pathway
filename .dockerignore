@@ -15,12 +15,5 @@ backend/.env
 .git
 .gitignore
 
-# Shared generated files (since we generate them during build)
-shared/assets
-# shared/branding.ts
-# shared/colors.ts
-# shared/theme.css
-# shared/tailwind.preset.js
-
 # OS files
 .DS_Store
