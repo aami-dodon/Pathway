@@ -15,7 +15,8 @@
     "start": "node -r dotenv/config scripts/start_wrapper.cjs",
     "seed": "npx tsx -r dotenv/config src/seed/index.ts",
     "test": "pnpm run test:api",
-    "test:api": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts tests/api"
+    "test:api": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts tests/api",
+    "stop": "lsof -t -i :9006 | xargs kill -9 || true"
   },
   "dependencies": {
     "@org/brand": "workspace:*",
@@ -56,12 +57,5 @@
   "engines": {
     "node": "^18.20.2 || >=20.9.0",
     "pnpm": "^9 || ^10"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "esbuild",
-      "unrs-resolver"
-    ]
   }
 }

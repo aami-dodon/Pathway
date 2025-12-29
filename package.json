@@ -4,11 +4,23 @@
     "private": true,
     "description": "Pathway - Learning Management System",
     "scripts": {
-        "generate": "node packages/brand/scripts/generate.js && node packages/ui/scripts/build.js && node packages/brand/scripts/sync-assets.js"
+        "dev": "pnpm --parallel --filter backend --filter frontend dev",
+        "dev:backend": "pnpm --filter backend dev",
+        "dev:frontend": "pnpm --filter frontend dev",
+        "generate": "node packages/brand/scripts/generate.js && node packages/ui/scripts/build.js && node packages/brand/scripts/sync-assets.js",
+        "stop": "pnpm --parallel --filter backend --filter frontend stop",
+        "stop:docker": "docker compose down"
     },
     "workspaces": [
         "frontend",
         "backend",
         "packages/*"
-    ]
+    ],
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "sharp",
+            "esbuild",
+            "unrs-resolver"
+        ]
+    }
 }

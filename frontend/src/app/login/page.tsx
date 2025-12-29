@@ -3,7 +3,8 @@
 import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { GraduationCap, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,11 +98,7 @@ function LoginContent() {
                 <div>
                     {/* Logo (mobile only) */}
                     <div className="flex justify-center mb-8 lg:hidden">
-                        <Link href="/" className="flex items-center gap-2">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/25">
-                                <GraduationCap className="h-6 w-6 text-primary-foreground" />
-                            </div>
-                        </Link>
+                        <Logo size="lg" />
                     </div>
 
                     <Card className="border-border/50 shadow-xl shadow-primary/5">

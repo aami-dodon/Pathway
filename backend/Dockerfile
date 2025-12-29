@@ -44,7 +44,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Public folder
-COPY --from=builder /app/backend/public ./public
+COPY --from=builder /app/backend/public ./backend/public
 
 # Set the correct permission
 RUN mkdir .next

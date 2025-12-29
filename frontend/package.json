@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "node -r dotenv/config scripts/start_wrapper.cjs",
     "serve": "node -r dotenv/config scripts/serve_wrapper.cjs",
-    "lint": "eslint"
+    "lint": "eslint",
+    "stop": "lsof -t -i :9007 | xargs kill -9 || true"
   },
   "dependencies": {
     "@org/brand": "workspace:*",

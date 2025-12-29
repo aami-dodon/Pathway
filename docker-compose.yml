@@ -14,7 +14,7 @@ services:
       - NODE_ENV=production
       - PORT=9006
       - HOSTNAME=0.0.0.0
-      - FRONTEND_URL=http://localhost:9007
+      - FRONTEND_URL=http://frontend:9007
     networks:
       - pathway-network
     restart: unless-stopped
@@ -30,9 +30,10 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        # Build-time variable for client-side API calls
-        # Set NEXT_PUBLIC_API_URL in .env to override (e.g., https://pathway-api.dodon.in)
+        # Build-time variables for proxy resolution.
+        # These can be overridden by environment variables on the host/CI.
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:9006}
+        INTERNAL_API_URL: ${INTERNAL_API_URL:-http://backend:9006}
     container_name: pathway-frontend
     ports:
       - "9007:9007"

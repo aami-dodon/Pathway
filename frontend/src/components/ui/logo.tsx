@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { GraduationCap } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
@@ -13,11 +16,12 @@ interface LogoProps {
     /**
      * Color variant of the logo
      * - primary: Uses primary color (default)
-     * - secondary: Uses secondary/muted colors
+     * - secondary: Uses secondary variant
      */
     variant?: "primary" | "secondary";
     /**
-     * Whether to show the "Pathway" text next to the icon
+     * Whether to show the full logo with "Pathway" text (true)
+     * or just the icon (false)
      */
     showText?: boolean;
     /**
@@ -32,78 +36,61 @@ interface LogoProps {
 
 const sizeConfig = {
     sm: {
-        container: "h-8 w-8 rounded-lg",
-        icon: "h-4 w-4",
-        text: "text-lg",
+        height: 24,
     },
     md: {
-        container: "h-9 w-9 rounded-xl",
-        icon: "h-5 w-5",
-        text: "text-xl",
+        height: 32,
     },
     lg: {
-        container: "h-12 w-12 rounded-xl",
-        icon: "h-6 w-6",
-        text: "text-2xl",
+        height: 48,
     },
 };
 
 export function Logo({
     size = "md",
-    variant = "primary",
     showText = true,
     asLink = true,
     className,
 }: LogoProps) {
+    const { theme, resolvedTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
     const config = sizeConfig[size];
 
-    const variantStyles = {
-        primary: {
-            container: "bg-gradient-to-br from-primary to-primary/70 shadow-primary/25",
-            icon: "text-primary-foreground",
-            text: "bg-gradient-to-r from-foreground to-foreground/70",
-        },
-        secondary: {
-            container: "bg-gradient-to-br from-secondary to-secondary/70 shadow-secondary/25 border border-border/50",
-            icon: "text-secondary-foreground",
-            text: "bg-gradient-to-r from-muted-foreground to-muted-foreground/70",
-        },
-    };
+    // Avoid hydration mismatch
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
-    const styles = variantStyles[variant];
+    const currentTheme = resolvedTheme || theme;
+
+    // Choose logo based on showText and theme
+    let logoSrc = "/logo-icon.svg";
+    if (showText) {
+        logoSrc = currentTheme === "dark"
+            ? "/logo-full-dark.svg"
+            : "/logo-full-light.svg";
+    }
 
     const logoContent = (
-        <>
-            <div
-                className={cn(
-                    "relative flex items-center justify-center shadow-lg transition-transform group-hover:scale-105",
-                    styles.container,
-                    config.container
-                )}
-            >
-                <GraduationCap className={cn(styles.icon, config.icon)} />
-            </div>
-            {showText && (
-                <span
-                    className={cn(
-                        "font-bold bg-clip-text text-transparent",
-                        styles.text,
-                        config.text
-                    )}
-                >
-                    Pathway
-                </span>
-            )}
-        </>
+        <img
+            src={mounted ? logoSrc : "/logo-icon.svg"}
+            alt="Pathway"
+            style={{
+                height: `${config.height}px`,
+                width: 'auto',
+                objectFit: 'contain',
+            }}
+            className="transition-transform group-hover:scale-105"
+        />
     );
 
     if (asLink) {
         return (
-            <Link href="/" className={cn("flex items-center gap-2 group", className)}>
+            <Link href="/" className={cn("flex items-center group", className)}>
                 {logoContent}
             </Link>
         );
     }
 
-    return <div className={cn("flex items-center gap-2", className)}>{logoContent}</div>;
+    return <div className={cn("flex items-center", className)}>{logoContent}</div>;
 }

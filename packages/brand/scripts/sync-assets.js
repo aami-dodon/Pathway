@@ -38,6 +38,9 @@ const ESSENTIAL_ASSETS = [
     'logo-full-light.png',
     'logo-full-dark.png',
     'logo-icon.png',
+    'logo-full-light.svg',
+    'logo-full-dark.svg',
+    'logo-icon.svg',
     'og-image.png',
 ];
 

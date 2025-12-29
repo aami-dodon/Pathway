@@ -28,7 +28,13 @@ COPY --from=deps /app ./
 COPY . .
 
 ARG NEXT_PUBLIC_API_URL
+ARG INTERNAL_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV INTERNAL_API_URL=${INTERNAL_API_URL}
+
+# Remove any .env files that might have been copied before building (recursively)
+# We keep .env.example but remove all others that Next.js might load
+RUN find . -name ".env*" ! -name ".env.example" -delete
 
 # Run global generation (brand assets, etc)
 RUN pnpm run generate
@@ -47,7 +53,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Public folder
-COPY --from=builder /app/frontend/public ./public
+COPY --from=builder /app/frontend/public ./frontend/public
 
 # Set the correct permission
 RUN mkdir .next
@@ -61,6 +67,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/
 RUN rm -rf /app/node_modules
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=deps --chown=nextjs:nodejs /app/frontend/node_modules ./frontend/node_modules
+
+# Remove any .env files that might override Docker environment variables
+RUN rm -f /app/.env /app/frontend/.env
 
 USER nextjs
 
