@@ -1,0 +1,26 @@
+# Local dependencies
+node_modules
+**/node_modules
+.next
+**/.next
+
+# Environment files
+.env
+.env.local
+.env.production
+frontend/.env
+backend/.env
+
+# Git
+.git
+.gitignore
+
+# Shared generated files (since we generate them during build)
+shared/assets
+# shared/branding.ts
+# shared/colors.ts
+# shared/theme.css
+# shared/tailwind.preset.js
+
+# OS files
+.DS_Store

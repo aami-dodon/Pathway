@@ -5,5 +5,10 @@
     "description": "Pathway - Learning Management System",
     "scripts": {
         "generate": "cd shared && node generate.js"
-    }
+    },
+    "workspaces": [
+        "frontend",
+        "backend",
+        "shared"
+    ]
 }

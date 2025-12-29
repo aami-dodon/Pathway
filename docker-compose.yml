@@ -3,8 +3,8 @@ name: pathway
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: pathway-backend
     ports:
       - "9006:9006"
@@ -27,8 +27,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         # Build-time variable for client-side API calls
         # Set NEXT_PUBLIC_API_URL in .env to override (e.g., https://pathway-api.dodon.in)

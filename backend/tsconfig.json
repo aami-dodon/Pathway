@@ -28,6 +28,9 @@
       ],
       "@payload-config": [
         "./src/payload.config.ts"
+      ],
+      "@shared/*": [
+        "../shared/*"
       ]
     },
     "target": "ES2022",
@@ -36,6 +39,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "../shared/**/*.ts",
+    "../shared/**/*.tsx",
     ".next/types/**/*.ts"
   ],
   "exclude": [

@@ -7,6 +7,7 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
+import { brandName } from './shared-generated/branding'
 
 // Administration collections
 import { Users, Media } from './collections/administration'
@@ -95,7 +96,7 @@ export default buildConfig({
       },
     ],
   },
-  cookiePrefix: 'pathway',
+  cookiePrefix: brandName.toLowerCase(),
   cors: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim()) : [],
   csrf: [], // explicitly disable csrf
   routes: {
@@ -113,7 +114,7 @@ export default buildConfig({
       },
     },
     meta: {
-      titleSuffix: '- Pathway',
+      titleSuffix: ` - ${brandName}`,
       icons: [
         {
           rel: 'icon',
@@ -121,11 +122,20 @@ export default buildConfig({
           type: 'image/x-icon',
         },
       ],
+      openGraph: {
+        images: [
+          {
+            url: '/og-image.png',
+            width: 1200,
+            height: 630,
+          }
+        ]
+      }
     },
   },
   email: nodemailerAdapter({
     defaultFromAddress: process.env.EMAIL_FROM || '',
-    defaultFromName: process.env.EMAIL_FROM || '',
+    defaultFromName: brandName,
     transportOptions: {
       host: process.env.EMAIL_SMTP_HOST,
       port: Number(process.env.EMAIL_SMTP_PORT) || 465,

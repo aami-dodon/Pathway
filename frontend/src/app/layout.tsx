@@ -19,25 +19,48 @@ const inter = Inter({
 
 export const dynamic = 'force-dynamic';
 
+import { metadata as brandMetadata } from "../shared-generated/branding";
+
 export const metadata: Metadata = {
-  title: "Pathway - Learn from Expert Coaches",
-  description: "Discover courses, read expert insights, and book coaching sessions to accelerate your growth.",
-  keywords: ["coaching", "learning", "courses", "LMS", "blog", "experts"],
+  title: {
+    default: brandMetadata.title,
+    template: `%s | ${brandMetadata.title}`,
+  },
+  description: brandMetadata.description,
+  keywords: brandMetadata.keywords.split(',').map(k => k.trim()),
+  authors: [{ name: brandMetadata.author }],
   openGraph: {
-    title: "Pathway - Learn from Expert Coaches",
-    description: "Discover courses, read expert insights, and book coaching sessions.",
+    title: brandMetadata.title,
+    description: brandMetadata.description,
     type: "website",
+    url: brandMetadata.url,
     images: [
       {
-        url: "https://images.unsplash.com/photo-1574169208507-84376144848b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzNDA2MjZ8MHwxfHNlYXJjaHwxMXx8YWJzdHJhY3R8ZW58MHx8fHwxNzY2ODAxNDMwfDA&ixlib=rb-4.1.0&q=80&w=1080",
-        width: 1080,
-        height: 1080,
-        alt: "Pathway - Learn from Expert Coaches",
+        url: "/og-image.png", // We generated this in shared/assets and copied to public/
+        width: 1200,
+        height: 630,
+        alt: brandMetadata.title,
       },
     ],
   },
   icons: {
-    icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.svg',
+    other: [
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '192x192',
+        url: '/icon-192.png',
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '512x512',
+        url: '/icon-512.png',
+      },
+    ],
   },
 };
 
