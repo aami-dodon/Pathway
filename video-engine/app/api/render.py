@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from pathlib import Path
 import logging
+import yt_dlp
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -12,31 +13,55 @@ class SourceModel(BaseModel):
 
 class RenderRequest(BaseModel):
     source: SourceModel
-    text: str
-    template: str
+    text: str | None = None
+    template: str | None = None
+
+def download_video(url: str, output_path: Path):
+    """
+    Downloads video using yt-dlp to the specified output path.
+    """
+    ydl_opts = {
+        'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        'outtmpl': str(output_path),
+        'overwrite': True,
+        'quiet': True,
+    }
+    
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+    except Exception as e:
+        logger.error(f"Download failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
 @router.post("/render")
-async def render_stub(request: RenderRequest):
+async def render_video(request: RenderRequest):
     """
-    Stub endpoint for video rendering.
-    Validates payload, logs it, creates a dummy file, and returns status.
+    Downloads video from URL.
     """
     # Log the received payload
+    logger.info(f"Received render payload: {request.dict()}")
     print(f"Received render payload: {request.dict()}")
 
+    if request.source.type != "url":
+        raise HTTPException(status_code=400, detail="Only 'url' source type is supported")
+
     # Define output directory and file
-    # Resolving relative to the project root (video-engine/)
-    # unique to where this file is: video-engine/app/api/render.py
     base_dir = Path(__file__).resolve().parent.parent.parent
     output_dir = base_dir / "outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    output_file = output_dir / "placeholder.txt"
+    output_file = output_dir / "input.mp4"
     
-    # Create a dummy file
-    output_file.write_text(f"Stub output for request: {request.text}")
+    print(f"Downloading from {request.source.value} to {output_file}")
+    
+    # Download video
+    download_video(request.source.value, output_file)
+
+    if not output_file.exists():
+         raise HTTPException(status_code=500, detail="File was not created after download")
 
     return {
-        "status": "accepted",
-        "output_path": "outputs/placeholder.txt"
+        "status": "downloaded",
+        "local_path": "outputs/input.mp4"
     }

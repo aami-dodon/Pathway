@@ -25,33 +25,32 @@ Standalone Python project for video processing.
 - `GET /health`
 - Response: `{ "status": "ok" }`
 
-### Render Stub
+### Render (Download Only)
 - `POST /render`
 - Request Body:
   ```json
   {
     "source": {
       "type": "url",
-      "value": "https://example.com/video.mp4"
-    },
-    "text": "Sample hook text",
-    "template": "default"
+      "value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    }
   }
   ```
 - Response:
   ```json
   {
-    "status": "accepted",
-    "output_path": "outputs/placeholder.txt"
+    "status": "downloaded",
+    "local_path": "outputs/input.mp4"
   }
   ```
+- This endpoint currently only downloads the video from the provided URL to `outputs/input.mp4`. No processing is performed.
 
 ## Project Structure
 
 - `app/`: FastAPI application code.
   - `api/`: API route handlers.
     - `health.py`: Health check endpoint.
-    - `render.py`: Render stub endpoint.
+    - `render.py`: Render endpoint (currently download-only).
   - `pipeline/`: Video processing logic (placeholder).
 - `outputs/`: Directory for generated video files.
 - `pyproject.toml`: Poetry project configuration.
