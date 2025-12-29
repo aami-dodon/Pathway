@@ -21,12 +21,37 @@ Standalone Python project for video processing.
 
 ## API Endpoints
 
-- `GET /health`: Returns `{ "status": "ok" }`.
+### Health Check
+- `GET /health`
+- Response: `{ "status": "ok" }`
+
+### Render Stub
+- `POST /render`
+- Request Body:
+  ```json
+  {
+    "source": {
+      "type": "url",
+      "value": "https://example.com/video.mp4"
+    },
+    "text": "Sample hook text",
+    "template": "default"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "status": "accepted",
+    "output_path": "outputs/placeholder.txt"
+  }
+  ```
 
 ## Project Structure
 
 - `app/`: FastAPI application code.
   - `api/`: API route handlers.
+    - `health.py`: Health check endpoint.
+    - `render.py`: Render stub endpoint.
   - `pipeline/`: Video processing logic (placeholder).
 - `outputs/`: Directory for generated video files.
 - `pyproject.toml`: Poetry project configuration.

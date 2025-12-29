@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import health
+from app.api import health, render
 from pathlib import Path
 
 # Base directory for the project
@@ -9,6 +9,7 @@ app = FastAPI(title="Video Engine API")
 
 # Include routers
 app.include_router(health.router)
+app.include_router(render.router)
 
 if __name__ == "__main__":
     import uvicorn
