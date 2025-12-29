@@ -5,3 +5,39 @@ logo:
   margin_top: 60
   margin_right: 60
   width: 360
+
+gradient:
+  enabled: true
+  file: overlays/gradient-bottom.png   # pre-rendered PNG for performance
+  position: bottom                      # top | bottom
+  height: 600                           # px from edge
+
+text:
+  enabled: true
+
+  typography:
+    font: fonts/Roboto-Bold.ttf
+    size: 64
+    line_height: 1.2
+    letter_spacing: 0
+    align: center
+    color: "#FFFFFF"
+
+    outline:
+      enabled: true
+      color: "#000000"
+      width: 3
+
+    shadow:
+      enabled: true
+      x: 0
+      y: 4
+      blur: 8
+      color: "#000000"
+
+  layout:
+    position: bottom            # top | center | bottom
+    max_words_per_line: 4
+    max_lines: 2
+    margin_bottom: 200
+    margin_top: 0

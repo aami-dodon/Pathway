@@ -129,22 +129,95 @@ def load_template(template_name: str = "default"):
         logger.error(f"Failed to load template: {e}")
         return {}
 
-def generate_ass_file(text: str, output_path: Path, font_dir: Path):
+def hex_to_ass_color(hex_color: str, alpha: str = "00") -> str:
     """
-    Generates an ASS subtitle file for Instagram-style captions.
+    Converts Hex color (#RRGGBB) to ASS color (&HBBGGRR).
+    Alpha is hex string (00 = opaque, FF = transparent).
+    Result format: &HAABBGGRR
     """
+    hex_color = hex_color.lstrip("#")
+    if len(hex_color) == 6:
+        r, g, b = hex_color[0:2], hex_color[2:4], hex_color[4:6]
+        return f"&H{alpha}{b}{g}{r}".upper()
+    return f"&H{alpha}FFFFFF" # Fallback
+
+def generate_ass_file(text: str, output_path: Path, template: dict):
+    """
+    Generates an ASS subtitle file based on the template configuration.
+    """
+    text_config = template.get("text", {})
+    typography = text_config.get("typography", {})
+    layout = text_config.get("layout", {})
+    
+    # 1. Typography & Style
+    font_file = typography.get("font", "fonts/Roboto-Bold.ttf")
+    # Extract font name (ASS needs the family name, but usually filename without ext works if in fontsdir)
+    font_name = Path(font_file).stem 
+    
+    font_size = typography.get("size", 64)
+    primary_color = hex_to_ass_color(typography.get("color", "#FFFFFF"))
+    
+    outline_config = typography.get("outline", {})
+    outline_enabled = outline_config.get("enabled", True)
+    outline_color = hex_to_ass_color(outline_config.get("color", "#000000"))
+    outline_width = outline_config.get("width", 3) if outline_enabled else 0
+    
+    shadow_config = typography.get("shadow", {})
+    shadow_enabled = shadow_config.get("enabled", True)
+    shadow_color = hex_to_ass_color(shadow_config.get("color", "#000000"))
+    # ASS mostly supports Shadow depth, not complex blur. We map 'y' or 'x' roughly.
+    shadow_depth = shadow_config.get("y", 2) if shadow_enabled else 0
+    
+    # 2. Layout & Alignment
+    # Position: top | center | bottom
+    pos = layout.get("position", "bottom")
+    margin_bottom = layout.get("margin_bottom", 200)
+    margin_top = layout.get("margin_top", 60)
+    
+    # Map to ASS Alignment
+    # 2 (Bottom Center), 8 (Top Center), 5 (Center)
+    if pos == "top":
+        alignment = 8
+        margin_v = margin_top
+    elif pos == "center":
+        alignment = 5
+        margin_v = 0 # Center doesn't usually use margin_v
+    else: # bottom
+        alignment = 2
+        margin_v = margin_bottom
+
+    # 3. Text Processing
     clean_text = sanitize_text(text).replace("\r", "")
-    # Wrap text to ~20 chars per line (adjustment for 80pt font on 1080px width)
-    lines = textwrap.wrap(clean_text, width=20)
-    # Join with ASS newline code \N
+    max_words = layout.get("max_words_per_line", 4)
+    max_lines = layout.get("max_lines", 2)
+    
+    # Basic wrapping
+    wrapped_lines = textwrap.wrap(clean_text, width=max_words * 6) # Approximation: Arg is chars. Assuming avg word=5 chars + space.
+    # Better approach might be to wrap by words explicitly, but textwrap.wrap works on chars. 
+    # Let's try to fit 'max_words' roughly.
+    # If we want strictly max_words, we need a custom wrapper, but textwrap is usually sufficient for visual wrapping.
+    # Re-reading: "max_words_per_line" -> explicit count? 
+    # Let's implement word-based wrapping if it's strictly "max_words".
+    
+    words = clean_text.split()
+    lines = []
+    current_line = []
+    
+    for word in words:
+        current_line.append(word)
+        if len(current_line) >= max_words:
+            lines.append(" ".join(current_line))
+            current_line = []
+    if current_line:
+        lines.append(" ".join(current_line))
+        
+    # Enforce max_lines (truncate for now, or just take first N)
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+
     ass_text = "\\N".join(lines)
     
-    # ASS File Content
-    # - Alignment 2 = Bottom Center
-    # - MarginV 500 = Positioned roughly 30-40% from bottom on 1920 height
-    # - Outline 5, Shadow 2 = Strong visibility
-    # - Fontname = Roboto-Bold (Matches the font filename without extension usually, or we force it via Style config if we can)
-    
+    # 4. Generate Content
     ass_content = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: 1080
@@ -152,7 +225,7 @@ PlayResY: 1920
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Roboto-Bold,80,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,-1,0,0,0,100,100,0,0,1,5,2,2,50,50,500,1
+Style: Default,{font_name},{font_size},{primary_color},&H000000FF,{outline_color},&H00000000,-1,0,0,0,100,100,0,0,1,{outline_width},{shadow_depth},{alignment},50,50,{margin_v},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -167,26 +240,72 @@ Dialogue: 0,0:00:00.00,0:00:30.00,Default,,0,0,0,,{ass_text}
 def apply_overlays(input_path: Path, output_path: Path, text: str | None, template_name: str | None):
     """
     Adds text overlay (ASS) and logo overlay (PNG) to the video.
+    Order: Video -> Text -> Logo
     """
     base_dir = Path(__file__).resolve().parent.parent.parent
     font_dir = base_dir / "assets" / "fonts"
     
     # Load Template
     template_config = load_template(template_name or "default")
-    logo_config = template_config.get("logo", {})
     
     # Prepare Inputs
     inputs = ["-i", str(input_path)]
     filter_chains = []
     
-    # 1. Logo Setup
-    logo_path = None
+    # Chain Construction
+    # Pipeline order: [0:v] -> gradient -> text -> logo -> output
+    current_stream = "[0:v]"
+    
+    # 1. Gradient Overlay (pre-rendered PNG for performance)
+    gradient_config = template_config.get("gradient", {})
+    if gradient_config.get("enabled"):
+        gradient_file = gradient_config.get("file")
+        if gradient_file:
+            gradient_path = base_dir / "assets" / gradient_file
+            if gradient_path.exists():
+                pos = gradient_config.get("position", "bottom")
+                height = gradient_config.get("height", 600)
+                
+                # Add gradient as input
+                gradient_stream_index = len(inputs) // 2
+                inputs.extend(["-i", str(gradient_path)])
+                
+                # Calculate overlay position
+                if pos == "bottom":
+                    overlay_y = f"H-{height}"
+                else:  # top
+                    overlay_y = "0"
+                
+                # Overlay gradient onto video
+                filter_chains.append(f"[0:v][{gradient_stream_index}:v]overlay=0:{overlay_y}[v_grad]")
+                current_stream = "[v_grad]"
+            else:
+                logger.warning(f"Gradient file not found at {gradient_path}")
+    
+    # 2. Text Overlay (ASS)
+    ass_file_path = None
+    if text and template_config.get("text", {}).get("enabled", True):
+        ass_file_path = base_dir / "outputs" / "captions.ass"
+        generate_ass_file(text, ass_file_path, template_config)
+        
+        escaped_ass_path = str(ass_file_path).replace("\\", "/").replace(":", "\\:")
+        escaped_fonts_dir = str(font_dir).replace("\\", "/").replace(":", "\\:")
+        
+        # Apply subtitles to current_stream -> [v_text]
+        filter_chains.append(f"{current_stream}ass='{escaped_ass_path}':fontsdir='{escaped_fonts_dir}'[v_text]")
+        current_stream = "[v_text]"
+    
+    # 3. Logo Overlay
+    logo_config = template_config.get("logo", {})
     if logo_config.get("enabled"):
         logo_rel_path = logo_config.get("file")
         if logo_rel_path:
             logo_path = base_dir / "assets" / logo_rel_path
             if logo_path.exists():
+                # Calculate index based on current number of inputs (each input adds 2 args: -i path)
+                logo_stream_index = len(inputs) // 2
                 inputs.extend(["-i", str(logo_path)])
+                
                 # Scale logo
                 width = logo_config.get("width", 120)
                 # Position logic
@@ -195,61 +314,47 @@ def apply_overlays(input_path: Path, output_path: Path, text: str | None, templa
                 margin_right = logo_config.get("margin_right", 60)
                 margin_left = logo_config.get("margin_left", 60)
                 
-                # We need to map the logo input stream (which is index 1 if present)
-                # Chain: [1:v]scale=w:h[logo];[0:v][logo]overlay=...
-                
-                # Basic position logic implementation (top-right default)
+                # Basic position logic
                 if pos == "top-right":
                     overlay_expr = f"W-w-{margin_right}:{margin_top}"
                 elif pos == "top-left":
                     overlay_expr = f"{margin_left}:{margin_top}"
                 else:
-                    overlay_expr = f"W-w-{margin_right}:{margin_top}" # Fallback
+                    overlay_expr = f"W-w-{margin_right}:{margin_top}"
                 
-                # Define filter chain
-                # First scale the logo to desired width, keep aspect ratio (-1)
-                # [1:v]scale=120:-1[logo]
-                filter_chains.append(f"[1:v]scale={width}:-1[logo]")
-                # [0:v][logo]overlay=x:y[bg]
-                filter_chains.append(f"[0:v][logo]overlay={overlay_expr}[v_logo]")
+                # Scale logo: [N:v] -> [logo_scaled]
+                filter_chains.append(f"[{logo_stream_index}:v]scale={width}:-1[logo_scaled]")
+                
+                # Overlay: [current_stream][logo_scaled] -> [v_logo]
+                filter_chains.append(f"{current_stream}[logo_scaled]overlay={overlay_expr}[v_logo]")
+                current_stream = "[v_logo]"
             else:
-                logger.warning(f"Logo file not found at {logo_path}")
-                # If logo missing, just pass through 0:v as v_logo for next step
-                filter_chains.append("[0:v]null[v_logo]")
-        else:
-             filter_chains.append("[0:v]null[v_logo]")
-    else:
-         filter_chains.append("[0:v]null[v_logo]")
+                 logger.warning(f"Logo file not found at {logo_path}")
 
-    # 2. Text/Subtitle Setup
-    ass_file_path = None
-    if text:
-        ass_file_path = base_dir / "outputs" / "captions.ass"
-        generate_ass_file(text, ass_file_path, font_dir)
-        
-        escaped_ass_path = str(ass_file_path).replace("\\", "/").replace(":", "\\:")
-        escaped_fonts_dir = str(font_dir).replace("\\", "/").replace(":", "\\:")
-        
-        # Apply subtiles to [v_logo] -> [v_out]
-        # ass='path':fontsdir='path'
-        filter_chains.append(f"[v_logo]ass='{escaped_ass_path}':fontsdir='{escaped_fonts_dir}'[v_out]")
-    else:
-        # If no text, just map v_logo to v_out
-        filter_chains.append("[v_logo]copy[v_out]")
-
-    # Construct complete filter complex string
-    filter_complex_str = ";".join(filter_chains)
+    # Final mapping
+    # If the current stream is not [v_logo] (e.g. logo disabled), we just map it out, 
+    # but filter_complex usually needs explicit chain termination/naming if we use labels.
+    # Simpler approach: rename the last output label to [v_out] or just map current_stream.
     
+    # Just output the current stream to output_path
+    # But subprocess needs valid filter complex.
+    
+    # If filter_chains is empty, we just copy.
+    if not filter_chains:
+        # Just copy input to output
+        filter_complex_args = []
+        mapping_args = ["-c:v", "copy", "-c:a", "copy"] # Fast copy if no filters
+    else:
+        filter_complex_str = ";".join(filter_chains)
+        filter_complex_args = ["-filter_complex", filter_complex_str, "-map", current_stream, "-map", "0:a"]
+        mapping_args = ["-c:v", "libx264", "-c:a", "copy", "-pix_fmt", "yuv420p"]
+
     cmd = [
         "ffmpeg",
         "-y",
         *inputs,
-        "-filter_complex", filter_complex_str,
-        "-map", "[v_out]",  # Map the final video output
-        "-map", "0:a",      # Map audio from source video
-        "-c:v", "libx264",
-        "-c:a", "copy",
-        "-pix_fmt", "yuv420p",
+        *filter_complex_args,
+        *mapping_args,
         str(output_path)
     ]
     

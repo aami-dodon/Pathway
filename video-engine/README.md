@@ -27,6 +27,17 @@ Standalone Python project for video processing.
    poetry run uvicorn app.main:app --host 127.0.0.1 --port 8001
    ```
 
+## Render Pipeline
+1. **Download:** `yt-dlp` fetches video.
+2. **Crop:** FFmpeg crops/scales to 1080x1920 (9:16).
+3. **Text Overlay:** ASS Subtitles generated from `template` + `text`, applied using `ass` filter. (Rendered below logo).
+4. **Logo Overlay:** Static PNG overlay applied on top.
+
+## text Processing
+- Text is split into lines based on `max_words_per_line` defined in the template.
+- Max lines are enforced via `max_lines`.
+- Styling (Font, Size, Outline, Shadow, Position) is driven by `templates/default.yaml`.
+
 ## API Endpoints
 
 ### Health Check
@@ -42,13 +53,10 @@ Standalone Python project for video processing.
       "type": "url",
       "value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     },
-    "text": "This is a sample hook text for the video overlay"
+    "text": "Hook text for the video",
+    "template": "default"
   }
   ```
-- Behavior:
-  1. **Download:** Downloads video from URL (supports YouTube).
-  2. **Crop:** Crops/Scales to 9:16 vertical aspect ratio (1080x1920) and limits to 30s.
-  3. **Overlay:** Adds Instagram-style text overlay (white, centered, bottom) if `text` is provided.
 - Response:
   ```json
   {
@@ -58,13 +66,9 @@ Standalone Python project for video processing.
   ```
 
 ## Project Structure
-- `app/`: FastAPI application code.
-  - `api/`
-    - `health.py`: Health check.
-    - `render.py`: Main rendering logic.
-- `assets/fonts/`: Contains `Roboto-Bold.ttf`.
-- `outputs/`:
-  - `input.mp4`: Raw download.
-  - `output.mp4`: Cropped intermediate.
-  - `final.mp4`: Final with text.
-- `cookies.txt`: Optional YouTube cookies for `yt-dlp`.
+- `app/`: FastAPI code.
+- `assets/`: 
+  - `fonts/`: Fonts (e.g. `Roboto-Bold.ttf`).
+  - `logo/`: Logo images.
+- `templates/`: YAML configuration templates.
+- `outputs/`: Artifacts.
