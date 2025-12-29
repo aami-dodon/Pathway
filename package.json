@@ -1,0 +1,9 @@
+{
+    "name": "pathway",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Pathway - Learning Management System",
+    "scripts": {
+        "generate": "cd shared && node generate.js"
+    }
+}

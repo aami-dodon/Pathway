@@ -4,7 +4,11 @@
 node_modules/
 .pnp
 .pnp.js
-.yarn/install-state.gz
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
 # IDE
 .idea/
@@ -30,10 +34,11 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
 # local env files
-.env*.local
-.env
+.env*
+!.env.example
 
 # vercel
 .vercel
@@ -51,5 +56,5 @@ playwright-report/
 blob-report/
 playwright/.cache/
 COURSES_BACKEND_DOCUMENTATION.md
-.gitignore
-COURSES_FRONTEND_DOCUMENTATION.md
+
+.agent
