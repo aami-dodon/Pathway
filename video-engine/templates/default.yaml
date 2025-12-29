@@ -1,0 +1,7 @@
+logo:
+  enabled: true
+  file: logo/logo-full-light.png
+  position: top-right
+  margin_top: 60
+  margin_right: 60
+  width: 120

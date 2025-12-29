@@ -106,6 +106,29 @@ def sanitize_text(text):
     # Keep only printable characters (this is a simple ascii/printable filter)
     return "".join(c for c in text if c.isprintable())
 
+import yaml
+
+def load_template(template_name: str = "default"):
+    """
+    Loads a YAML template from the templates directory.
+    """
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    template_path = base_dir / "templates" / f"{template_name}.yaml"
+    
+    if not template_path.exists():
+        logger.warning(f"Template {template_name} not found, falling back to default.")
+        template_path = base_dir / "templates" / "default.yaml"
+    
+    if not template_path.exists():
+        return {}
+        
+    try:
+        with open(template_path, "r") as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        logger.error(f"Failed to load template: {e}")
+        return {}
+
 def generate_ass_file(text: str, output_path: Path, font_dir: Path):
     """
     Generates an ASS subtitle file for Instagram-style captions.
@@ -121,7 +144,6 @@ def generate_ass_file(text: str, output_path: Path, font_dir: Path):
     # - MarginV 500 = Positioned roughly 30-40% from bottom on 1920 height
     # - Outline 5, Shadow 2 = Strong visibility
     # - Fontname = Roboto-Bold (Matches the font filename without extension usually, or we force it via Style config if we can)
-    # Note: FFmpeg's ass filter needs to find the font. We will provide fontsdir.
     
     ass_content = f"""[Script Info]
 ScriptType: v4.00+
@@ -142,49 +164,108 @@ Dialogue: 0,0:00:00.00,0:00:30.00,Default,,0,0,0,,{ass_text}
         logger.error(f"Failed to write ASS file: {e}")
         raise HTTPException(status_code=500, detail="Subtitle generation failed")
 
-def add_text_overlay(input_path: Path, output_path: Path, text: str):
+def apply_overlays(input_path: Path, output_path: Path, text: str | None, template_name: str | None):
     """
-    Adds text overlay using ASS subtitles (burned in).
+    Adds text overlay (ASS) and logo overlay (PNG) to the video.
     """
     base_dir = Path(__file__).resolve().parent.parent.parent
     font_dir = base_dir / "assets" / "fonts"
-    ass_file_path = base_dir / "outputs" / "captions.ass"
     
-    # Generate the ASS file
-    generate_ass_file(text, ass_file_path, font_dir)
+    # Load Template
+    template_config = load_template(template_name or "default")
+    logo_config = template_config.get("logo", {})
     
-    # Prepare paths for FFmpeg
-    # FFmpeg ass filter requires escaped paths
-    escaped_ass_path = str(ass_file_path).replace("\\", "/").replace(":", "\\:")
-    escaped_fonts_dir = str(font_dir).replace("\\", "/").replace(":", "\\:")
+    # Prepare Inputs
+    inputs = ["-i", str(input_path)]
+    filter_chains = []
     
-    # "ass=filename.ass:fontsdir=..."
-    vf_filter = f"ass='{escaped_ass_path}':fontsdir='{escaped_fonts_dir}'"
+    # 1. Logo Setup
+    logo_path = None
+    if logo_config.get("enabled"):
+        logo_rel_path = logo_config.get("file")
+        if logo_rel_path:
+            logo_path = base_dir / "assets" / logo_rel_path
+            if logo_path.exists():
+                inputs.extend(["-i", str(logo_path)])
+                # Scale logo
+                width = logo_config.get("width", 120)
+                # Position logic
+                pos = logo_config.get("position", "top-right")
+                margin_top = logo_config.get("margin_top", 60)
+                margin_right = logo_config.get("margin_right", 60)
+                margin_left = logo_config.get("margin_left", 60)
+                
+                # We need to map the logo input stream (which is index 1 if present)
+                # Chain: [1:v]scale=w:h[logo];[0:v][logo]overlay=...
+                
+                # Basic position logic implementation (top-right default)
+                if pos == "top-right":
+                    overlay_expr = f"W-w-{margin_right}:{margin_top}"
+                elif pos == "top-left":
+                    overlay_expr = f"{margin_left}:{margin_top}"
+                else:
+                    overlay_expr = f"W-w-{margin_right}:{margin_top}" # Fallback
+                
+                # Define filter chain
+                # First scale the logo to desired width, keep aspect ratio (-1)
+                # [1:v]scale=120:-1[logo]
+                filter_chains.append(f"[1:v]scale={width}:-1[logo]")
+                # [0:v][logo]overlay=x:y[bg]
+                filter_chains.append(f"[0:v][logo]overlay={overlay_expr}[v_logo]")
+            else:
+                logger.warning(f"Logo file not found at {logo_path}")
+                # If logo missing, just pass through 0:v as v_logo for next step
+                filter_chains.append("[0:v]null[v_logo]")
+        else:
+             filter_chains.append("[0:v]null[v_logo]")
+    else:
+         filter_chains.append("[0:v]null[v_logo]")
+
+    # 2. Text/Subtitle Setup
+    ass_file_path = None
+    if text:
+        ass_file_path = base_dir / "outputs" / "captions.ass"
+        generate_ass_file(text, ass_file_path, font_dir)
+        
+        escaped_ass_path = str(ass_file_path).replace("\\", "/").replace(":", "\\:")
+        escaped_fonts_dir = str(font_dir).replace("\\", "/").replace(":", "\\:")
+        
+        # Apply subtiles to [v_logo] -> [v_out]
+        # ass='path':fontsdir='path'
+        filter_chains.append(f"[v_logo]ass='{escaped_ass_path}':fontsdir='{escaped_fonts_dir}'[v_out]")
+    else:
+        # If no text, just map v_logo to v_out
+        filter_chains.append("[v_logo]copy[v_out]")
+
+    # Construct complete filter complex string
+    filter_complex_str = ";".join(filter_chains)
     
     cmd = [
         "ffmpeg",
         "-y",
-        "-i", str(input_path),
-        "-vf", vf_filter,
+        *inputs,
+        "-filter_complex", filter_complex_str,
+        "-map", "[v_out]",  # Map the final video output
+        "-map", "0:a",      # Map audio from source video
         "-c:v", "libx264",
         "-c:a", "copy",
         "-pix_fmt", "yuv420p",
         str(output_path)
     ]
     
-    logger.info(f"Running FFmpeg ASS: {' '.join(cmd)}")
-    print(f"Running FFmpeg ASS: {' '.join(cmd)}")
+    logger.info(f"Running FFmpeg Overlay: {' '.join(cmd)}")
+    print(f"Running FFmpeg Overlay: {' '.join(cmd)}")
     
     try:
         subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     except subprocess.CalledProcessError as e:
         error_msg = e.stderr.decode() if e.stderr else str(e)
-        logger.error(f"FFmpeg ASS failed: {error_msg}")
-        raise HTTPException(status_code=500, detail=f"Subtitle overlay failed: {error_msg}")
+        logger.error(f"FFmpeg Overlay failed: {error_msg}")
+        raise HTTPException(status_code=500, detail=f"Overlay processing failed: {error_msg}")
     finally:
         # Cleanup ASS file
-        if ass_file_path.exists():
-            ass_file_path.unlink()
+        if ass_file_path and ass_file_path.exists():
+             ass_file_path.unlink()
 
 @router.post("/render")
 async def render_video(request: RenderRequest):
@@ -225,19 +306,15 @@ async def render_video(request: RenderRequest):
     if not cropped_file.exists():
         raise HTTPException(status_code=500, detail="Cropped file was not created")
 
-    # 3. Add Text Overlay
-    if request.text:
-        print(f"Adding text overlay to {final_file}")
-        add_text_overlay(cropped_file, final_file, request.text)
-        
-        if not final_file.exists():
-             raise HTTPException(status_code=500, detail="Final file with text was not created")
-        
-        final_output_path = "outputs/final.mp4"
-    else:
-        # If no text, final is just the cropped version (shim behavior)
-        final_file = cropped_file
-        final_output_path = "outputs/output.mp4"
+    # 3. Apply Overlays (Logo + Text)
+    # Even if no text is provided, we might have a logo to apply
+    print(f"Applying overlays to {final_file}")
+    apply_overlays(cropped_file, final_file, request.text, request.template)
+    
+    if not final_file.exists():
+         raise HTTPException(status_code=500, detail="Final file with overlays was not created")
+    
+    final_output_path = "outputs/final.mp4"
 
     return {
         "status": "completed",
