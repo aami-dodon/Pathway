@@ -7,7 +7,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
-import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { HeaderNavData, FooterContentData, SiteSettingsData, api } from "@/lib/api";
 import { ComingSoon } from "@/components/ComingSoon";
 
@@ -113,7 +112,6 @@ export default async function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <DynamicFavicon />
           <AuthProvider>
             {isMaintenanceMode && siteSettings ? (
               <ComingSoon
