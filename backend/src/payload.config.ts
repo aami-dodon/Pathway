@@ -193,7 +193,6 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
-  // @ts-expect-error Sharp types are incompatible between versions but runtime works fine
   sharp,
   plugins: [
     s3Storage({
@@ -208,3 +207,4 @@ export default buildConfig({
     }),
   ],
 })
+// caching test

@@ -6,24 +6,22 @@ RUN apk add --no-cache libc6-compat
 RUN corepack enable pnpm
 WORKDIR /app
 
-# Copy workspace config
-COPY pnpm-workspace.yaml ./
-COPY package.json ./
+# Copy workspace config and package files
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY backend/package.json ./backend/
+COPY frontend/package.json ./frontend/
+COPY packages/brand/package.json ./packages/brand/
+COPY packages/ui/package.json ./packages/ui/
 
-# Copy all package files for packages and frontend
-COPY packages ./packages
-COPY frontend/package.json frontend/pnpm-lock.yaml* ./frontend/
-
-# Install all dependencies from workspace root with shamefully-hoist for flat structure
-RUN pnpm install --shamefully-hoist
-
+# Install dependencies for frontend and its local workspace dependencies
+RUN pnpm install --frozen-lockfile --shamefully-hoist --filter frontend...
 
 # Rebuild the source code only when needed
 FROM base AS builder
 RUN corepack enable pnpm
 WORKDIR /app
 
-# Copy everything from deps (node_modules, packages, etc)
+# Copy node_modules and setup from deps
 COPY --from=deps /app ./
 
 # Copy source
@@ -32,8 +30,8 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
-# Run brand generation and asset sync
-RUN node packages/brand/scripts/generate.js && node packages/ui/scripts/build.js && node packages/brand/scripts/sync-assets.js
+# Run global generation (brand assets, etc)
+RUN pnpm run generate
 
 # Build the frontend app
 WORKDIR /app/frontend
@@ -51,27 +49,25 @@ RUN adduser --system --uid 1001 nextjs
 # Public folder
 COPY --from=builder /app/frontend/public ./public
 
-# Set the correct permission for prerender cache
+# Set the correct permission
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Copy standalone output (server.js and structure)
+# Copy standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/.next/static
 
-# CRITICAL: Replace the symlinked node_modules with actual dependencies from deps stage
+# CRITICAL: Restore node_modules to fix broken pnpm symlinks in standalone build
 RUN rm -rf /app/node_modules
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=deps --chown=nextjs:nodejs /app/frontend/node_modules ./frontend/node_modules
 
-# Copy static files
-COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/.next/static
-
-WORKDIR /app/frontend
-
 USER nextjs
 
 EXPOSE 9007
-
 ENV PORT=9007
+
+# The standalone output puts server.js inside the app directory
+WORKDIR /app/frontend
 
 CMD ["node", "server.js"]
