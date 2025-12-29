@@ -21,7 +21,8 @@ def download_video(url: str, output_path: Path):
     Downloads video using yt-dlp to the specified output path.
     """
     ydl_opts = {
-        'format': 'bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        # Select best single file with video and audio to avoid FFmpeg merging
+        'format': 'best[ext=mp4]/best',
         'outtmpl': str(output_path),
         'overwrite': True,
         'quiet': True,
