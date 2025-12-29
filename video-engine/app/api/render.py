@@ -108,7 +108,7 @@ def sanitize_text(text):
 
 def add_text_overlay(input_path: Path, output_path: Path, text: str):
     """
-    Adds text overlay to the video using FFmpeg drawtext.
+    Adds text overlay to the video using FFmpeg drawtext via a text file.
     """
     # 1. Path to font
     base_dir = Path(__file__).resolve().parent.parent.parent
@@ -118,25 +118,33 @@ def add_text_overlay(input_path: Path, output_path: Path, text: str):
         logger.error(f"Font file not found at {font_path}")
         raise HTTPException(status_code=500, detail="Font file missing")
     
-    # 2. Prepare text
+    # 2. Prepare text and write to temp file
     clean_text = sanitize_text(text)
-    wrapped_text = wrap_text(clean_text, width=20) # Approx 20 chars per line for large font
-    escaped_text = escape_ffmpeg_text(wrapped_text)
+    wrapped_text = wrap_text(clean_text, width=20)
     
+    # Create a consistent temp file path (overwrite each time is fine for single user local)
+    # Using a unique name per request in real app would be better, but simple is fine here.
+    text_file_path = base_dir / "outputs" / "temp_text.txt"
+    try:
+        text_file_path.write_text(wrapped_text, encoding="utf-8")
+    except Exception as e:
+        logger.error(f"Failed to write text file: {e}")
+        raise HTTPException(status_code=500, detail="Text processing failed")
+
     # 3. Construct FFmpeg filter
-    # fontsize=64, white color, black border/shadow for contrast
-    # centered horizontally (x=(w-text_w)/2)
-    # bottom 30% (y=h-h*0.35) - rough positioning
-    
+    # Use textfile instead of text, and escape the path (Windows/special chars safe)
+    # Note: absolute path required usually.
+    escaped_font_path = str(font_path).replace("\\", "/").replace(":", "\\:")
+    escaped_text_path = str(text_file_path).replace("\\", "/").replace(":", "\\:")
+
     drawtext_filter = (
-        f"drawtext=fontfile='{font_path}':"
-        f"text='{escaped_text}':"
+        f"drawtext=fontfile='{escaped_font_path}':"
+        f"textfile='{escaped_text_path}':"
         "fontcolor=white:"
         "fontsize=80:"
         "shadowcolor=black:shadowx=5:shadowy=5:"
         "x=(w-text_w)/2:"
-        "y=h-(h*0.35):"
-        "text_align=C" # Center alignment within the text box
+        "y=h-(h*0.35)" # Removed text_align to avoid artifacts, rely on block centering
     )
     
     cmd = [
@@ -145,7 +153,7 @@ def add_text_overlay(input_path: Path, output_path: Path, text: str):
         "-i", str(input_path),
         "-vf", drawtext_filter,
         "-c:v", "libx264",
-        "-c:a", "copy", # Copy audio without re-encoding if possible
+        "-c:a", "copy",
         "-pix_fmt", "yuv420p",
         str(output_path)
     ]
@@ -159,6 +167,10 @@ def add_text_overlay(input_path: Path, output_path: Path, text: str):
         error_msg = e.stderr.decode() if e.stderr else str(e)
         logger.error(f"FFmpeg Text failed: {error_msg}")
         raise HTTPException(status_code=500, detail=f"Text overlay failed: {error_msg}")
+    finally:
+        # Cleanup temp text file
+        if text_file_path.exists():
+            text_file_path.unlink()
 
 @router.post("/render")
 async def render_video(request: RenderRequest):
