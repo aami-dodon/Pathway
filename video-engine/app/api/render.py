@@ -53,6 +53,8 @@ def check_ffmpeg():
         logger.error("FFmpeg not found. Please install FFmpeg.")
         raise HTTPException(status_code=500, detail="FFmpeg not configured on server")
 
+import textwrap
+
 def process_video(input_path: Path, output_path: Path):
     """
     Crops video to 9:16 (1080x1920), limits to 30s.
@@ -73,20 +75,87 @@ def process_video(input_path: Path, output_path: Path):
         str(output_path)
     ]
     
-    logger.info(f"Running FFmpeg: {' '.join(cmd)}")
-    print(f"Running FFmpeg: {' '.join(cmd)}")
+    logger.info(f"Running FFmpeg Crop: {' '.join(cmd)}")
+    print(f"Running FFmpeg Crop: {' '.join(cmd)}")
     
     try:
         subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     except subprocess.CalledProcessError as e:
         error_msg = e.stderr.decode() if e.stderr else str(e)
-        logger.error(f"FFmpeg failed: {error_msg}")
-        raise HTTPException(status_code=500, detail=f"Video processing failed: {error_msg}")
+        logger.error(f"FFmpeg Crop failed: {error_msg}")
+        raise HTTPException(status_code=500, detail=f"Video cropping failed: {error_msg}")
+
+def escape_ffmpeg_text(text):
+    """
+    Escapes text for FFmpeg drawtext filter.
+    """
+    # Escape \ -> \\, ' -> \', : -> \:
+    text = text.replace("\\", "\\\\").replace("'", "\\'").replace(":", "\\:")
+    return text
+
+def wrap_text(text, width=20):
+    """
+    Wraps text into multiple lines.
+    """
+    return "\n".join(textwrap.wrap(text, width=width))
+
+def add_text_overlay(input_path: Path, output_path: Path, text: str):
+    """
+    Adds text overlay to the video using FFmpeg drawtext.
+    """
+    # 1. Path to font
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    font_path = base_dir / "assets" / "fonts" / "Roboto-Bold.ttf"
+    
+    if not font_path.exists():
+        logger.error(f"Font file not found at {font_path}")
+        raise HTTPException(status_code=500, detail="Font file missing")
+    
+    # 2. Prepare text
+    wrapped_text = wrap_text(text, width=20) # Approx 20 chars per line for large font
+    escaped_text = escape_ffmpeg_text(wrapped_text)
+    
+    # 3. Construct FFmpeg filter
+    # fontsize=64, white color, black border/shadow for contrast
+    # centered horizontally (x=(w-text_w)/2)
+    # bottom 30% (y=h-h*0.35) - rough positioning
+    
+    drawtext_filter = (
+        f"drawtext=fontfile='{font_path}':"
+        f"text='{escaped_text}':"
+        "fontcolor=white:"
+        "fontsize=80:"
+        "shadowcolor=black:shadowx=5:shadowy=5:"
+        "x=(w-text_w)/2:"
+        "y=h-(h*0.35):"
+        "text_align=C" # Center alignment within the text box
+    )
+    
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-i", str(input_path),
+        "-vf", drawtext_filter,
+        "-c:v", "libx264",
+        "-c:a", "copy", # Copy audio without re-encoding if possible
+        "-pix_fmt", "yuv420p",
+        str(output_path)
+    ]
+    
+    logger.info(f"Running FFmpeg Text: {' '.join(cmd)}")
+    print(f"Running FFmpeg Text: {' '.join(cmd)}")
+    
+    try:
+        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr.decode() if e.stderr else str(e)
+        logger.error(f"FFmpeg Text failed: {error_msg}")
+        raise HTTPException(status_code=500, detail=f"Text overlay failed: {error_msg}")
 
 @router.post("/render")
 async def render_video(request: RenderRequest):
     """
-    Downloads video from URL and processes it to vertical format.
+    Downloads, crops, and adds text overlay to a video.
     """
     # check ffmpeg first
     check_ffmpeg()
@@ -104,25 +173,39 @@ async def render_video(request: RenderRequest):
     output_dir.mkdir(parents=True, exist_ok=True)
     
     input_file = output_dir / "input.mp4"
-    output_file = output_dir / "output.mp4"
+    cropped_file = output_dir / "output.mp4"
+    final_file = output_dir / "final.mp4"
     
     print(f"Downloading from {request.source.value} to {input_file}")
     
-    # Download video
+    # 1. Download video
     download_video(request.source.value, input_file)
 
     if not input_file.exists():
          raise HTTPException(status_code=500, detail="File was not created after download")
     
-    # Process video
-    print(f"Processing video to {output_file}")
-    process_video(input_file, output_file)
+    # 2. Crop/Scale video
+    print(f"Processing (cropping) video to {cropped_file}")
+    process_video(input_file, cropped_file)
 
-    if not output_file.exists():
-        raise HTTPException(status_code=500, detail="Output file was not created after processing")
+    if not cropped_file.exists():
+        raise HTTPException(status_code=500, detail="Cropped file was not created")
+
+    # 3. Add Text Overlay
+    if request.text:
+        print(f"Adding text overlay to {final_file}")
+        add_text_overlay(cropped_file, final_file, request.text)
+        
+        if not final_file.exists():
+             raise HTTPException(status_code=500, detail="Final file with text was not created")
+        
+        final_output_path = "outputs/final.mp4"
+    else:
+        # If no text, final is just the cropped version (shim behavior)
+        final_file = cropped_file
+        final_output_path = "outputs/output.mp4"
 
     return {
-        "status": "processed",
-        "input": "outputs/input.mp4",
-        "output": "outputs/output.mp4"
+        "status": "completed",
+        "final_video": final_output_path
     }
