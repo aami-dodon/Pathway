@@ -1,74 +1,57 @@
 # Video Engine
-Standalone Python project for video processing.
+Standalone Python project for automated video generation using AI.
 
 ## Requirements
-- Python 3.10+
+- Python 3.11+
 - Poetry
 - FFmpeg (System dependency)
 
 ### Installing FFmpeg
-- **macOS (Homebrew):**
-  ```bash
-  brew install ffmpeg
-  ```
-- **Windows (Winget):**
-  ```bash
-  winget install ffmpeg
-  ```
+- **macOS (Homebrew):** `brew install ffmpeg`
+- **Windows (Winget):** `winget install ffmpeg`
 
-## Setup and Running
-
-1. Install dependencies:
+## Setup
+1. **API Keys:** Create a `.env` file in the root with your keys:
+   ```env
+   GOOGLE_API_KEY=your_google_ai_studio_key
+   ELEVENLABS_API_KEY=your_elevenlabs_key
+   ```
+2. **Install dependencies:**
    ```bash
    poetry install
-   ```
-2. Run the FastAPI server:
-   ```bash
-   poetry run uvicorn app.main:app --host 127.0.0.1 --port 8001
+   poetry run pip install openai-whisper
    ```
 
-## Render Pipeline
-1. **Download:** `yt-dlp` fetches video.
-2. **Crop:** FFmpeg crops/scales to 1080x1920 (9:16).
-3. **Text Overlay:** ASS Subtitles generated from `template` + `text`, applied using `ass` filter. (Rendered below logo).
-4. **Logo Overlay:** Static PNG overlay applied on top.
+## Usage
 
-## text Processing
-- Text is split into lines based on `max_words_per_line` defined in the template.
-- Max lines are enforced via `max_lines`.
-- Styling (Font, Size, Outline, Shadow, Position) is driven by `templates/default.yaml`.
+### 1. Asset Generation
+Generate brand-specific logos, gradients, and animations based on `packages/brand`:
+```bash
+poetry run python app/generate_vfx.py
+```
 
-## API Endpoints
-
-### Health Check
-- `GET /health`
-- Response: `{ "status": "ok" }`
-
-### Render
-- `POST /render`
-- Request Body:
-  ```json
-  {
-    "source": {
-      "type": "url",
-      "value": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    },
-    "text": "Hook text for the video",
-    "template": "default"
-  }
-  ```
-- Response:
-  ```json
-  {
-    "status": "completed",
-    "final_video": "outputs/final.mp4"
-  }
-  ```
+### 2. Automated Workflow
+Generate a complete video from a text topic and a YouTube source:
+```bash
+poetry run python app/workflow.py
+```
+This script will:
+1. Generate a blog post and a 60s video script using **Google Gemini**.
+2. Convert the script to high-quality audio using **ElevenLabs**.
+3. Generate word-synced subtitles using **Whisper (STT)**.
+4. Download the source video from YouTube and crop it to **9:16**.
+5. Merge everything with a **3s intro and 3s outro buffer**.
+6. Apply branding (Logo, Gradient, Animations).
 
 ## Project Structure
-- `app/`: FastAPI code.
+- `app/`:
+  - `services/`: Core logic for LLM, TTS, STT, Downloading, and Processing.
+  - `generate_vfx.py`: Branding asset generator.
+  - `workflow.py`: Main orchestration script.
 - `assets/`: 
-  - `fonts/`: Fonts (e.g. `Roboto-Bold.ttf`).
-  - `logo/`: Logo images.
-- `templates/`: YAML configuration templates.
-- `outputs/`: Artifacts.
+  - `animations/`: Generated intro/outro webm files.
+  - `fonts/`: Typography assets.
+  - `logo/`: Branded logos.
+  - `overlays/`: Gradient overlays.
+- `templates/`: YAML configuration templates for styling.
+- `outputs/`: Final videos and intermediate artifacts.

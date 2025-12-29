@@ -1,59 +1,50 @@
-logo:
-  enabled: true
-  file: logo/logo-light.png
-  position: top-right
-  margin_top: 60
-  margin_right: 60
-  width: 360
-
-intro:
-  enabled: true
-  file: animations/intro_overlay.webm     # Industry standard WebM with alpha
-  duration: 3                             # seconds
-
-outro:
-  enabled: true
-  file: animations/outro_overlay.webm     # Industry standard WebM with alpha
-  duration: 3                             # seconds
-
-music:
-  enabled: true
-  file: mp3/style1.mp3
-  duration: 60                            # target video duration in seconds
-  fade_out: 3                             # fade out duration in seconds
-
 gradient:
   enabled: true
   file: overlays/gradient-bottom.png
-  position: bottom
   height: 600
-
+  position: bottom
+intro:
+  duration: 3
+  enabled: true
+  file: animations/intro_overlay.webm
+logo:
+  enabled: true
+  file: logo/logo.png
+  margin_right: 60
+  margin_top: 60
+  position: top-right
+  width: 360
+music:
+  duration: 60
+  enabled: true
+  fade_out: 3
+  file: mp3/style1.mp3
+outro:
+  duration: 3
+  enabled: true
+  file: animations/outro_overlay.webm
 text:
   enabled: true
-
+  layout:
+    margin_bottom: 200
+    margin_top: 0
+    max_lines: 2
+    max_words_per_line: 4
+    position: bottom
   typography:
-    font: fonts/Roboto-Bold.ttf
-    size: 64
-    line_height: 1.2
-    letter_spacing: 0
     align: center
-    color: "#FFFFFF"
-
+    color: '#FFFFFF'
+    font: fonts/Inter-Bold.ttf
+    letter_spacing: 0
+    line_height: 1.2
     outline:
+      color: '#000000'
       enabled: true
-      color: "#000000"
       width: 3
-
     shadow:
+      blur: 8
+      color: '#000000'
       enabled: true
       x: 0
       y: 4
-      blur: 8
-      color: "#000000"
-
-  layout:
-    position: bottom            # top | center | bottom
-    max_words_per_line: 4
-    max_lines: 2
-    margin_bottom: 200
-    margin_top: 0
+    size: 64
