@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "video-engine"
+version = "0.1.0"
+description = "Standalone video processing engine"
+authors = ["Pathway Team"]
+readme = "README.md"
+packages = [{include = "app"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.100.0"
+uvicorn = "^0.22.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
