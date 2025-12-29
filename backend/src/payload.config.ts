@@ -7,7 +7,7 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
-import { brandName } from './shared-generated/branding'
+import { brand } from '@org/brand/metadata'
 
 // Administration collections
 import { Users, Media } from './collections/administration'
@@ -96,7 +96,7 @@ export default buildConfig({
       },
     ],
   },
-  cookiePrefix: brandName.toLowerCase(),
+  cookiePrefix: brand.name.toLowerCase(),
   cors: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim()) : [],
   csrf: [], // explicitly disable csrf
   routes: {
@@ -114,7 +114,7 @@ export default buildConfig({
       },
     },
     meta: {
-      titleSuffix: ` - ${brandName}`,
+      titleSuffix: ` - ${brand.name}`,
       icons: [
         {
           rel: 'icon',
@@ -135,7 +135,7 @@ export default buildConfig({
   },
   email: nodemailerAdapter({
     defaultFromAddress: process.env.EMAIL_FROM || '',
-    defaultFromName: brandName,
+    defaultFromName: brand.name,
     transportOptions: {
       host: process.env.EMAIL_SMTP_HOST,
       port: Number(process.env.EMAIL_SMTP_PORT) || 465,
@@ -193,6 +193,7 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
+  // @ts-expect-error Sharp types are incompatible between versions but runtime works fine
   sharp,
   plugins: [
     s3Storage({

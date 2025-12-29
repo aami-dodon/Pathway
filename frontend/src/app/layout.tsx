@@ -19,27 +19,27 @@ const inter = Inter({
 
 export const dynamic = 'force-dynamic';
 
-import { metadata as brandMetadata } from "../shared-generated/branding";
+import { brand } from "@org/brand/metadata";
 
 export const metadata: Metadata = {
   title: {
-    default: brandMetadata.title,
-    template: `%s | ${brandMetadata.title}`,
+    default: brand.metadata.title,
+    template: `%s | ${brand.metadata.title}`,
   },
-  description: brandMetadata.description,
-  keywords: brandMetadata.keywords.split(',').map(k => k.trim()),
-  authors: [{ name: brandMetadata.author }],
+  description: brand.metadata.description,
+  keywords: brand.metadata.keywords.split(',').map((k: string) => k.trim()),
+  authors: [{ name: brand.metadata.author }],
   openGraph: {
-    title: brandMetadata.title,
-    description: brandMetadata.description,
+    title: brand.metadata.title,
+    description: brand.metadata.description,
     type: "website",
-    url: brandMetadata.url,
+    url: brand.metadata.url,
     images: [
       {
-        url: "/og-image.png", // We generated this in shared/assets and copied to public/
+        url: "/og-image.png", // Generated in @org/brand/assets and synced to public/
         width: 1200,
         height: 630,
-        alt: brandMetadata.title,
+        alt: brand.metadata.title,
       },
     ],
   },

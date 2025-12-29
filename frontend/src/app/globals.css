@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../shared-generated/theme.css";
+@import "@org/ui/brand.css";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 

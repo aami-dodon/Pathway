@@ -18,6 +18,7 @@
     "test:api": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts tests/api"
   },
   "dependencies": {
+    "@org/brand": "workspace:*",
     "@aws-sdk/client-s3": "^3.958.0",
     "@aws-sdk/s3-request-presigner": "^3.958.0",
     "@payloadcms/db-postgres": "3.69.0",

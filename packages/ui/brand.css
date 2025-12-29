@@ -1,7 +1,10 @@
 /**
- * Shared Theme CSS - AUTO-GENERATED
- * Import this file in your root layout or main css file.
- * Example: import '@shared/theme.css';
+ * @org/ui Brand CSS
+ * 
+ * AUTO-GENERATED from @org/brand/theme.css
+ * Generated: 2025-12-29T05:51:45.724Z
+ * 
+ * To update: Edit packages/brand/theme.css and run: pnpm generate
  */
 
 @layer base {
@@ -39,7 +42,7 @@
     --sidebar-border: oklch(0.92 0.004 286.32);
     --sidebar-ring: oklch(0.852 0.199 91.936);
   }
- 
+
   .dark {
     --background: oklch(0.141 0.005 285.823);
     --foreground: oklch(0.985 0 0);

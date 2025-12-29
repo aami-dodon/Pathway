@@ -138,12 +138,12 @@ export function CoursePlayerClient({
                     console.error("Failed to update enrollment status", err);
                 }
 
-                // Trigger celebration
+                // Trigger celebration - using grayscale to match brand primary
                 confetti({
                     particleCount: 150,
                     spread: 70,
                     origin: { y: 0.6 },
-                    colors: ['#f59e0b', '#fbbf24', '#ffffff']
+                    colors: ['#1a1a1a', '#404040', '#808080', '#ffffff']
                 });
 
                 setIsCompletionModalOpen(true);

@@ -1,0 +1,22 @@
+{
+    "name": "@org/brand",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "main": "./src/index.ts",
+    "exports": {
+        ".": "./src/index.ts",
+        "./tokens": "./src/tokens.ts",
+        "./metadata": "./src/metadata.ts",
+        "./theme.css": "./theme.css"
+    },
+    "scripts": {
+        "generate": "node scripts/generate.js",
+        "sync": "node scripts/sync-assets.js",
+        "build": "node scripts/generate.js && node scripts/sync-assets.js"
+    },
+    "dependencies": {
+        "lucide": "^0.562.0",
+        "sharp": "^0.34.5"
+    }
+}

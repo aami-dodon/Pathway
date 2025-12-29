@@ -1,11 +1,20 @@
 /**
- * Shared Theme CSS - AUTO-GENERATED
- * Import this file in your root layout or main css file.
- * Example: import '@shared/theme.css';
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  PATHWAY BRAND THEME
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ *  SINGLE SOURCE OF TRUTH for all theme colors.
+ *  
+ *  To update the theme:
+ *  1. Go to https://ui.shadcn.com/themes
+ *  2. Copy the :root and .dark blocks
+ *  3. Paste them below, replacing the existing content
+ *  4. Run: pnpm generate
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
-@layer base {
-  :root {
+:root {
     --radius: 0.65rem;
     --background: oklch(1 0 0);
     --foreground: oklch(0.141 0.005 285.823);
@@ -38,9 +47,9 @@
     --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
     --sidebar-border: oklch(0.92 0.004 286.32);
     --sidebar-ring: oklch(0.852 0.199 91.936);
-  }
- 
-  .dark {
+}
+
+.dark {
     --background: oklch(0.141 0.005 285.823);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.21 0.006 285.885);
@@ -72,5 +81,4 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.421 0.095 57.708);
-  }
 }
