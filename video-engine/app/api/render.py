@@ -99,6 +99,13 @@ def wrap_text(text, width=20):
     """
     return "\n".join(textwrap.wrap(text, width=width))
 
+def sanitize_text(text):
+    """
+    Sanitizes text to remove non-printable characters that might render as squares.
+    """
+    # Keep only printable characters (this is a simple ascii/printable filter)
+    return "".join(c for c in text if c.isprintable())
+
 def add_text_overlay(input_path: Path, output_path: Path, text: str):
     """
     Adds text overlay to the video using FFmpeg drawtext.
@@ -112,7 +119,8 @@ def add_text_overlay(input_path: Path, output_path: Path, text: str):
         raise HTTPException(status_code=500, detail="Font file missing")
     
     # 2. Prepare text
-    wrapped_text = wrap_text(text, width=20) # Approx 20 chars per line for large font
+    clean_text = sanitize_text(text)
+    wrapped_text = wrap_text(clean_text, width=20) # Approx 20 chars per line for large font
     escaped_text = escape_ffmpeg_text(wrapped_text)
     
     # 3. Construct FFmpeg filter
