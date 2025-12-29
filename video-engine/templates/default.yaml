@@ -1,16 +1,32 @@
 logo:
   enabled: true
-  file: logo/logo-full-light.png
+  file: logo/logo-light.png
   position: top-right
   margin_top: 60
   margin_right: 60
   width: 360
 
+intro:
+  enabled: true
+  file: animations/intro_overlay.webm     # Industry standard WebM with alpha
+  duration: 3                             # seconds
+
+outro:
+  enabled: true
+  file: animations/outro_overlay.webm     # Industry standard WebM with alpha
+  duration: 3                             # seconds
+
+music:
+  enabled: true
+  file: mp3/style1.mp3
+  duration: 60                            # target video duration in seconds
+  fade_out: 3                             # fade out duration in seconds
+
 gradient:
   enabled: true
-  file: overlays/gradient-bottom.png   # pre-rendered PNG for performance
-  position: bottom                      # top | bottom
-  height: 600                           # px from edge
+  file: overlays/gradient-bottom.png
+  position: bottom
+  height: 600
 
 text:
   enabled: true
