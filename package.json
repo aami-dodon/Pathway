@@ -7,6 +7,7 @@
         "dev": "pnpm --parallel --filter backend --filter frontend dev",
         "dev:backend": "pnpm --filter backend dev",
         "dev:frontend": "pnpm --filter frontend dev",
+        "dev:video": "./start-video-engine.sh",
         "generate": "node packages/brand/scripts/generate.js && node packages/ui/scripts/build.js && node packages/brand/scripts/sync-assets.js",
         "stop": "pnpm --parallel --filter backend --filter frontend stop",
         "stop:docker": "docker compose down"

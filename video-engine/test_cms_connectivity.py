@@ -1,16 +1,21 @@
 import sys
 import os
+import time
 
 # Add video-engine/app to path to import CMS service
 sys.path.append(os.path.join(os.getcwd(), 'app'))
 
 try:
     from services.cms import CmsService
+    from dotenv import load_dotenv
+    
+    # Load environment variables
+    load_dotenv()
     
     # Configuration
-    API_URL = "http://localhost:9006/api"
-    EMAIL = "sayantan.kumar.basu@gmail.com"
-    PASSWORD = "!1Dilbert"
+    API_URL = os.getenv("CMS_API_URL", "http://localhost:9006/api")
+    EMAIL = os.getenv("CMS_EMAIL")
+    PASSWORD = os.getenv("CMS_PASSWORD")
 
     print(f"--- Testing CMS Integration ---")
     print(f"Connecting to {API_URL}...")
@@ -29,8 +34,8 @@ try:
     
     # 3. Test Creating a Post (Draft)
     print("\n3. Creating a test post...")
-    test_title = "Integration Test from Video Engine"
-    test_content = "This is a test post created by the Antigravity agent to verify video-engine to backend connectivity."
+    test_title = f"Prod Integration Test {int(time.time())}"
+    test_content = "This is a test post created by the Antigravity agent to verify video-engine to production backend connectivity."
     test_excerpt = "Testing connectivity between video-engine and backend."
     
     post = cms.create_post(
@@ -40,9 +45,16 @@ try:
         coach_id=coach.get('id')
     )
     
-    print(f"✅ Post created successfully! ID: {post.get('id')}")
-    print(f"Post Title: {post.get('title')}")
-    print(f"Status: {'Published' if post.get('isPublished') else 'Draft'}")
+    print(f"Response: {post}")
+    
+    # Try to find ID and Title safely
+    post_id = post.get('id') or post.get('doc', {}).get('id')
+    post_title = post.get('title') or post.get('doc', {}).get('title')
+    is_published = post.get('isPublished') or post.get('doc', {}).get('isPublished')
+    
+    print(f"✅ Post created successfully! ID: {post_id}")
+    print(f"Post Title: {post_title}")
+    print(f"Status: {'Published' if is_published else 'Draft'}")
     
     print("\n--- All tests passed! ---")
 

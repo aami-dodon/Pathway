@@ -13,6 +13,10 @@ from app.services.cms import CmsService
 from app.utils.slug import slugify
 import yaml
 import json
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -156,7 +160,7 @@ async def start_source_download():
         workflow = VideoWorkflow(BASE_DIR)
         topic = state.content.get("topic", "source")
         prefix = slugify(topic)
-        path, res = await asyncio.to_thread(workflow.download_video, yt_url, filename_prefix=prefix)
+        path, res = await asyncio.to_thread(workflow.download_video, yt_url, filename_prefix=prefix + "_source")
         # Standardized field name: video_file holds the source video
         state.content["video_file"] = path.name
         state.update_job(state.current_job_id, content=state.content)
@@ -484,11 +488,11 @@ async def start_cms_publish():
             coach_id=coach_id
         )
         
-        post_id = res.get("doc", {}).get("id")
+        post_id = res.get("id") or res.get("doc", {}).get("id")
         
-        # Construct URL for CMS Admin (assuming /api and /admin structure)
+        # Construct URL for CMS (assuming /api structure)
         base_url = cms_url.replace('/api', '')
-        post_url = f"{base_url}/admin/collections/posts/{post_id}"
+        post_url = f"{base_url}/collections/posts/{post_id}"
         
         state.content["cms_post_id"] = post_id
         state.content["cms_post_url"] = post_url
@@ -513,6 +517,8 @@ def go_next_step():
     """Advance to next step in the wizard."""
     if state.current_step < 12:
         state.current_step += 1
+        # Update furthest reached step
+        state.max_step = max(state.max_step, state.current_step)
         # Save current step to job
         if state.current_job_id:
             state.update_job(state.current_job_id, current_step=state.current_step)

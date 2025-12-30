@@ -4,6 +4,8 @@ import os
 import sys
 import asyncio
 from app.services.cms import CmsService
+from app.services.llm import GeminiService
+from app.services.tts import ElevenLabsService
 from pathlib import Path
 from typing import Optional, List, Dict
 from datetime import datetime
@@ -30,8 +32,7 @@ class State:
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
         self.settings_file = data_dir.parent / "settings.json"
-        self.secrets_file = data_dir / "secrets.json"
-        self.task_file = data_dir / "tasks.json" # Changed from tasks_file
+        self.task_file = data_dir / "tasks.json" 
         
         self.settings = self._load_json(self.settings_file, {
             "llm_model": "gemini-flash-latest",
@@ -62,14 +63,14 @@ class State:
         self.font_family = "Inter, sans-serif"
         
         self._load_brand_identity()
-        # Load secrets with environment fallbacks
-        self.secrets = self._load_json(self.secrets_file, {
+        # Load secrets from environment variables only
+        self.secrets = {
             "google_api_key": os.getenv("GOOGLE_API_KEY", ""),
             "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
-            "cms_url": "http://localhost:9006/api",
-            "cms_email": "",
-            "cms_password": ""
-        }) # Changed default to empty dict
+            "cms_url": os.getenv("CMS_API_URL", "https://core.preppathway.com/api"),
+            "cms_email": os.getenv("CMS_EMAIL", ""),
+            "cms_password": os.getenv("CMS_PASSWORD", "")
+        }
         
         # Job History
         self.jobs_file = data_dir / "jobs.json"
@@ -80,6 +81,7 @@ class State:
         self.logs = ""
         self.is_processing = False
         self.current_step = 1 # 1-11: 11-step wizard
+        self.max_step = 1     # Furthest step reached
         self.terminal_open = False # Track terminal drawer state
         self.content = {"topic": "", "blog": "", "excerpt": "", "speech": "", "steps": {}}
         self.available_coaches = []
@@ -125,7 +127,8 @@ class State:
         else:
             self.current_step = 1
             
-        print(f"📌 Job {self.current_job_id} resumed at Step {self.current_step}")
+        self.max_step = self.current_step
+        print(f"📌 Job {self.current_job_id} resumed at Step {self.current_step} (Max: {self.max_step})")
 
     def _load_brand_identity(self):
         try:
@@ -172,8 +175,7 @@ class State:
             json.dump(self.settings, f, indent=4)
 
     def save_secrets(self):
-        with open(self.secrets_file, "w") as f:
-            json.dump(self.secrets, f, indent=4)
+        self.update_env_file()
 
     def save_tasks(self):
         with open(self.task_file, "w") as f: # Changed from tasks_file
@@ -198,6 +200,45 @@ class State:
     def save_jobs(self):
         with open(self.jobs_file, "w") as f:
             json.dump(self.jobs, f, indent=4)
+
+    def update_env_file(self):
+        """Sync secrets to .env file for persistence across service restarts."""
+        env_path = self.data_dir.parent / ".env"
+        try:
+            # Prepare key mapping
+            mapping = {
+                "GOOGLE_API_KEY": self.secrets.get("google_api_key"),
+                "ELEVENLABS_API_KEY": self.secrets.get("elevenlabs_api_key"),
+                "CMS_API_URL": self.secrets.get("cms_url"),
+                "CMS_EMAIL": self.secrets.get("cms_email"),
+                "CMS_PASSWORD": self.secrets.get("cms_password"),
+            }
+            
+            content = ""
+            if env_path.exists():
+                lines = env_path.read_text().splitlines()
+                updated_keys = set()
+                new_lines = []
+                for line in lines:
+                    if "=" in line and not line.strip().startswith("#"):
+                        key = line.split("=")[0].strip()
+                        if key in mapping:
+                            new_lines.append(f"{key}={mapping[key]}")
+                            updated_keys.add(key)
+                            continue
+                    new_lines.append(line)
+                
+                # Append missing keys
+                for key, val in mapping.items():
+                    if key not in updated_keys and val:
+                        new_lines.append(f"{key}={val}")
+                content = "\n".join(new_lines) + "\n"
+            else:
+                content = "\n".join([f"{k}={v}" for k, v in mapping.items() if v]) + "\n"
+                
+            env_path.write_text(content)
+        except Exception as e:
+            print(f"⚠️ Failed to update .env: {e}")
 
     def add_job(self, topic: str) -> str:
         """Create a new job and return its ID."""
@@ -390,8 +431,29 @@ def settings_drawer(state: State):
                      on_change=lambda e: state.secrets.update({'elevenlabs_api_key': e.value})) \
                 .classes('w-full').props('dark filled dense')
             
-            ui.button('Update Keys', on_click=state.save_secrets) \
-                .classes('w-full bg-slate-800 hover:bg-slate-700 text-xs py-2')
+            async def test_google_key():
+                ui.notify('Testing Google API Key...', type='info')
+                if await asyncio.to_thread(GeminiService.validate_api_key, state.secrets['google_api_key']):
+                    state.save_secrets()
+                    state.update_env_file()
+                    ui.notify('✅ Google API Key Valid & Saved!', type='positive')
+                else:
+                    ui.notify('❌ Invalid Google API Key', type='negative')
+
+            async def test_eleven_key():
+                ui.notify('Testing ElevenLabs API Key...', type='info')
+                if await asyncio.to_thread(ElevenLabsService.validate_api_key, state.secrets['elevenlabs_api_key']):
+                    state.save_secrets()
+                    state.update_env_file()
+                    ui.notify('✅ ElevenLabs API Key Valid & Saved!', type='positive')
+                else:
+                    ui.notify('❌ Invalid ElevenLabs API Key', type='negative')
+
+            with ui.row().classes('w-full gap-2'):
+                ui.button('Test Google', on_click=test_google_key) \
+                    .classes('flex-1 bg-slate-800 hover:bg-slate-700 text-[10px] py-1')
+                ui.button('Test Eleven', on_click=test_eleven_key) \
+                    .classes('flex-1 bg-slate-800 hover:bg-slate-700 text-[10px] py-1')
 
             ui.separator().classes('bg-slate-800')
 
@@ -420,6 +482,7 @@ def settings_drawer(state: State):
                     
                     # If successful, save secrets
                     state.save_secrets()
+                    state.update_env_file()
                     ui.notify('✅ Connection Successful & Saved!', type='positive')
                 except Exception as e:
                     ui.notify(f'❌ Connection Failed: {str(e)}', type='negative')
@@ -471,7 +534,7 @@ def wizard_navigation(state: State, on_new_job):
                 
                 def make_nav_handler(target_step):
                     def go_to_step():
-                        if target_step <= state.current_step or is_completed:
+                        if target_step <= state.max_step:
                             state.current_step = target_step
                             ui.navigate.to('/')
                     return go_to_step

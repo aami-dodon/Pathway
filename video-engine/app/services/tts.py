@@ -7,30 +7,29 @@ from pathlib import Path
 load_dotenv()
 
 class ElevenLabsService:
+    @staticmethod
+    def validate_api_key(api_key: str) -> bool:
+        try:
+            import requests
+            headers = {"xi-api-key": api_key}
+            resp = requests.get("https://api.elevenlabs.io/v1/user", headers=headers, timeout=10)
+            resp.raise_for_status()
+            return True
+        except Exception:
+            return False
+
     def __init__(self):
         # Load dynamic settings and secrets
         self.base_dir = Path(__file__).resolve().parent.parent.parent
-        self.secrets_path = self.base_dir / "data" / "secrets.json"
-        
         self.api_key = os.getenv("ELEVENLABS_API_KEY")
         self.backup_key = os.getenv("ELEVENLABS_API_KEY_BACKUP")
         
-        if self.secrets_path.exists():
-            try:
-                with open(self.secrets_path, "r") as f:
-                    secrets = json.load(f)
-                    self.api_key = secrets.get("elevenlabs_api_key", self.api_key)
-                    self.backup_key = secrets.get("elevenlabs_api_key_backup", self.backup_key)
-            except:
-                pass
-
         if not self.api_key:
-            raise ValueError("ELEVENLABS_API_KEY not found in environment or secrets.json")
+            raise ValueError("ELEVENLABS_API_KEY not found in environment")
         set_api_key(self.api_key)
         
         # Load dynamic settings
-        base_dir = Path(__file__).resolve().parent.parent.parent
-        settings_path = base_dir / "data" / "settings.json"
+        settings_path = self.base_dir / "settings.json"
         
         # Defaults
         self.voice_id = "21m00Tcm4TlvDq8ikWAM" # Rachel
