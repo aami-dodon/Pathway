@@ -7,7 +7,7 @@ from app.services.llm import GeminiService
 from app.services.tts import ElevenLabsService
 from app.services.stt import WhisperService
 from app.services.downloader import YTDownloader
-from app.services.video_processor_moviepy import VideoProcessor
+from app.services.video_processor_ffmpeg import VideoProcessorFFmpeg
 
 load_dotenv()
 
@@ -21,7 +21,7 @@ class VideoWorkflow:
         self.tts = ElevenLabsService()
         self.stt = WhisperService()
         self.downloader = YTDownloader(cookies_path=base_dir / "cookies.txt")
-        self.processor = VideoProcessor()
+        self.processor = VideoProcessorFFmpeg()
 
     def run(self, input_text: str, yt_url: str, template_name: str = "default"):
         print(f"🚀 Starting workflow for: {input_text}")
@@ -85,8 +85,8 @@ class VideoWorkflow:
         source_video_path, res = self.downloader.download(yt_url, self.outputs_dir)
         print(f"      ✅ Video downloaded: {source_video_path.name} (Resolution: {res})")
         
-        # --- 5. Final Rendering (MoviePy Only - Optimized) ---
-        print(f"\n   [Step 5/6] Optimized Single-Pass Rendering (MoviePy)")
+        # --- 5. Final Rendering (FFmpeg Pipeline) ---
+        print(f"\n   [Step 5/6] Rendering Video with FFmpeg pipeline")
         final_video = self.outputs_dir / "final_video.mp4"
         assets_dir = self.base_dir / "assets"
         
