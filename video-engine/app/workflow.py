@@ -8,6 +8,7 @@ from app.services.tts import ElevenLabsService
 from app.services.stt import WhisperService
 from app.services.downloader import YTDownloader
 from app.services.video_processor_ffmpeg import VideoProcessorFFmpeg
+from app.utils.theme_parser import get_theme_color
 
 load_dotenv()
 
@@ -22,6 +23,11 @@ class VideoWorkflow:
         self.stt = WhisperService()
         self.downloader = YTDownloader(cookies_path=base_dir / "cookies.txt")
         self.processor = VideoProcessorFFmpeg()
+        
+        # Determine theme color once
+        theme_css_path = base_dir.parent / "packages" / "brand" / "theme.css"
+        self.theme_color = get_theme_color(theme_css_path)
+        print(f"🎨 Theme Color: {self.theme_color}")
 
     def run(self, input_text: str, yt_url: str, template_name: str = "default"):
         print(f"🚀 Starting workflow for: {input_text}")
@@ -97,7 +103,8 @@ class VideoWorkflow:
             words=words,
             template=template,
             base_dir=self.base_dir,
-            bg_music_path=assets_dir / template['music']['file']
+            bg_music_path=assets_dir / template['music']['file'],
+            theme_color=self.theme_color
         )
         print(f"      ✅ Final video generated: {final_video.name}")
         

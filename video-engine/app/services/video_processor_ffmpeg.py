@@ -63,17 +63,33 @@ class VideoProcessorFFmpeg:
         subprocess.run(cmd, check=True)
 
     @staticmethod
-    def apply_vfx(input_path: Path, output_path: Path, ass_path: Path, template: dict, base_dir: Path):
+    def apply_vfx(
+        input_path: Path, 
+        output_path: Path, 
+        ass_path: Path, 
+        template: dict, 
+        base_dir: Path,
+        theme_color: str = "#FCC01E"  # Default Gold if not provided
+    ):
         assets_dir = base_dir / "assets"
         intro_path = assets_dir / template['intro']['file']
         outro_path = assets_dir / template['outro']['file']
         logo_path = assets_dir / template['logo']['file']
         gradient_bottom_path = assets_dir / template['gradient']['file']
+        
+        # User request: "default graident will also have gradeient bo top right"
+        # We can reuse gradient-bottom.png but rotated or use a generic one if available.
+        # Assuming we can reuse gradient-bottom.png rotated 180 deg or similar?
+        # Or better, let's look for a generic top gradient or just use the bottom one rotated.
+        # Let's try to specific `gradient-top.png` if it exists (we saw it in list_dir earlier)
+        # Actually user said "top right". Let's use `gradient-top.png` positioned to top-right or just top.
+        # "gradeient bo top right" -> "gradient be top right"? Or "gradient to top right"?
+        # Assuming they want a gradient at the top-right. 
+        # We will use `gradient-top.png` and position it at top-right or overlay it.
         gradient_top_path = assets_dir / "overlays/gradient-top.png"
         
         duration = VideoProcessorFFmpeg.get_duration(input_path)
         
-        # Get dynamic durations for intro/outro
         intro_duration = VideoProcessorFFmpeg.get_duration(intro_path)
         outro_duration = VideoProcessorFFmpeg.get_duration(outro_path)
         
@@ -87,9 +103,8 @@ class VideoProcessorFFmpeg:
             try:
                 target_logo_w = int(logo_width_config)
             except:
-                target_logo_w = 324 # Default 30% of 1080
+                target_logo_w = 324 
         
-        theme_color = "#FCC01E" 
         fonts_dir = assets_dir / "fonts"
         
         # Dynamic timing
@@ -97,33 +112,46 @@ class VideoProcessorFFmpeg:
         outro_start = max(0, duration - outro_duration)
         fade_dur = 1.0
         
+        # Fade to Black logic:
+        # "in the last 4 minutes the background video should fade to black" (User meant seconds likely, given context)
+        # "For 3 it should not fade the outro animation."
+        # So we fade the underlying video (and tint/subs) to black BEFORE the outro overlay starts/finishes.
+        # Logic: Fade out the `[v_tint]` stream before combining with outro.
+        # Start fade 4 seconds before end.
+        fade_start_t = max(0, duration - 4.0)
+
         # Transparency-Safe FFmpeg Filter Chain
-        # We explicitly ensure inputs are cast to RGBA to preserve alpha channels
         filter_complex = (
             f"[0:v]format=rgba[v0];"
             
-            # Subtitles first
+            # 1. Subtitles
             f"[v0]ass='{esc(ass_path)}':fontsdir='{esc(fonts_dir)}'[v_sub];"
             
-            # Tint after subtitles
+            # 2. Tint (Using dynamic theme_color)
             f"[v_sub]drawbox=x=0:y=0:w=iw:h=ih:color={theme_color}@0.08:t=fill[v_tint];"
             
-            # Prepare Intro/Outro with alpha preservation and colorkey for black background
+            # 3. Fade to Black (Underlying Content ONLY)
+            # Fade out to black over 4 seconds, ending at duration
+            f"[v_tint]fade=t=out:st={fade_start_t}:d=4:color=black[v_faded];"
+            
+            # Prepare Intro/Outro/Gradients
             f"[1:v]format=rgba,colorkey=0x000000:0.1:0.1[intro_src];"
             f"[2:v]format=rgba,colorkey=0x000000:0.1:0.1[outro_src];"
             
-            # Intro / Outro overlays
-            # We strictly overlay them only during their active times to avoid potential black frames if the video freezes or loops
-            f"[v_tint][intro_src]overlay=0:0:enable='between(t,0,{intro_end})'[v_intro];"
+            # 4. Intro Overlay
+            f"[v_faded][intro_src]overlay=0:0:enable='between(t,0,{intro_end})'[v_intro];"
+            
+            # 5. Outro Overlay (NOT FADED via v_tint)
             f"[v_intro][outro_src]overlay=0:0:enable='between(t,{outro_start},{duration})'[v_outro];"
             
-            # Gradients (PNG alpha preserved automatically)
+            # 6. Gradients
+            # Bottom Gradient
             f"[v_outro][3:v]overlay=0:H-h[v_grad_b];"
-            f"[v_grad_b][4:v]overlay=0:0[v_grad_t];"
+            # Top-Right Gradient logic
+            # Use gradient-top.png. Let's position it top-right. W-w:0
+            f"[v_grad_b][4:v]overlay=W-w:0[v_grad_t];"
             
-            # Logo with alpha fade
-            # User request: Start 5s in, exit 5s before end
-            # CRITICAL: Must loop the static logo image so it exists at t=5.0s
+            # 7. Logo (Standard logic)
             f"[5:v]loop=loop=-1:size=1:start=0,scale={target_logo_w}:-1,format=rgba,"
             f"fade=in:st=5.0:d={fade_dur}:alpha=1,"
             f"fade=out:st={duration - 5.0}:d={fade_dur}:alpha=1[logo_s];"
@@ -144,10 +172,10 @@ class VideoProcessorFFmpeg:
             "-map", "[v_final]",
             "-map", "0:a?",
             "-c:v", "libx264",
-            "-pix_fmt", "yuv420p",  # Convert to yuv420p ONLY at encoder stage
+            "-pix_fmt", "yuv420p",
             "-preset", "ultrafast",
             "-crf", "23",
-            "-c:a", "aac", "-b:a", "192k",  # Safe audio encoding
+            "-c:a", "aac", "-b:a", "192k",
             str(output_path)
         ]
         subprocess.run(cmd, check=True)
@@ -160,7 +188,8 @@ class VideoProcessorFFmpeg:
         words: list, 
         template: dict, 
         base_dir: Path, 
-        bg_music_path: Path = None
+        bg_music_path: Path = None,
+        theme_color: str = "#FCC01E"
     ):
         """
         Orchestrates the full FFmpeg pipeline:
@@ -216,7 +245,8 @@ class VideoProcessorFFmpeg:
             output_path=output_path,
             ass_path=ass_path,
             template=template,
-            base_dir=base_dir
+            base_dir=base_dir,
+            theme_color=theme_color
         )
         
         # Cleanup temps
