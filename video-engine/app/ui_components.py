@@ -1,6 +1,9 @@
 from nicegui import ui, events
 import json
 import os
+import sys
+import asyncio
+from app.services.cms import CmsService
 from pathlib import Path
 from typing import Optional, List, Dict
 from datetime import datetime
@@ -79,6 +82,8 @@ class State:
         self.current_step = 1 # 1-11: 11-step wizard
         self.terminal_open = False # Track terminal drawer state
         self.content = {"topic": "", "blog": "", "excerpt": "", "speech": "", "steps": {}}
+        self.available_coaches = []
+        self.ui_counter = 0 # Dummy counter for UI updates
         
         # Load available music
         self.music_dir = self.data_dir.parent / "assets" / "music"
@@ -221,8 +226,10 @@ class State:
                 "video_file": None,
                 "subtitle_file": f"{slug}_words.json",
                 "subtitle_file": f"{slug}_words.json",
+                "subtitle_file": f"{slug}_words.json",
                 "output_video": f"{slug}_final.mp4",
-                "cms_post_url": None
+                "cms_post_url": None,
+                "cms_coach_id": None
             }
         }
         self.jobs.insert(0, job)
@@ -399,7 +406,25 @@ def settings_drawer(state: State):
                      on_change=lambda e: state.secrets.update({'cms_password': e.value})) \
                 .classes('w-full').props('dark filled dense')
 
-            ui.button('Update CMS Keys', on_click=state.save_secrets) \
+            async def test_cms_connection():
+                ui.notify('Testing connection...', type='info')
+                try:
+                    cms_url = state.secrets.get("cms_url", "http://localhost:9006/api")
+                    cms = CmsService(
+                        api_url=cms_url,
+                        email=state.secrets.get("cms_email"),
+                        password=state.secrets.get("cms_password")
+                    )
+                    # Attempt login
+                    await asyncio.to_thread(cms.login)
+                    
+                    # If successful, save secrets
+                    state.save_secrets()
+                    ui.notify('✅ Connection Successful & Saved!', type='positive')
+                except Exception as e:
+                    ui.notify(f'❌ Connection Failed: {str(e)}', type='negative')
+
+            ui.button('Test Connection & Update', on_click=test_cms_connection) \
                 .classes('w-full bg-slate-800 hover:bg-slate-700 text-xs py-2')
 
         ui.separator().classes('bg-slate-800')
@@ -685,6 +710,52 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                     post_url = state.content.get("cms_post_url")
                     with ui.column().classes('w-full items-center gap-6 py-8'):
                         ui.icon('publish').classes('text-6xl').style(f'color: {state.brand_color}')
+                        
+                        if not post_url:
+                            # 1. Fetch coaches if not loaded
+                            if not state.available_coaches and state.secrets.get("cms_email"):
+                                try:
+                                    cms = CmsService(
+                                        api_url=state.secrets.get("cms_url"),
+                                        email=state.secrets.get("cms_email"), 
+                                        password=state.secrets.get("cms_password")
+                                    )
+                                    # We can't await easily here in draw loop, so we might rely on a button or cache
+                                    # But better to just show a "Load Coaches" or handle it via a timer/event if missing
+                                    # For simplicity, let's just show a warning if empty, or try to load via main.py logic?
+                                    # Actually, let's load them in a background task or just assume user will click "Load"
+                                    pass 
+                                except:
+                                    pass
+
+                            # Coach Selection
+                            if state.available_coaches:
+                                coach_opts = {c['id']: c.get('displayName', 'Unknown') for c in state.available_coaches}
+                                ui.select(coach_opts, label="Author (Coach)", value=state.content.get("cms_coach_id"),
+                                          on_change=lambda e: setattr(state, 'ui_counter', state.ui_counter + 1)) \
+                                    .classes('w-64 rounded-t-lg') \
+                                    .props(f'dark filled dense popup-content-style="background-color: {state.brand_background}; border: 1px solid {state.brand_color}"') \
+                                    .style(f'background-color: {state.brand_background}80;') \
+                                    .bind_value(state.content, "cms_coach_id")
+                            else:
+                                ui.label('No coaches found. Check credentials or click Refresh.').classes('text-amber-500 text-xs')
+                                async def load_coaches():
+                                    ui.notify('Loading coaches...')
+                                    try:
+                                        cms = CmsService(
+                                            api_url=state.secrets.get("cms_url"),
+                                            email=state.secrets.get("cms_email"), 
+                                            password=state.secrets.get("cms_password")
+                                        )
+                                        coaches = await asyncio.to_thread(cms.get_all_coaches)
+                                        state.available_coaches = coaches
+                                        ui.notify(f'Loaded {len(coaches)} coaches!', type='positive')
+                                        ui.navigate.to('/')
+                                    except Exception as e:
+                                        ui.notify(f'Failed to load coaches: {e}', type='negative')
+                                
+                                ui.button('LOAD COACHES', icon='refresh', on_click=load_coaches).classes('text-xs')
+
                         if post_url:
                             ui.label('✅ Content Published Successfully!').classes('text-green-500 font-bold text-xl')
                             ui.link('View Post in CMS', post_url, new_tab=True).classes('text-blue-400 hover:text-blue-300 underline')
@@ -696,7 +767,8 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                         else:
                             ui.label('Ready to Publish').classes('text-white text-lg font-bold')
                             ui.label('Article + Excerpt will be pushed to CMS').classes('text-slate-400 text-sm')
-                            ui.label('Ensure you have entered CMS Credentials in Settings').classes('text-amber-500 text-xs')
+                            if not state.content.get("cms_coach_id"):
+                                 ui.label('Please Select an Author').classes('text-amber-500 font-bold')
         
         # Navigation Buttons
         with ui.row().classes('w-full justify-between items-center mt-2'):
@@ -795,7 +867,7 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                     else:
                         ui.button('PUBLISH TO CMS', icon='publish', on_click=on_publish) \
                             .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
-                            .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                            .bind_enabled_from(state, 'ui_counter', backward=lambda x: not state.is_processing and bool(state.content.get("cms_coach_id")))
         
         # Global progress indicator
         global_progress_indicator(state)

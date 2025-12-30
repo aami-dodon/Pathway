@@ -472,6 +472,7 @@ async def start_cms_publish():
         blog_content = state.content.get("blog", "")
         excerpt = state.content.get("excerpt", "")
         slug = state.content.get("slug")
+        coach_id = state.content.get("cms_coach_id")
         
         # Run in thread
         res = await asyncio.to_thread(
@@ -479,7 +480,8 @@ async def start_cms_publish():
             title=topic, 
             content_text=blog_content, 
             excerpt=excerpt,
-            slug=slug
+            slug=slug,
+            coach_id=coach_id
         )
         
         post_id = res.get("doc", {}).get("id")

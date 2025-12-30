@@ -23,11 +23,21 @@ class CmsService:
                 json={"email": self.email, "password": self.password},
                 headers={"Content-Type": "application/json"}
             )
+            
             if resp.status_code == 401:
                 raise ValueError("Invalid email or password.")
+                
+            if resp.status_code == 404:
+                raise ValueError(f"Endpoint not found (404): {self.api_url}/users/login. Check your CMS API URL.")
+
             resp.raise_for_status()
             
-            data = resp.json()
+            try:
+                data = resp.json()
+            except json.JSONDecodeError:
+                snippet = resp.text[:200]
+                raise ValueError(f"Invalid JSON response from CMS ({resp.status_code}). Response snippet: {snippet}")
+
             self.token = data.get("token")
             self.user = data.get("user")
             return self.user
@@ -56,13 +66,32 @@ class CmsService:
         except Exception as e:
             logger.error(f"Failed to fetch Coach Profile: {e}")
             raise
+            
+    def get_all_coaches(self):
+        if not self.token:
+            self.login()
+        
+        try:
+            resp = requests.get(
+                f"{self.api_url}/coach-profiles",
+                params={"limit": 100, "depth": 0},
+                headers={"Authorization": f"JWT {self.token}"}
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("docs", [])
+        except Exception as e:
+            logger.error(f"Failed to fetch coaches: {e}")
+            raise
 
-    def create_post(self, title, content_text, excerpt, slug=None):
+    def create_post(self, title, content_text, excerpt, slug=None, coach_id=None):
         if not self.token:
             self.login()
             
-        coach = self.get_coach_profile()
-        coach_id = coach.get("id")
+        if not coach_id:
+             # Fallback to current user's coach profile
+             coach = self.get_coach_profile()
+             coach_id = coach.get("id")
 
         # Create basic Lexical JSON structure with the content as one paragraph
         lexical_content = {
