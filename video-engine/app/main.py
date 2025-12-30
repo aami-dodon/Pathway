@@ -10,10 +10,14 @@ from app.workflow import VideoWorkflow
 from app.services.llm import GeminiService
 from app.services.tts import ElevenLabsService
 from app.utils.slug import slugify
+import yaml
+import json
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+# Suppress watchfiles info noise
+logging.getLogger('watchfiles').setLevel(logging.WARNING)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
@@ -131,24 +135,15 @@ async def regenerate_content():
     # Refresh UI
     ui.navigate.to('/')
 
-async def start_final_generation(topic: str, template: str):
-    # Reuse existing job or create new if somehow missing
-    job_id = state.current_job_id
-    if not job_id:
-        job_id = state.add_job(f"Video: {topic}")
-    
+async def start_source_download():
+    """Download the source video specified in state.content['youtube_URL']."""
+    yt_url = state.content.get("youtube_URL")
+    if not yt_url:
+        ui.notify("No YouTube URL provided", type='warning')
+        return
+        
     state.is_processing = True
-    state.logs += f"\n🚀 Starting Final Production for: {topic}...\n"
-    
-    # Generate unique output filename
-    slug = slugify(topic)
-    video_filename = f"{slug}_final.mp4"
-    state.content.update({
-        "video_file": "source_1080p.mp4", # Assuming this is the source used in workflow
-        "subtitle_file": f"{slug}_words.json",
-        "output_video": video_filename
-    })
-    state.update_job(job_id, status="draft", progress=60, content=state.content) 
+    state.logs += f"\n📥 Downloading source video from {yt_url}...\n"
     
     # Capture stdout/stderr
     original_stdout = sys.stdout
@@ -158,24 +153,150 @@ async def start_final_generation(topic: str, template: str):
 
     try:
         workflow = VideoWorkflow(BASE_DIR)
-        result = await asyncio.to_thread(workflow.run, topic, None, template, content=state.content)
-        
-        # Update content with actual generated paths from workflow
-        if isinstance(result, dict):
-            state.content.update({
-                "video_file": result.get("source").name if result.get("source") else "source_1080p.mp4",
-                "subtitle_file": result.get("subtitles").name if result.get("subtitles") else state.content.get("subtitle_file"),
-                "output_video": result.get("video").name if result.get("video") else state.content.get("output_video")
-            })
-
-        # Mark as 100% and completed
-        state.update_job(job_id, status="completed", progress=100, content=state.content)
-        state.logs += f"\n✅ VIDEO READY! Check outputs/{state.content.get('output_video')}\n"
-        ui.notify('Video generation completed!', type='positive')
-        # state.clear_draft() 
+        topic = state.content.get("topic", "source")
+        prefix = slugify(topic)
+        path, res = await asyncio.to_thread(workflow.download_video, yt_url, filename_prefix=prefix)
+        # Standardized field name: video_file holds the source video
+        state.content["video_file"] = path.name
+        state.update_job(state.current_job_id, content=state.content)
+        ui.notify(f"Source video downloaded: {path.name}", type='positive')
+        state.logs += f"✅ Source video ready: {path.name} ({res})\n"
+        ui.navigate.to('/')
     except Exception as e:
-        logger.error(f"Generation failed: {e}")
-        state.logs += f"\n❌ ERROR: {str(e)}\n"
+        logger.error(f"Download failed: {e}")
+        state.logs += f"\n❌ DOWNLOAD ERROR: {str(e)}\n"
+        ui.notify(f"Download failed: {str(e)}", type='negative')
+    finally:
+        state.is_processing = False
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+
+async def start_final_generation(topic: str, template: str, target_step: int = 11):
+    """
+    Orchestrates granular steps with checkpointing.
+    target_step: 9 (Crop only), 10 (Mix only), 11 (Final Render)
+    """
+    job_id = state.current_job_id
+    if not job_id:
+        job_id = state.add_job(f"Video: {topic}")
+    
+    state.is_processing = True
+    state.logs += f"\n🚀 Starting Production Phase (Target: Step {target_step}) for: {topic}...\n"
+    
+    slug = slugify(topic)
+    outputs_dir = OUTPUTS_DIR
+    
+    # Capture stdout/stderr
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    sys.stdout = NiceGUIOutputWrapper(state)
+    sys.stderr = sys.stdout
+
+    try:
+        workflow = VideoWorkflow(BASE_DIR)
+        yt_url = state.content.get("youtube_URL")
+        if not yt_url:
+             raise ValueError("Source video (YouTube URL) is mandatory")
+
+        # Define file paths based on slug
+        audio_path = outputs_dir / f"{slug}.mp3"
+        subtitle_words = outputs_dir / f"{slug}_words.json"
+        source_video = outputs_dir / f"{slug}_source.mp4"
+        cropped_video = outputs_dir / f"{slug}_cropped.mp4"
+        mixed_video = outputs_dir / f"{slug}_mixed.mp4"
+        final_video = outputs_dir / f"{slug}_final.mp4"
+        ass_path = outputs_dir / f"{slug}_captions.ass"
+
+        # Step 2: Audio (Ensure it exists)
+        if not audio_path.exists():
+             state.logs += "📍 Preparing Audio Stage...\n"
+             await asyncio.to_thread(workflow.step_audio_gen, state.content, audio_path)
+        state.content["voice_file"] = audio_path.name
+
+        # Step 3: Transcribe (Ensure it exists and is valid)
+        if not subtitle_words.exists() or subtitle_words.stat().st_size == 0:
+             state.logs += "📍 Preparing Transcription Stage...\n"
+             words = await asyncio.to_thread(workflow.step_transcribe, audio_path, subtitle_words)
+        else:
+             import json
+             try:
+                 with open(subtitle_words) as f:
+                      words = json.load(f)
+             except Exception as e:
+                 state.logs += "📍 Transcription file corrupted, regenerating...\n"
+                 words = await asyncio.to_thread(workflow.step_transcribe, audio_path, subtitle_words)
+        state.content["subtitle_file"] = subtitle_words.name
+
+        # Step 4: Download (Ensure it exists)
+        actual_source = None
+        for f in outputs_dir.glob(f"{slug}_source*"):
+             actual_source = f
+             break
+        
+        if not actual_source:
+             if not yt_url:
+                  raise ValueError("Source video (YouTube URL) is mandatory")
+             state.logs += "📍 Preparing Source Video Stage...\n"
+             actual_source = await asyncio.to_thread(workflow.step_video_download, yt_url, slug)
+        
+        state.content["video_file"] = actual_source.name
+
+        # --- GRANULAR PRODUCTION LOGIC ---
+
+        # Step 9: Crop
+        if target_step >= 9:
+             state.logs += "📍 [Step 9] Video Crop & Loop Stage...\n"
+             await asyncio.to_thread(workflow.step_video_crop, actual_source, audio_path, cropped_video, None)
+             state.content["processed_video"] = cropped_video.name
+             state.update_job(job_id, progress=60, content=state.content)
+             if target_step == 9:
+                  state.current_step = 9 # Stay for preview
+                  ui.notify('Cropping complete!', type='positive')
+
+        # Step 10: Music Mix
+        if target_step >= 10:
+             state.logs += "📍 [Step 10] Music & Voice Mix Stage...\n"
+             # Load template
+             template_path = BASE_DIR / "templates" / f"{template}.yaml"
+             with open(template_path, "r") as f:
+                 template_data = yaml.safe_load(f)
+                 
+             music_file = state.content.get("bg_music") or (template_data['music']['file'] if 'music' in template_data else "lofi.mp3")
+             bg_music_path = BASE_DIR / "assets" / "music" / music_file
+             
+             await asyncio.to_thread(workflow.step_music_merge, cropped_video, audio_path, mixed_video, bg_music_path, None)
+             state.content["merged_audio"] = mixed_video.name
+             state.update_job(job_id, progress=80, content=state.content)
+             if target_step == 10:
+                  state.current_step = 10 # Stay for preview
+                  ui.notify('Audio mix complete!', type='positive')
+
+        # Step 11: Final Render
+        if target_step >= 11:
+             state.logs += "📍 [Step 11] Final VFX & Subtitles Stage...\n"
+             template_path = BASE_DIR / "templates" / f"{template}.yaml"
+             with open(template_path, "r") as f:
+                 template_data = yaml.safe_load(f)
+             
+             # Ensure ASS is ready
+             from app.services.stt import WhisperService
+             stt = WhisperService()
+             font_name = template_data['text']['typography']['font'].split('.')[0]
+             font_size = template_data['text']['typography'].get('size', 110)
+             stt.generate_ass(words, ass_path, font_name, font_size, time_offset=4.0)
+
+             await asyncio.to_thread(workflow.step_final_render, mixed_video, final_video, ass_path, template_data, workflow.theme_color, None)
+             
+             state.content["output_video"] = final_video.name
+             state.update_job(job_id, status="completed", progress=100, content=state.content)
+             state.current_step = 11
+             ui.notify('Final render complete!', type='positive')
+
+        ui.navigate.to('/')
+
+    except Exception as e:
+        logger.error(f"Production failed: {e}")
+        state.logs += f"\n❌ PRODUCTION ERROR: {str(e)}\n"
         state.update_job(job_id, status="failed")
         ui.notify(f'Failed: {str(e)}', type='negative')
     finally:
@@ -184,6 +305,14 @@ async def start_final_generation(topic: str, template: str):
         state.is_processing = False
 
 def go_back():
+    """Pause current job (if any) and start fresh for NEW JOB."""
+    # Mark current job as paused
+    if state.current_job_id:
+        state.update_job(state.current_job_id, status="paused", current_step=state.current_step)
+    
+    # Reset state for new job
+    state.current_job_id = None
+    state.content = {"topic": "", "blog": "", "excerpt": "", "speech": "", "steps": {}}
     state.current_step = 1
     ui.navigate.to('/')
 
@@ -237,10 +366,27 @@ async def start_audio_generation():
         
         state.update_job(job_id, status="draft", progress=60, content=state.content)
         state.logs += f"\n✅ AUDIO READY! Saved to {output_path.name}\n"
-        ui.notify('Audio generated! Proceed to preview.', type='positive')
+        
+        # Add Transcription stage so it's ready for Step 7
+        state.logs += "🎙️ Transcribing audio for subtitles...\n"
+        from app.services.stt import WhisperService
+        stt = WhisperService()
+        words = await asyncio.to_thread(stt.transcribe, output_path)
+        
+        # Save words for later steps
+        words_filename = f"{slug}_words.json"
+        words_path = DATA_DIR / "outputs" / words_filename
+        with open(words_path, 'w') as f:
+            json.dump(words, f)
+        
+        state.content["subtitle_file"] = words_filename
+        state.update_job(job_id, progress=80, content=state.content)
+        state.logs += "✅ TRANSCRIPTION READY!\n"
+        
+        ui.notify('Audio & Transcript generated! Proceed to preview.', type='positive')
         
         # Advance to preview step
-        state.current_step = 5
+        state.current_step = 6
         ui.navigate.to('/')
         
     except Exception as e:
@@ -253,10 +399,55 @@ async def start_audio_generation():
         sys.stderr = original_stderr
         state.is_processing = False
 
+async def start_transcription():
+    """Generates transcript for preview step if missing."""
+    topic = state.content.get('topic', 'Audio')
+    job_id = state.current_job_id
+    if not job_id:
+        return
+        
+    state.is_processing = True
+    state.logs += f"\n🎙️ Transcribing audio for: {topic}...\n"
+    
+    slug = slugify(topic)
+    audio_path = DATA_DIR / "outputs" / f"{slug}.mp3"
+    
+    if not audio_path.exists():
+        state.logs += "❌ Error: Audio file not found. Please generate audio first.\n"
+        ui.notify('Audio file missing!', type='negative')
+        state.is_processing = False
+        return
+
+    try:
+        from app.services.stt import WhisperService
+        stt = WhisperService()
+        words = await asyncio.to_thread(stt.transcribe, audio_path)
+        
+        # Save words
+        words_filename = f"{slug}_words.json"
+        words_path = DATA_DIR / "outputs" / words_filename
+        with open(words_path, 'w') as f:
+            json.dump(words, f)
+        
+        state.content["subtitle_file"] = words_filename
+        state.update_job(job_id, progress=80, content=state.content)
+        state.logs += "✅ TRANSCRIPTION READY!\n"
+        ui.notify('Transcription complete!', type='positive')
+        ui.navigate.to('/')
+    except Exception as e:
+        logger.error(f"❌ Transcription failed: {e}")
+        state.logs += f"❌ Transcription failed: {str(e)}\n"
+        ui.notify(f'Transcription failed: {str(e)}', type='negative')
+    finally:
+        state.is_processing = False
+
 def go_next_step():
     """Advance to next step in the wizard."""
-    if state.current_step < 5:
+    if state.current_step < 11:
         state.current_step += 1
+        # Save current step to job
+        if state.current_job_id:
+            state.update_job(state.current_job_id, current_step=state.current_step)
         ui.navigate.to('/')
 
 @ui.page('/')
@@ -338,19 +529,22 @@ def index():
         # Dynamic View Switching
         with ui.column().classes('w-full h-full transition-all duration-500 justify-center items-center'):
             if state.current_step == 1:
-                generator_panel(state, start_content_generation)
+                generator_panel(state, start_content_generation, on_new_job=go_back)
             else:
                 # Steps 2, 3, 4 - Wizard flow
                 content_editor_panel(
                     state, 
                     on_back=go_back,
                     on_generate_audio=start_audio_generation,
+                    on_download_source=start_source_download,
                     on_generate_video=lambda: start_final_generation(
                         state.content.get('topic', 'Video'), 
-                        'default'
+                        'default',
+                        target_step=state.current_step
                     ),
                     on_next_step=go_next_step,
-                    on_regenerate=regenerate_content
+                    on_regenerate=regenerate_content,
+                    on_generate_transcript=start_transcription
                 )
 
 # Startup check
@@ -360,11 +554,17 @@ if not DATA_DIR.exists():
 if __name__ in {"__main__", "__mp_main__"}:
     # NiceGUI app configuration
     favicon_path = str(BRAND_ASSETS_DIR / 'favicon.ico') if BRAND_ASSETS_DIR.exists() else None
+    
+    # Get absolute paths for exclusions
+    data_dir = DATA_DIR
+    
     ui.run(
         title='Pathway Video Engine', 
         port=8001, 
         reload=True, 
         dark=True, 
         favicon=favicon_path,
-        reload_dirs=[str(BASE_DIR / 'app')]
+        uvicorn_reload_dirs=['app'], 
+        uvicorn_reload_excludes='data/*,outputs/*,*.json,*.mp3,*.mp4,*.ass,*/data/*,*/outputs/*'
     )
+

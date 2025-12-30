@@ -7,6 +7,21 @@ from datetime import datetime
 import re
 import uuid
 
+# 11-Step Production Wizard Configuration
+STEP_CONFIG = {
+    1: {"title": "Topic", "subtitle": "Enter your content topic", "icon": "topic", "field": "topic", "action": "CONTINUE"},
+    2: {"title": "Blog", "subtitle": "Edit the blog article", "icon": "article", "field": "blog", "action": "CONTINUE"},
+    3: {"title": "Excerpt", "subtitle": "Create social excerpt", "icon": "format_quote", "field": "excerpt", "action": "CONTINUE"},
+    4: {"title": "Script", "subtitle": "Write narration script", "icon": "record_voice_over", "field": "speech", "action": "CONTINUE"},
+    5: {"title": "Voice", "subtitle": "Select narrator voice", "icon": "mic", "field": None, "action": "CONTINUE"},
+    6: {"title": "Audio", "subtitle": "Preview narration audio", "icon": "headphones", "field": None, "action": "CONTINUE"},
+    7: {"title": "Transcript", "subtitle": "Review word transcription", "icon": "subtitles", "field": None, "action": "CONTINUE"},
+    8: {"title": "Source", "subtitle": "Download source video", "icon": "download", "field": None, "action": "CONTINUE"},
+    9: {"title": "Crop", "subtitle": "Process video length", "icon": "content_cut", "field": None, "action": "CONTINUE"},
+    10: {"title": "Mix", "subtitle": "Add background music", "icon": "library_music", "field": None, "action": "CONTINUE"},
+    11: {"title": "Render", "subtitle": "Final video with VFX", "icon": "movie", "field": None, "action": "DOWNLOAD"},
+}
+
 class State:
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
@@ -57,17 +72,48 @@ class State:
         self.tasks = self._load_json(self.task_file, []) # Changed from tasks_file
         self.logs = ""
         self.is_processing = False
-        self.current_step = 1 # 1: Topic Input, 2: Blog Editor, 3: Excerpt Editor, 4: Story Editor
+        self.current_step = 1 # 1-11: 11-step wizard
         self.terminal_open = False # Track terminal drawer state
-        self.content = {"topic": "", "blog": "", "excerpt": "", "speech": ""}
-        self.draft_file = data_dir / "draft.json"
+        self.content = {"topic": "", "blog": "", "excerpt": "", "speech": "", "steps": {}}
         
-        # Load draft if exists - go to blog step if draft has content
-        draft = self._load_json(self.draft_file, None)
-        if draft:
-            self.content = draft
-            if draft.get("blog"):
-                self.current_step = 2
+        # Load available music
+        self.music_dir = self.data_dir.parent / "assets" / "music"
+        self.music_options = [f.name for f in self.music_dir.glob("*.mp3")] if self.music_dir.exists() else []
+        
+        # Home page starts fresh - no auto-restore
+        # User must click a job in sidebar to resume it
+
+    def _infer_step(self):
+        """Infers the current step (1-11) based on available content and files."""
+        content = self.content
+        slug = content.get("slug", "")
+        outputs = self.data_dir / "outputs"
+        
+        # Check in reverse order (highest step first)
+        if (outputs / f"{slug}_final.mp4").exists():
+            self.current_step = 11
+        elif (outputs / f"{slug}_mixed.mp4").exists():
+            self.current_step = 10
+        elif (outputs / f"{slug}_cropped.mp4").exists():
+            self.current_step = 9
+        elif (outputs / f"{slug}_source.mp4").exists() or any(outputs.glob(f"{slug}_source*")):
+            self.current_step = 9 # Advance to next logic step after download
+        elif (outputs / f"{slug}_words.json").exists():
+            self.current_step = 7
+        elif (outputs / f"{slug}.mp3").exists():
+            self.current_step = 6
+        elif content.get("speech"):
+            self.current_step = 5
+        elif content.get("excerpt"):
+            self.current_step = 4
+        elif content.get("blog"):
+            self.current_step = 3
+        elif content.get("topic"):
+            self.current_step = 2
+        else:
+            self.current_step = 1
+            
+        print(f"📌 Job {self.current_job_id} resumed at Step {self.current_step}")
 
     def _load_brand_identity(self):
         try:
@@ -122,15 +168,20 @@ class State:
             json.dump(self.tasks, f, indent=4)
 
     def save_draft(self):
-        with open(self.draft_file, "w") as f:
-            json.dump(self.content, f, indent=4)
-        ui.notify('Draft saved!', type='positive')
+        """Saves current content to the current job."""
+        if self.current_job_id:
+            self.update_job(self.current_job_id, content=self.content)
+            ui.notify('Progress saved!', type='positive')
+        else:
+             # If no job yet (Step 1), we don't save a draft anymore 
+             # as the job is created on "GENERATE"
+             pass
 
     def clear_draft(self):
-        if self.draft_file.exists():
-            self.draft_file.unlink()
+        """Resets the editor state."""
         self.content = {"topic": "", "blog": "", "excerpt": "", "speech": ""}
         self.current_step = 1
+        self.current_job_id = None
 
     def save_jobs(self):
         with open(self.jobs_file, "w") as f:
@@ -171,8 +222,8 @@ class State:
         self.save_jobs()
         return job_id
 
-    def update_job(self, job_id: str, status: str = None, progress: int = None, content: Dict = None):
-        """Update a job's status, progress, or content."""
+    def update_job(self, job_id: str, status: str = None, progress: int = None, content: Dict = None, current_step: int = None):
+        """Update a job's status, progress, content, or current_step."""
         for job in self.jobs:
             if job["id"] == job_id:
                 if status:
@@ -183,6 +234,8 @@ class State:
                     job["progress"] = progress
                 if content is not None:
                     job["content"] = content
+                if current_step is not None:
+                    job["current_step"] = current_step
                 self.save_jobs()
                 break
 
@@ -200,12 +253,7 @@ class State:
         self.current_job_id = None
         self.save_jobs()
         
-        # 2. Clear Draft
-        if self.draft_file.exists():
-             try:
-                 self.draft_file.unlink()
-             except Exception as e:
-                 print(f"Failed to delete draft: {e}")
+        # 2. Clear Content State
         self.content = {"topic": "", "blog": "", "excerpt": "", "speech": ""}
         self.current_step = 1
         
@@ -274,27 +322,7 @@ def render_job_item(state: State, job: Dict):
         if "content" in job and job["content"]:
             state.content = job["content"]
             state.current_job_id = job["id"]
-            
-            # Infer step
-            content = state.content
-            if content.get("output_video") and (state.data_dir / "outputs" / content.get("output_video")).exists():
-                 # Final video exists (though maybe not technically possible if restaging, but let's be safe)
-                 state.current_step = 5 
-            elif content.get("voice_id") and (state.data_dir / "outputs" / content.get("voice_file", "voice.mp3")).exists():
-                 # Has audio -> Preview Step
-                 state.current_step = 5
-            elif content.get("speech"):
-                 # Has script -> Director Script Step
-                 state.current_step = 4
-            elif content.get("excerpt"):
-                 # Has excerpt -> Story Step (misnamed in logic? Step 4 is Director which uses speech/script)
-                 # Flow: Topic(1) -> Blog(2) -> Excerpt(3) -> Script(4) -> Audio(5)
-                 state.current_step = 3
-            elif content.get("blog"):
-                 state.current_step = 2
-            else:
-                 state.current_step = 1
-            
+            state._infer_step()
             ui.navigate.to('/')
             ui.notify(f"Restored job: {job['topic'][:20]}...", type='positive')
         else:
@@ -308,6 +336,9 @@ def render_job_item(state: State, job: Dict):
             with ui.column().classes('flex-1 gap-1'):
                 ui.label(job["topic"]).classes('text-xs font-medium text-white truncate')
                 
+                # Progress bar for history
+                ui.linear_progress(value=job["progress"]/100).classes('w-full h-[1px] mt-1 opacity-30').props('color=white')
+
                 # Format timestamp
                 try:
                     dt = datetime.fromisoformat(job["started_at"])
@@ -369,8 +400,43 @@ def settings_drawer(state: State):
                 ui.html(f'<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>', sanitize=False)
                 ui.label('All Services Online').classes('text-[10px] text-slate-400')
 
-def generator_panel(state: State, on_start):
-    with ui.column().classes('w-full max-w-3xl mx-auto gap-4'):
+def wizard_navigation(state: State, on_new_job):
+    """Unified navigation header for all 11 steps."""
+    with ui.column().classes('w-full gap-2 mb-4'):
+        # Top Bar: NEW JOB and Step Counter
+        with ui.row().classes('w-full justify-between items-center'):
+            ui.button('NEW JOB', icon='add', on_click=on_new_job) \
+                .props('flat color=amber') \
+                .classes('text-xs font-bold px-2 py-1 rounded-lg hover:bg-amber-500/10 transition-all')
+            ui.label(f'Step {state.current_step} of 11').classes('text-[10px] font-bold text-slate-500 uppercase tracking-tighter')
+        
+        # Progress Navigation - 11 Steps with Badges
+        with ui.row().classes('w-full justify-center gap-1 flex-wrap bg-slate-900/40 p-2 rounded-2xl border border-slate-800/30'):
+            for step_num in range(1, 12):
+                step_info = STEP_CONFIG[step_num]
+                is_active = state.current_step == step_num
+                is_completed = state.current_step > step_num
+                
+                color = state.brand_color if is_active else ("#22c55e" if is_completed else "#334155")
+                
+                def make_nav_handler(target_step):
+                    def go_to_step():
+                        if target_step <= state.current_step or is_completed:
+                            state.current_step = target_step
+                            ui.navigate.to('/')
+                    return go_to_step
+                
+                with ui.column().classes('items-center gap-0.5 px-2 py-1 rounded-xl cursor-pointer hover:bg-slate-800/50 transition-all') \
+                    .on('click', make_nav_handler(step_num)):
+                    ui.label(str(step_num)).classes('w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold') \
+                        .style(f'background: {color}; color: white;')
+                    ui.icon(step_info["icon"]).classes('text-sm').style(f'color: {color}')
+
+def generator_panel(state: State, on_start, on_new_job):
+    with ui.column().classes('w-full h-full max-w-4xl mx-auto gap-4'):
+        # Glassmorphic Navigation
+        wizard_navigation(state, on_new_job)
+        
         # Glassmorphic Main Card
         with ui.card().classes('w-full p-6 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-2xl').style(f'background: {state.brand_background}cc;'):
             ui.label('Design your content').classes('text-xs font-bold text-slate-500 uppercase tracking-widest mb-1 text-center')
@@ -380,11 +446,14 @@ def generator_panel(state: State, on_start):
                 .classes(f'w-full text-lg font-medium p-3 bg-slate-800/30 border-0 rounded-xl transition-all focus:ring-2 focus:ring-[{state.brand_color}]') \
                 .props('dark borderless autofocus').bind_value(state.content, 'topic')
             
-            with ui.row().classes('w-full justify-center mt-4'):
-                ui.button('START MANIPULATION', on_click=lambda: on_start(topic.value, 'default')) \
-                    .classes(f'h-12 px-8 text-black font-black text-sm rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all transform hover:scale-105 active:scale-95') \
-                    .style(f'background-color: {state.brand_color}') \
-                    .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+            ui.button('GENERATE BRANDED CONTENT', on_click=lambda: on_start(state.content["topic"], "default")) \
+                .classes('w-full py-4 text-black font-bold rounded-xl shadow-lg hover:scale-105 transition-all') \
+                .style(f'background-color: {state.brand_color};') \
+                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x) \
+                .bind_text_from(state, 'is_processing', backward=lambda x: 'COMMUNICATING WITH GEMINI...' if x else 'GENERATE BRANDED CONTENT')
+
+        # Add the global sticky indicator
+        global_progress_indicator(state)
 
         with ui.row().classes('w-full gap-3 justify-center'):
             with ui.card().classes('border border-slate-800 p-3 flex-1 items-center').style(f'background: {state.brand_background}cc;'):
@@ -423,47 +492,35 @@ def log_terminal(state: State):
             
         ui.timer(0.5, update_logs)
 
-def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_video, on_next_step, on_regenerate):
-    """Step-based content editor wizard with audio-first workflow."""
-    
-    # Step configuration - Audio generation before video
-    step_config = {
-        2: {"title": "The Article", "subtitle": "Write your blog content", "field": "blog", "icon": "description", "next_label": "NEXT: EXCERPT"},
-        3: {"title": "Social Blurb", "subtitle": "Create a catchy excerpt", "field": "excerpt", "icon": "campaign", "next_label": "NEXT: STORY"},
-        4: {"title": "Director Script", "subtitle": "Write the narration script", "field": "speech", "icon": "record_voice_over", "next_label": "GENERATE AUDIO"},
-        5: {"title": "Audio Preview", "subtitle": "Review audio before video generation", "field": None, "icon": "headphones", "next_label": "GENERATE VIDEO"}
-    }
-    
-    config = step_config.get(state.current_step, step_config[2])
-    
-    with ui.column().classes('w-full h-full max-w-4xl mx-auto gap-3'):
-        # Progress indicator - clickable navigation
-        with ui.row().classes('w-full justify-center gap-2'):
-            for step_num in [2, 3, 4, 5]:
-                step_info = step_config[step_num]
-                is_active = state.current_step == step_num
-                is_completed = state.current_step > step_num
-                is_accessible = state.current_step >= step_num  # Can click on current or completed steps
-                
-                color = state.brand_color if is_active else ("#22c55e" if is_completed else "#334155")
-                cursor = "cursor-pointer" if is_accessible else "cursor-not-allowed"
-                
-                def make_nav_handler(target_step):
-                    def go_to_step():
-                        if state.current_step >= target_step:
-                            state.current_step = target_step
-                            ui.navigate.to('/')
-                    return go_to_step
-                
-                with ui.row().classes(f'items-center gap-1 {cursor}').on('click', make_nav_handler(step_num)):
-                    ui.icon(step_info["icon"]).classes('text-lg').style(f'color: {color}')
-                    if step_num < 5: # Hide title for Step 5 to save space, or keep it short
-                        ui.label(step_info["title"]).classes(f'text-xs {"font-bold" if is_active else ""} hover:opacity-80 hidden sm:block').style(f'color: {color}')
-                    else:
-                        ui.label("Audio").classes(f'text-xs {"font-bold" if is_active else ""} hover:opacity-80 hidden sm:block').style(f'color: {color}')
+def global_progress_indicator(state: State):
+    """A floating/fixed progress indicator shown when processing."""
+    with ui.column().classes('fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-50 pointer-events-none transition-all duration-500') \
+        .bind_visibility_from(state, 'is_processing'):
+        
+        with ui.card().classes('w-full border border-slate-700/50 p-4 shadow-2xl backdrop-blur-xl').style(f'background: {state.brand_background}dd;'):
+            with ui.row().classes('w-full items-center gap-4'):
+                ui.spinner('audio', size='lg', color=state.brand_color)
+                with ui.column().classes('flex-1 gap-1'):
+                    ui.label('PROCESSING STAGE...').classes('text-[10px] font-bold text-slate-500 tracking-widest')
+                    # Find progress
+                    job = next((j for j in state.jobs if j["id"] == state.current_job_id), None)
+                    p_val = job["progress"] if job else 10
                     
-                    if step_num < 5:
-                        ui.icon('chevron_right').classes('text-slate-600')
+                    with ui.row().classes('w-full justify-between items-end'):
+                        ui.label(f'{p_val}%').classes('text-xs font-mono text-white')
+                        ui.label('PLEASE WAIT').classes('text-[8px] text-slate-500')
+                    
+                    ui.linear_progress(value=p_val/100).classes('w-full h-1.5 rounded-full').props(f'color="{state.brand_color}"')
+
+def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_video, on_next_step, on_regenerate, on_download_source=None, on_generate_transcript=None):
+    """11-step content production wizard."""
+    config = STEP_CONFIG.get(state.current_step, STEP_CONFIG[1])
+    slug = state.content.get("slug", "")
+    outputs_dir = state.data_dir / "outputs"
+    
+    with ui.column().classes('w-full h-full max-w-5xl mx-auto gap-3'):
+        # Unified Wizard Navigation
+        wizard_navigation(state, on_back)
         
         # Header
         with ui.row().classes('w-full items-center justify-between'):
@@ -475,105 +532,219 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
             
             ui.button(icon='close', on_click=on_back).classes('rounded-full bg-slate-800 hover:bg-slate-700 p-2')
         
-        # Editor Card / Audio Preview
-        with ui.card().classes('w-full border border-slate-800 rounded-2xl overflow-hidden p-0').style(f'background: {state.brand_background}cc; height: calc(100vh - 280px);'):
-            if state.current_step == 5:
-                # Audio Preview Step
-                with ui.column().classes('w-full h-full justify-center items-center gap-6 p-8'):
-                    ui.icon('headphones').classes('text-6xl text-slate-600')
-                    
-                    # Audio Player
-                    audio_filename = state.content.get("voice_file") or "voice.mp3"
-                    # Fallback for old jobs with typo
-                    if not (state.data_dir / "outputs" / audio_filename).exists() and (state.data_dir / "outputs" / "narration.mp3").exists():
-                        audio_filename = "narration.mp3"
-                    if not (state.data_dir / "outputs" / audio_filename).exists() and (state.data_dir / "outputs" / "narrartion.mp3").exists():
-                        audio_filename = "narrartion.mp3"
+        # Main Content Area - Step-specific rendering
+        with ui.card().classes('w-full border border-slate-800 rounded-2xl overflow-hidden p-0').style(f'background: {state.brand_background}cc; min-height: 400px; flex-grow: 1;'):
+            with ui.scroll_area().classes('w-full p-4').style('height: calc(100vh - 300px);'):
+                
+                # STEPS 1-4: Text Editors
+                if state.current_step in [1, 2, 3, 4]:
+                    field = config.get("field")
+                    if field:
+                        ui.textarea(placeholder=f"Enter your {field} here...") \
+                            .classes('w-full text-base bg-transparent border-0') \
+                            .style('min-height: 350px;') \
+                            .props('dark borderless autofocus autogrow') \
+                            .bind_value(state.content, field)
+                
+                # STEP 5: Voice Selection
+                elif state.current_step == 5:
+                    with ui.column().classes('w-full items-center gap-6 py-8'):
+                        ui.icon('mic').classes('text-6xl').style(f'color: {state.brand_color}')
+                        ui.label('Select Narrator Voice').classes('text-slate-400 text-sm')
                         
-                    audio_url = f"/outputs/{audio_filename}" 
-                    audio = ui.audio(audio_url).classes('w-full max-w-md')
-                    
-                    ui.label('Listen to the generated narration before creating the video.').classes('text-slate-400')
-                    
-            else:
-                # Text Editor Steps
-                with ui.scroll_area().classes('w-full h-full'):
-                    # Voice Selection for Step 4
-                    if state.current_step == 4:
-                        with ui.row().classes('w-full items-center gap-4 mb-2 p-4'): 
-                            # Determine bg color (can use darker shade for contrast if needed, or same as brand)
-                            bg_style = f'background-color: {state.brand_background};'
-                            text_style = f'color: {state.brand_color};'
-                            
-                            ui.select(
-                                options=state.voice_options, 
-                                label="Select Narrator Voice",
-                                value=state.content.get("voice_id")
-                            ).classes('w-64') \
-                             .props(f'dark filled dense behavior=menu popup-content-style="{bg_style} {text_style}"') \
-                             .style(bg_style + text_style) \
-                             .bind_value(state.content, "voice_id")
-                            
-                            ui.select(
-                                options=state.tts_model_options, 
-                                label="Select TTS Model",
-                                value=state.content.get("tts_model")
-                            ).classes('w-64') \
-                             .props(f'dark filled dense behavior=menu popup-content-style="{bg_style} {text_style}"') \
-                             .style(bg_style + text_style) \
-                             .bind_value(state.content, "tts_model")
-                            
-                    ui.textarea(placeholder=f"Enter your {config['field']} here...") \
-                        .classes('w-full text-base bg-transparent border-0 p-4') \
-                        .style('min-height: calc(100vh - 300px); padding-bottom: 60px;') \
-                        .props('dark borderless autofocus autogrow') \
-                        .bind_value(state.content, config["field"])
+                        with ui.row().classes('gap-4'):
+                            ui.select(options=state.voice_options, label="Voice", value=state.content.get("voice_id")) \
+                                .classes('w-64').props('dark filled dense').bind_value(state.content, "voice_id")
+                            ui.select(options=state.tts_model_options, label="TTS Model", value=state.content.get("tts_model")) \
+                                .classes('w-64').props('dark filled dense').bind_value(state.content, "tts_model")
+                
+                # STEP 6: Audio Preview
+                elif state.current_step == 6:
+                    audio_file = outputs_dir / f"{slug}.mp3"
+                    with ui.column().classes('w-full items-center gap-6 py-8'):
+                        ui.icon('headphones').classes('text-6xl').style(f'color: {state.brand_color}')
+                        if audio_file.exists():
+                            ui.audio(f"/outputs/{slug}.mp3").classes('w-full max-w-md')
+                            ui.label('Listen to your generated narration').classes('text-slate-400 text-xs')
+                        else:
+                            ui.label('Audio not yet generated').classes('text-amber-500')
+                
+                # STEP 7: Transcription Review
+                elif state.current_step == 7:
+                    words_file = outputs_dir / f"{slug}_words.json"
+                    with ui.column().classes('w-full gap-4'):
+                        with ui.row().classes('w-full justify-between items-center'):
+                            ui.label('Word-Level Transcription').classes('text-sm font-bold text-slate-400')
+                        
+                        if words_file.exists():
+                            import json
+                            try:
+                                if words_file.stat().st_size == 0:
+                                    raise ValueError("File is empty")
+                                with open(words_file) as f:
+                                    words = json.load(f)
+                                with ui.row().classes('flex-wrap gap-1'):
+                                    for w in words[:100]:  # Limit display
+                                        ui.label(w.get("word", "")).classes('px-1 py-0.5 bg-slate-800 rounded text-xs')
+                            except (json.JSONDecodeError, ValueError, Exception) as e:
+                                with ui.column().classes('w-full items-center p-8 bg-red-900/10 rounded-2xl border border-red-900/30'):
+                                    ui.icon('error', color='red').classes('text-3xl mb-2')
+                                    ui.label(f'Corrupt Transcription File').classes('text-red-500 font-bold')
+                                    ui.label('The transcription file is empty or invalid. Please regenerate.').classes('text-slate-400 text-xs text-center mb-4')
+                                    ui.button('REGENERATE TRANSCRIPT', icon='bolt', on_click=on_generate_transcript) \
+                                        .classes('px-6 py-2').style(f'background: {state.brand_color}') \
+                                        .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                        else:
+                            with ui.column().classes('w-full items-center p-12 bg-slate-900/30 rounded-2xl border border-dashed border-slate-700'):
+                                ui.icon('subtitles_off', size='48px').classes('text-slate-600 mb-2')
+                                ui.label('Transcription not yet generated').classes('text-amber-500 mb-4')
+                                ui.button('GENERATE TRANSCRIPT', icon='bolt', on_click=on_generate_transcript) \
+                                    .classes('px-6 py-2').style(f'background: {state.brand_color}') \
+                                    .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                
+                # STEP 8: Source Video Download
+                elif state.current_step == 8:
+                    source_file = list(outputs_dir.glob(f"{slug}_source*"))
+                    with ui.column().classes('w-full items-center gap-6 py-8'):
+                        ui.icon('download').classes('text-6xl').style(f'color: {state.brand_color}')
+                        
+                        # YouTube URL input
+                        with ui.row().classes('w-full max-w-md items-center gap-2'):
+                            ui.input('YouTube URL', value=state.content.get("youtube_URL")) \
+                                .classes('flex-1').props('dark dense').bind_value(state.content, "youtube_URL")
+                            if not source_file:
+                                ui.button('DOWNLOAD', icon='download', on_click=on_download_source) \
+                                    .classes('px-4 py-2').style(f'background: {state.brand_color}') \
+                                    .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                        
+                        if source_file:
+                            ui.video(f"/outputs/{source_file[0].name}").classes('w-full max-w-md rounded-xl')
+                            ui.label('Source video ready').classes('text-green-500 text-xs')
+                
+                # STEP 9: Video Crop Preview
+                elif state.current_step == 9:
+                    cropped_file = outputs_dir / f"{slug}_cropped.mp4"
+                    with ui.column().classes('w-full items-center gap-6 py-8'):
+                        ui.icon('content_cut').classes('text-6xl').style(f'color: {state.brand_color}')
+                        if cropped_file.exists():
+                            ui.video(f"/outputs/{slug}_cropped.mp4").classes('w-full max-w-md rounded-xl')
+                            ui.label('Video cropped and looped').classes('text-green-500 text-xs')
+                        else:
+                            ui.label('Processing...').classes('text-amber-500')
+                
+                # STEP 10: Audio Mixing Preview
+                elif state.current_step == 10:
+                    mixed_file = outputs_dir / f"{slug}_mixed.mp4"
+                    with ui.column().classes('w-full items-center gap-6 py-8'):
+                        ui.icon('library_music').classes('text-6xl').style(f'color: {state.brand_color}')
+                        
+                        # Music selector
+                        ui.select(state.music_options, label="Background Music", value=state.content.get("bg_music") or (state.music_options[0] if state.music_options else None)) \
+                            .classes('w-64').props('dark dense').bind_value(state.content, "bg_music")
+                        
+                        if mixed_file.exists():
+                            ui.video(f"/outputs/{slug}_mixed.mp4").classes('w-full max-w-md rounded-xl')
+                            ui.label('Audio mixed successfully').classes('text-green-500 text-xs')
+                        else:
+                            ui.label('Click CONTINUE to mix audio').classes('text-slate-500 text-xs')
+                
+                # STEP 11: Final Render
+                elif state.current_step == 11:
+                    final_file = outputs_dir / f"{slug}_final.mp4"
+                    with ui.column().classes('w-full items-center gap-6 py-8'):
+                        if final_file.exists():
+                            ui.video(f"/outputs/{slug}_final.mp4").classes('w-full max-w-lg rounded-xl shadow-2xl')
+                            ui.label('🎬 Final video ready!').classes('text-green-500 font-bold')
+                            # Download link
+                            ui.link('DOWNLOAD VIDEO', f"/outputs/{slug}_final.mp4").classes('px-6 py-3 rounded-xl font-bold').style(f'background: {state.brand_color}; color: black;')
+                        else:
+                            ui.icon('movie').classes('text-6xl').style(f'color: {state.brand_color}')
+                            ui.label('Rendering in progress...').classes('text-amber-500')
         
-        # Navigation buttons
-        with ui.row().classes('w-full justify-between items-center'):
-            # Back button - ghost style
-            if state.current_step > 2:
-                ui.button('BACK', icon='arrow_back', on_click=lambda: go_prev_step(state)) \
-                    .props('outline') \
-                    .classes('px-6 py-3 rounded-xl text-sm text-slate-400')
+        # Navigation Buttons
+        with ui.row().classes('w-full justify-between items-center mt-2'):
+            # Back button
+            if state.current_step > 1:
+                ui.button('BACK', icon='arrow_back', on_click=lambda: go_prev_step(state)).props('flat').classes('text-slate-400')
             else:
-                ui.button('CANCEL', icon='close', on_click=on_back) \
-                    .props('outline') \
-                    .classes('px-6 py-3 rounded-xl text-sm text-slate-400')
+                ui.label('')  # Spacer
             
             with ui.row().classes('gap-2'):
-                if state.current_step < 5:
-                    ui.button('REGENERATE', icon='refresh', on_click=on_regenerate) \
-                        .props('flat') \
-                        .classes('px-4 py-3 rounded-xl text-xs text-slate-400') \
+                # Regenerate button for content steps
+                if state.current_step in [2, 3, 4]:
+                    ui.button('REGENERATE', icon='refresh', on_click=on_regenerate).props('flat').classes('text-slate-400') \
                         .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
-                    
-                    ui.button('SAVE', icon='save', on_click=state.save_draft) \
-                        .props('flat') \
-                        .classes('px-4 py-3 rounded-xl text-xs text-slate-400')
                 
-                # Next/Generate button logic
-                if state.current_step < 4:
-                    # Steps 2 & 3: Just Next
-                    ui.button(config["next_label"], icon='arrow_forward', on_click=on_next_step) \
-                        .classes('px-8 py-3 text-black font-bold rounded-xl') \
-                        .style(f'background-color: {state.brand_color}')
-                elif state.current_step == 4:
-                     # Step 4: Generate Audio
-                    ui.button(config["next_label"], icon='mic', on_click=on_generate_audio) \
-                        .classes('px-8 py-3 text-black font-bold rounded-xl') \
-                        .style(f'background-color: {state.brand_color}') \
-                        .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                # Dynamic Action Button logic
+                if state.current_step < 11:
+                    action_label = config["action"]
+                    
+                    if state.current_step == 5:
+                        # Logic for Step 5: Voice
+                        audio_file = outputs_dir / f"{slug}.mp3"
+                        if audio_file.exists():
+                            ui.button('CONTINUE', icon='arrow_forward', on_click=on_next_step) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
+                        else:
+                            ui.button('GENERATE AUDIO', icon='mic', on_click=on_generate_audio) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
+                                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                    
+                    elif state.current_step == 7:
+                        # Logic for Step 7: Transcript
+                        words_file = outputs_dir / f"{slug}_words.json"
+                        if words_file.exists():
+                            ui.button('CONTINUE', icon='arrow_forward', on_click=on_next_step) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
+                        else:
+                            ui.button('GENERATE TRANSCRIPT', icon='bolt', on_click=on_generate_transcript) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
+                                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                    
+                    elif state.current_step == 9:
+                        # Logic for Step 9: Crop Preview
+                        cropped_file = outputs_dir / f"{slug}_cropped.mp4"
+                        if cropped_file.exists():
+                            ui.button('CONTINUE', icon='arrow_forward', on_click=on_next_step) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
+                        else:
+                            ui.button('PROCESS VIDEO', icon='content_cut', on_click=on_generate_video) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
+                                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                                
+                    elif state.current_step == 10:
+                        # Logic for Step 10: Mix Preview
+                        mixed_file = outputs_dir / f"{slug}_mixed.mp4"
+                        if mixed_file.exists():
+                            ui.button('CONTINUE', icon='arrow_forward', on_click=on_next_step) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
+                        else:
+                            ui.button('MIX AUDIO', icon='library_music', on_click=on_generate_video) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
+                                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                    
+                    else:
+                        # Default simple next
+                        ui.button(action_label, icon='arrow_forward', on_click=on_next_step) \
+                            .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
                 else:
-                    # Step 5: Generate Video
-                    ui.button(config["next_label"], icon='movie', on_click=on_generate_video) \
-                        .classes('px-8 py-3 text-black font-bold rounded-xl') \
-                        .style(f'background-color: {state.brand_color}') \
-                        .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                    # Step 11: Render or New Job
+                    final_file = outputs_dir / f"{slug}_final.mp4"
+                    if final_file.exists():
+                        ui.button('NEW JOB', icon='add', on_click=on_back) \
+                            .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
+                    else:
+                        ui.button('FINAL RENDER', icon='movie', on_click=on_generate_video) \
+                            .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
+                            .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+        
+        # Global progress indicator
+        global_progress_indicator(state)
+                
 
 def go_prev_step(state: State):
     """Go to previous step."""
-    if state.current_step > 2:
+    if state.current_step > 1:
         state.current_step -= 1
         ui.navigate.to('/')
 

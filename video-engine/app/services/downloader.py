@@ -10,7 +10,7 @@ class YTDownloader:
         with yt_dlp.YoutubeDL() as ydl:
             return ydl.extract_info(url, download=False)
 
-    def download(self, url: str, output_dir: Path):
+    def download(self, url: str, output_dir: Path, filename_prefix: str = "source"):
         # First get info to find resolution
         info = self.get_info(url)
         # Select best format below 1080p for efficiency, or just best
@@ -23,7 +23,7 @@ class YTDownloader:
         height = best_format.get('height', 'unknown')
         resolution_suffix = f"{height}p"
         
-        filename = f"source_{resolution_suffix}.mp4"
+        filename = f"{filename_prefix}_{resolution_suffix}.mp4"
         output_path = output_dir / filename
         
         ydl_opts = {

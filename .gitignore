@@ -70,3 +70,8 @@ __pycache__/
 video-engine/outputs/*
 !video-engine/outputs/.gitkeep
 video-engine/cookies.txt
+video-engine/data/outputs/*
+!video-engine/data/outputs/.gitkeep
+
+video-engine/data/jobs.json
+
