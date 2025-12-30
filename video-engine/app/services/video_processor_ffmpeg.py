@@ -254,4 +254,22 @@ class VideoProcessorFFmpeg:
             if p.exists():
                 p.unlink()
         
+        # Save sample/metadata JSON
+        json_path = output_path.with_suffix(".json")
+        metadata = {
+             "id": output_path.stem,
+             "files": {
+                 "video": output_path.name,
+                 "voice": voice_path.name,
+                 "source": source_video_path.name,
+                 "music": bg_music_path.name if bg_music_path else None
+             },
+             "config": template,
+             "theme_color": theme_color,
+             "duration": target_duration
+        }
+        with open(json_path, "w") as f:
+            json.dump(metadata, f, indent=4)
+        print(f"      ✅ Saved metadata to {json_path.name}")
+        
         print(f"✅ FFmpeg Pipeline Complete: {output_path}")

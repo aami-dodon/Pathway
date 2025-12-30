@@ -60,26 +60,42 @@ def oklch_to_rgb(l, c, h):
         int(transfer(bl) * 255)
     )
 
-def get_theme_color(theme_path):
-    DEFAULT_GOLD = "#FCC01E"
+def get_theme_colors(theme_path):
+    DEFAULTS = {
+        "primary": "#FCC01E",
+        "secondary": "#10b981",
+        "accent": "#8b5cf6"
+    }
     
     try:
         if not theme_path.exists():
-            return DEFAULT_GOLD
+            return DEFAULTS
             
         content = theme_path.read_text()
         
-        # Regex to find --primary: oklch(...)
-        # Handles oklch(0.852 0.199 91.936);
-        match = re.search(r'--primary:\s*oklch\(([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\)', content)
+        colors = {}
+        # Find colors in .dark block first
+        dark_match = re.search(r'\.dark\s*\{([^}]+)\}', content, re.DOTALL)
+        block = dark_match.group(1) if dark_match else content
         
-        if match:
-            l, c, h = map(float, match.groups())
-            r, g, b = oklch_to_rgb(l, c, h)
-            return f"#{r:02x}{g:02x}{b:02x}".upper()
-            
-        return DEFAULT_GOLD
+        for name in ["primary", "secondary", "accent", "background"]:
+            match = re.search(fr'--{name}:\s*oklch\(([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)\)', block)
+            if match:
+                l, c, h = map(float, match.groups())
+                r, g, b = oklch_to_rgb(l, c, h)
+                colors[name] = f"#{r:02x}{g:02x}{b:02x}".upper()
+            elif name in DEFAULTS:
+                colors[name] = DEFAULTS[name]
+            else:
+                colors[name] = "#000000" # Fallback black for background
+        
+        return colors
         
     except Exception as e:
-        print(f"⚠️ Failed to parse theme color: {e}")
-        return DEFAULT_GOLD
+        print(f"⚠️ Failed to parse theme colors: {e}")
+        return DEFAULTS
+
+def get_theme_color(theme_path):
+    """Compatibility shim for single primary color."""
+    colors = get_theme_colors(theme_path)
+    return colors.get("primary", "#FCC01E")

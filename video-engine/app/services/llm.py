@@ -8,9 +8,23 @@ load_dotenv()
 
 class GeminiService:
     def __init__(self):
+        # Load dynamic settings and secrets
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        secrets_path = base_dir / "data" / "secrets.json"
+        
         api_key = os.getenv("GOOGLE_API_KEY")
+        
+        if secrets_path.exists():
+            try:
+                with open(secrets_path, "r") as f:
+                    secrets = json.load(f)
+                    api_key = secrets.get("google_api_key", api_key)
+            except:
+                pass
+
         if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found in environment")
+            raise ValueError("GOOGLE_API_KEY not found in environment or secrets.json")
+            
         genai.configure(api_key=api_key)
         
         # Load dynamic settings
