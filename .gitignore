@@ -58,3 +58,20 @@ playwright/.cache/
 COURSES_BACKEND_DOCUMENTATION.md
 
 .agent
+
+# Python
+__pycache__/
+*.pyc
+.venv
+.pytest_cache/
+.mypy_cache/
+
+# video-engine
+video-engine/outputs/*
+!video-engine/outputs/.gitkeep
+video-engine/cookies.txt
+video-engine/data/outputs/*
+!video-engine/data/outputs/.gitkeep
+
+video-engine/data/jobs.json
+

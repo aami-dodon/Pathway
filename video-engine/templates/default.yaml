@@ -1,0 +1,55 @@
+ai_defaults:
+  llm_model: models/gemini-flash-latest
+  tts_model: eleven_multilingual_v2
+  tts_voice_id: EXAVITQu4vr4xnSDxMaL
+  tts_voice_name: Sarah - Mature, Reassuring, Confident
+gradient:
+  enabled: true
+  file: overlays/gradient-bottom.png
+  height: 600
+  position: bottom
+intro:
+  duration: 3
+  enabled: true
+  file: animations/intro_overlay.webm
+logo:
+  enabled: true
+  file: logo/logo-full-dark.png
+  margin_right: 60
+  margin_top: 60
+  position: top-right
+  width: 30%
+music:
+  duration: 60
+  enabled: true
+  fade_out: 3
+  file: music/background.mp3
+outro:
+  duration: 3
+  enabled: true
+  file: animations/outro_overlay.webm
+text:
+  enabled: true
+  layout:
+    margin_bottom: 200
+    margin_top: 0
+    max_lines: 2
+    max_words_per_line: 4
+    position: bottom
+  typography:
+    align: center
+    color: '#FFFFFF'
+    font: fonts/Inter-Bold.ttf
+    letter_spacing: 0
+    line_height: 1.2
+    outline:
+      color: '#000000'
+      enabled: true
+      width: 3
+    shadow:
+      blur: 8
+      color: '#000000'
+      enabled: true
+      x: 0
+      y: 4
+    size: 110

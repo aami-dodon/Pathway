@@ -1,0 +1,32 @@
+[
+    {
+        "model_id": "eleven_v3",
+        "name": "Eleven v3 (alpha)",
+        "description": "The most expressive model. Supports 70+ languages. Requires more prompt engineering than our previous models. In alpha and the reliability will improve over time."
+    },
+    {
+        "model_id": "eleven_multilingual_v2",
+        "name": "Eleven Multilingual v2",
+        "description": "Our most life-like, emotionally rich mode in 29 languages. Best for voice overs, audiobooks, post-production, or any other content creation needs."
+    },
+    {
+        "model_id": "eleven_flash_v2_5",
+        "name": "Eleven Flash v2.5",
+        "description": "Our ultra low latency model in 32 languages. Ideal for conversational use cases."
+    },
+    {
+        "model_id": "eleven_turbo_v2_5",
+        "name": "Eleven Turbo v2.5",
+        "description": "Our high quality, low latency model in 32 languages. Best for developer use cases where speed matters and you need non-English languages."
+    },
+    {
+        "model_id": "eleven_turbo_v2",
+        "name": "Eleven Turbo v2",
+        "description": "Our English-only, low latency model. Best for developer use cases where speed matters and you only need English. Performance is on par with Turbo v2.5."
+    },
+    {
+        "model_id": "eleven_flash_v2",
+        "name": "Eleven Flash v2",
+        "description": "Our ultra low latency model in english. Ideal for conversational use cases."
+    }
+]
