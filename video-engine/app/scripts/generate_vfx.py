@@ -217,6 +217,8 @@ def create_glow(image_path: Path, glow_color: str = "#FCC01E", radius: int = 15)
         output_path = image_path.parent / f"{image_path.stem}_glow.png"
         blurred.save(output_path)
         return output_path, padding
+
+def generate_animations(brand_data):
     """Creates simple, fast intro/outro animations using 2-pass Hybrid approach"""
     print("🎬 Generating animations (Hybrid: MoviePy Composition -> FFmpeg Encoding)...")
     print("   📦 Importing MoviePy modules...")
@@ -246,30 +248,14 @@ def create_glow(image_path: Path, glow_color: str = "#FCC01E", radius: int = 15)
     # --- INTRO: Simple Full Logo Fade ---
     print("\n   🎬 Creating INTRO... (Phase 1: Composition)")
     
-    # Generate Glow
-    glow_path, padding = create_glow(full_logo_path, glow_color=brand_data['primary_hex'], radius=50)
-    
-    # Transparent Background
-    bg_dark = ColorClip(size=(1080, 1920), color=(0, 0, 0)).with_opacity(0).with_duration(duration)
-    
-    # Original Logo
+    # Full logo centered
     target_width = 700
     full_logo = ImageClip(str(full_logo_path)).resized(width=target_width).with_duration(duration)
     full_logo = full_logo.with_position(("center", "center")).with_effects([FadeIn(0.8)])
     
-    # Glow Clip (Keep aspect ratio)
-    # Calculate relative scale factor
-    with Image.open(full_logo_path) as img:
-        orig_w = img.width
-    
-    scale = target_width / orig_w
-    with Image.open(glow_path) as img:
-        glow_width = img.width * scale
-        
-    glow_clip = ImageClip(str(glow_path)).resized(width=glow_width).with_duration(duration)
-    glow_clip = glow_clip.with_position(("center", "center")).with_effects([FadeIn(0.8)])
-    
-    intro_clip = CompositeVideoClip([bg_dark, glow_clip, full_logo])
+    # Composite WITHOUT background clip to ensure transparency
+    intro_clip = CompositeVideoClip([full_logo], size=(1080, 1920), bg_color=None)
+    intro_clip.has_mask = True # Force alpha mask support
     
     # Phase 1: Render keyframes to intermediate high-quality MOV (ProRes/PNG for Alpha)
     temp_intro = ANIM_DIR / "temp_intro.mov"
@@ -279,7 +265,7 @@ def create_glow(image_path: Path, glow_color: str = "#FCC01E", radius: int = 15)
     intro_clip.write_videofile(
         str(temp_intro), 
         fps=24, 
-        codec="png", # Lossless RGBA
+        codec="qtrle", # QuickTime Animation (Lossless with Alpha)
         audio=False, 
         logger='bar'
     )
@@ -288,20 +274,13 @@ def create_glow(image_path: Path, glow_color: str = "#FCC01E", radius: int = 15)
     print(f"      ⚙️  Converting to optimized WebM: {final_intro.name}")
     SimpleFFmpegHelper.encode_vp9(temp_intro, final_intro, crf=32)
     
-    # Cleanup
-    temp_intro.unlink(missing_ok=True)
-    glow_path.unlink(missing_ok=True) # Cleanup temp glow
+    # Cleanup (Disabled for debugging)
+    # temp_intro.unlink(missing_ok=True)
     print("      ✅ Intro complete!")
 
 
     # --- OUTRO: Square Logo + Website URL ---
     print("\n   🎬 Creating OUTRO... (Phase 1: Composition)")
-    
-    # Generate Glow
-    glow_path_sq, padding_sq = create_glow(logo_path, glow_color=brand_data['primary_hex'], radius=40)
-    
-    # Transparent Background
-    bg_outro = ColorClip(size=(1080, 1920), color=(0, 0, 0)).with_opacity(0).with_duration(duration)
     
     # Square logo
     target_height = 250
@@ -309,25 +288,9 @@ def create_glow(image_path: Path, glow_color: str = "#FCC01E", radius: int = 15)
     logo_y = 700
     square_logo = square_logo.with_position(("center", logo_y)).with_effects([FadeIn(0.8)])
     
-    # Glow Clip
-    with Image.open(logo_path) as img:
-        orig_h_sq = img.height
-        
-    scale_sq = target_height / orig_h_sq
-    with Image.open(glow_path_sq) as img:
-        glow_height = img.height * scale_sq
-        
-    # Center glow Y relative to logo Y
-    # Logo Center Y = logo_y + target_height/2
-    # Glow Top Y = Logo Center Y - glow_height/2
-    logo_sem = logo_y + (target_height/2)
-    glow_y = logo_sem - (glow_height/2)
-    
-    glow_clip_sq = ImageClip(str(glow_path_sq)).resized(height=glow_height).with_duration(duration)
-    glow_clip_sq = glow_clip_sq.with_position(("center", glow_y)).with_effects([FadeIn(0.8)])
-    
     # Note: Text is handled by FFmpeg in Phase 3 for reliability
-    outro_clip = CompositeVideoClip([bg_outro, glow_clip_sq, square_logo])
+    outro_clip = CompositeVideoClip([square_logo], size=(1080, 1920), bg_color=None)
+    outro_clip.has_mask = True
     
     temp_outro_base = ANIM_DIR / "temp_outro_base.mov"
     final_outro = ANIM_DIR / "outro_overlay.webm"
@@ -336,7 +299,7 @@ def create_glow(image_path: Path, glow_color: str = "#FCC01E", radius: int = 15)
     outro_clip.write_videofile(
         str(temp_outro_base), 
         fps=24, 
-        codec="png", # Lossless RGBA
+        codec="qtrle",
         audio=False, 
         logger='bar'
     )
@@ -356,9 +319,8 @@ def create_glow(image_path: Path, glow_color: str = "#FCC01E", radius: int = 15)
         y_pos=1000
     )
     
-    # Cleanup
-    temp_outro_base.unlink(missing_ok=True)
-    glow_path_sq.unlink(missing_ok=True) # Cleanup temp
+    # Cleanup (Disabled for debugging)
+    # temp_outro_base.unlink(missing_ok=True)
     print("      ✅ Outro complete!")
     
     print("   ✅ Premium 9:16 animations generated (Hybrid Pipeline)")
@@ -392,7 +354,7 @@ def update_templates(font_path):
         "logo": {"enabled": True, "position": "top-right", "margin_top": 60, "margin_right": 60, "width": 360},
         "intro": {"enabled": True, "duration": 3},
         "outro": {"enabled": True, "duration": 3},
-        "music": {"enabled": True, "file": "mp3/style1.mp3", "duration": 60, "fade_out": 3},
+        "music": {"enabled": True, "file": "music/background.mp3", "duration": 60, "fade_out": 3},
         "gradient": {"enabled": True, "position": "bottom", "height": 600},
         "text": {
             "enabled": True,

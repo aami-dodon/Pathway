@@ -1,4 +1,5 @@
 import os
+import json
 import yaml
 from pathlib import Path
 from dotenv import load_dotenv
@@ -6,7 +7,7 @@ from app.services.llm import GeminiService
 from app.services.tts import ElevenLabsService
 from app.services.stt import WhisperService
 from app.services.downloader import YTDownloader
-from app.services.video_processor import VideoProcessor
+from app.services.video_processor_moviepy import VideoProcessor
 
 load_dotenv()
 
@@ -65,57 +66,42 @@ class VideoWorkflow:
             self.tts.text_to_speech(content["speech"], audio_path)
             print(f"      ✅ Audio generated: {audio_path.name}")
         
-        # 3. Subtitle Generation
-        print("   ✍️ Generating subtitles with Whisper...")
-        ass_path = self.outputs_dir / "captions.ass"
+        # 3. Subtitle Generation (Whisper)
+        print("   ✍️ Transcribing audio with Whisper...")
+        words_json = self.outputs_dir / "words.json"
         
-        if ass_path.exists():
-             print("   ⚠️ Subtitles found, skipping Whisper generation...")
+        if words_json.exists():
+            print("      ⚠️ Word data found, skipping transcription...")
+            with open(words_json, 'r') as f:
+                words = json.load(f)
         else:
             words = self.stt.transcribe(audio_path)
-            
-            # Extract font settings from template
-            font_config = template.get('text', {}).get('typography', {})
-            font_name = font_config.get('font', 'Inter-Bold').split('/')[-1].replace('.ttf', '')
-            font_size = font_config.get('size', 110)
-            
-            # Use the new time_offset parameter (4.0s) to sync with audio delay
-            self.stt.generate_ass(words, ass_path, font_name=font_name, font_size=font_size, time_offset=4.0)
-            print(f"      ✅ Subtitles generated: {ass_path.name}")
+            with open(words_json, 'w') as f:
+                json.dump(words, f)
+            print(f"      ✅ Audio transcribed and saved to {words_json.name}")
         
         # 4. Download YouTube Video
         print(f"   📥 Downloading video from {yt_url}...")
-        source_path, res = self.downloader.download(yt_url, self.outputs_dir)
-        print(f"      ✅ Video downloaded: {source_path.name} (Resolution: {res})")
+        source_video_path, res = self.downloader.download(yt_url, self.outputs_dir)
+        print(f"      ✅ Video downloaded: {source_video_path.name} (Resolution: {res})")
         
-        # 5. Video Processing
-        print("   🎬 Processing video...")
-        audio_duration = self.processor.get_duration(audio_path)
-        total_duration = audio_duration + 8.0 # 4s intro + 4s outro
+        # --- 5. Final Rendering (MoviePy Only - Optimized) ---
+        print(f"\n   [Step 5/6] Optimized Single-Pass Rendering (MoviePy)")
+        final_video = self.outputs_dir / "final_video.mp4"
+        assets_dir = self.base_dir / "assets"
         
-        processed_source = self.outputs_dir / "processed_source.mp4"
-        self.processor.process_source_video(source_path, processed_source, total_duration)
+        self.processor.generate_final_video(
+            source_video_path=source_video_path,
+            voice_path=audio_path,
+            output_path=final_video,
+            words=words,
+            template=template,
+            base_dir=self.base_dir,
+            bg_music_path=assets_dir / template['music']['file']
+        )
+        print(f"      ✅ Final video generated: {final_video.name}")
         
-        # Load template to get music file
-        template_path = self.base_dir / "templates" / f"{template_name}.yaml"
-        with open(template_path, "r") as f:
-            template = yaml.safe_load(f)
-            
-        bg_music_path = self.base_dir / "assets" / template['music']['file']
-        
-        muxed_path = self.outputs_dir / "muxed.mp4"
-        self.processor.merge_audio_video(processed_source, audio_path, muxed_path, audio_delay=4.0, bg_music_path=bg_music_path)
-        print(f"      ✅ Video processed and merged with audio")
-        
-        # 6. Apply VFX (Overlays, Logos, etc.)
-        print("   🎨 Applying VFX overlays...")
-        # Template already loaded above
-            
-        final_path = self.outputs_dir / "final_video.mp4"
-        self.processor.apply_vfx(muxed_path, final_path, ass_path, template, self.base_dir)
-        print(f"      ✅ VFX applied. Final video: {final_path.name}")
-        
-        return final_path
+        return final_video
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent

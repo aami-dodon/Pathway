@@ -23,7 +23,7 @@ music:
   duration: 60
   enabled: true
   fade_out: 3
-  file: mp3/style1.mp3
+  file: music/background.mp3
 outro:
   duration: 3
   enabled: true
