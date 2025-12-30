@@ -357,12 +357,13 @@ async def start_audio_generation():
         output_path = DATA_DIR / "outputs" / audio_filename
         
         tts = ElevenLabsService()
-        audio_path_result = tts.text_to_speech(
+        audio_path_result = await asyncio.to_thread(
+            tts.text_to_speech,
             text=state.content.get('speech', ''), 
             output_path=output_path,
             voice_id=voice_id,
             model_id=model_id
-        ) 
+        )
         
         state.update_job(job_id, status="draft", progress=60, content=state.content)
         state.logs += f"\n✅ AUDIO READY! Saved to {output_path.name}\n"
@@ -564,7 +565,7 @@ if __name__ in {"__main__", "__mp_main__"}:
         reload=True, 
         dark=True, 
         favicon=favicon_path,
-        uvicorn_reload_dirs=['app'], 
+        uvicorn_reload_dirs='app', 
         uvicorn_reload_excludes='data/*,outputs/*,*.json,*.mp3,*.mp4,*.ass,*/data/*,*/outputs/*'
     )
 

@@ -206,7 +206,7 @@ class SimpleFFmpegHelper:
             "-c:v", "libvpx-vp9",
             "-b:v", bitrate if bitrate else "0",
             "-crf", str(crf),
-            "-Pix_fmt", "yuva420p",
+            "-pix_fmt", "yuva420p",
             "-auto-alt-ref", "0",
             "-metadata:s:v:0", "alpha_mode=1",
             "-c:a", "libopus",

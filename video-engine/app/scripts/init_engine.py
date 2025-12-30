@@ -3,13 +3,49 @@ import json
 import yaml
 import subprocess
 import sys
+import shutil
 from pathlib import Path
+import warnings
+
+# Suppress warnings
+warnings.filterwarnings("ignore")
 
 # Paths
 SCRIPT_DIR = Path(__file__).resolve().parent
 BASE_DIR = SCRIPT_DIR.parent.parent
 DATA_DIR = BASE_DIR / "data"
 TEMPLATES_DIR = BASE_DIR / "templates"
+
+def check_dependencies():
+    print("🛠️  Step 0: Checking System Dependencies...")
+    
+    # 1. FFmpeg & FFprobe
+    if not shutil.which("ffmpeg"):
+        print("❌ Error: 'ffmpeg' not found. Please install FFmpeg (brew install ffmpeg).")
+        sys.exit(1)
+    if not shutil.which("ffprobe"):
+        print("❌ Error: 'ffprobe' not found. Please install FFmpeg.")
+        sys.exit(1)
+    print("      ✅ FFmpeg & FFprobe found.")
+
+    # 2. Whisper (check import)
+    try:
+        import whisper
+        print("      ✅ OpenAI Whisper installed.")
+    except ImportError:
+        print("❌ Error: 'openai-whisper' python package not found.")
+        sys.exit(1)
+
+def preload_whisper():
+    print("🎙️  Step 0.5: Pre-warming Whisper Model...")
+    try:
+        import whisper
+        # Pre-download 'base' model to ~/.cache/whisper
+        print("      Downloading/Loading 'base' model... (this may take a moment)")
+        model = whisper.load_model("base")
+        print("      ✅ Whisper 'base' model cached and ready.")
+    except Exception as e:
+        print(f"⚠️ Warning: Failed to pre-load Whisper model: {e}")
 
 def run_asset_generation():
     print("🎨 Step 1: Generating Branding Assets...")
@@ -75,7 +111,7 @@ def setup_defaults():
         "tts_voice_name": selected_voice['name']
     }
     
-    settings_path = DATA_DIR / "settings.json"
+    settings_path = BASE_DIR / "settings.json"
     with open(settings_path, "w") as f:
         json.dump(settings, f, indent=4)
     print(f"      ✅ Settings saved to {settings_path.relative_to(BASE_DIR)}")
@@ -96,6 +132,9 @@ def setup_defaults():
 def main():
     print("🚀 Initializing Video Engine...")
     try:
+        check_dependencies()
+        preload_whisper()
+        print("-" * 30)
         run_asset_generation()
         print("-" * 30)
         run_model_discovery()

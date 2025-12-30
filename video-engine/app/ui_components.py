@@ -25,7 +25,7 @@ STEP_CONFIG = {
 class State:
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
-        self.settings_file = data_dir / "settings.json"
+        self.settings_file = data_dir.parent / "settings.json"
         self.secrets_file = data_dir / "secrets.json"
         self.task_file = data_dir / "tasks.json" # Changed from tasks_file
         
@@ -619,7 +619,7 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                         
                         if source_file:
                             ui.video(f"/outputs/{source_file[0].name}").classes('w-full max-w-md rounded-xl')
-                            ui.label('Source video ready').classes('text-green-500 text-xs')
+                            ui.label('Source video ready. Click CONTINUE ->').classes('text-green-500 text-xs font-bold')
                 
                 # STEP 9: Video Crop Preview
                 elif state.current_step == 9:
@@ -630,7 +630,7 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                             ui.video(f"/outputs/{slug}_cropped.mp4").classes('w-full max-w-md rounded-xl')
                             ui.label('Video cropped and looped').classes('text-green-500 text-xs')
                         else:
-                            ui.label('Processing...').classes('text-amber-500')
+                            ui.label('Ready to Process').classes('text-slate-500 text-xs')
                 
                 # STEP 10: Audio Mixing Preview
                 elif state.current_step == 10:
@@ -659,7 +659,7 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                             ui.link('DOWNLOAD VIDEO', f"/outputs/{slug}_final.mp4").classes('px-6 py-3 rounded-xl font-bold').style(f'background: {state.brand_color}; color: black;')
                         else:
                             ui.icon('movie').classes('text-6xl').style(f'color: {state.brand_color}')
-                            ui.label('Rendering in progress...').classes('text-amber-500')
+                            ui.label('Ready for Final Render').classes('text-slate-500 text-xs')
         
         # Navigation Buttons
         with ui.row().classes('w-full justify-between items-center mt-2'):

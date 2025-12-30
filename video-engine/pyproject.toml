@@ -18,6 +18,13 @@ google-generativeai = "^0.3.2"
 elevenlabs = "^0.2.27"
 python-dotenv = "^1.0.0"
 nicegui = "^3.4.1"
+openai-whisper = "*"
+setuptools-rust = "*"
+
+[tool.poetry.scripts]
+init = "app.scripts.init_engine:main"
+gen-assets = "app.scripts.generate_vfx:main"
+list-models = "app.scripts.list_models:list_elevenlabs_resources"
 
 [build-system]
 requires = ["poetry-core"]
