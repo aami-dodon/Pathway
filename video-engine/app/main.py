@@ -9,6 +9,7 @@ from app.ui_components import State, settings_drawer, generator_panel, log_termi
 from app.workflow import VideoWorkflow
 from app.services.llm import GeminiService
 from app.services.tts import ElevenLabsService
+from app.services.cms import CmsService
 from app.utils.slug import slugify
 import yaml
 import json
@@ -442,9 +443,73 @@ async def start_transcription():
     finally:
         state.is_processing = False
 
+async def start_cms_publish():
+    """Publish content to CMS."""
+    topic = state.content.get('topic', 'Content')
+    job_id = state.current_job_id
+    
+    if not state.secrets.get("cms_email") or not state.secrets.get("cms_password"):
+         ui.notify("CMS Credentials missing! Please add them in Settings.", type='negative')
+         return
+
+    state.is_processing = True
+    state.logs += f"\n📤 Publishing to CMS: {topic}...\n"
+    
+    # Capture stdout/stderr
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    sys.stdout = NiceGUIOutputWrapper(state)
+    sys.stderr = sys.stdout
+
+    try:
+        cms_url = state.secrets.get("cms_url", "http://localhost:9006/api")
+        cms = CmsService(
+            api_url=cms_url,
+            email=state.secrets.get("cms_email"), 
+            password=state.secrets.get("cms_password")
+        )
+        
+        blog_content = state.content.get("blog", "")
+        excerpt = state.content.get("excerpt", "")
+        slug = state.content.get("slug")
+        
+        # Run in thread
+        res = await asyncio.to_thread(
+            cms.create_post, 
+            title=topic, 
+            content_text=blog_content, 
+            excerpt=excerpt,
+            slug=slug
+        )
+        
+        post_id = res.get("doc", {}).get("id")
+        
+        # Construct URL for CMS Admin (assuming /api and /admin structure)
+        base_url = cms_url.replace('/api', '')
+        post_url = f"{base_url}/admin/collections/posts/{post_id}"
+        
+        state.content["cms_post_id"] = post_id
+        state.content["cms_post_url"] = post_url
+        
+        state.update_job(job_id, content=state.content)
+        state.current_step = 12
+        
+        state.logs += f"✅ Published successfully! ID: {post_id}\n"
+        ui.notify('Published to CMS successfully!', type='positive')
+        ui.navigate.to('/')
+        
+    except Exception as e:
+        logger.error(f"Publish failed: {e}")
+        state.logs += f"\n❌ PUBLISH ERROR: {str(e)}\n"
+        ui.notify(f"Publish failed: {str(e)}", type='negative')
+    finally:
+        state.is_processing = False
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+
 def go_next_step():
     """Advance to next step in the wizard."""
-    if state.current_step < 11:
+    if state.current_step < 12:
         state.current_step += 1
         # Save current step to job
         if state.current_job_id:
@@ -545,7 +610,8 @@ def index():
                     ),
                     on_next_step=go_next_step,
                     on_regenerate=regenerate_content,
-                    on_generate_transcript=start_transcription
+                    on_generate_transcript=start_transcription,
+                    on_publish=start_cms_publish
                 )
 
 # Startup check

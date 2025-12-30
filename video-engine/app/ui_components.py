@@ -19,7 +19,8 @@ STEP_CONFIG = {
     8: {"title": "Source", "subtitle": "Download source video", "icon": "download", "field": None, "action": "CONTINUE"},
     9: {"title": "Crop", "subtitle": "Process video length", "icon": "content_cut", "field": None, "action": "CONTINUE"},
     10: {"title": "Mix", "subtitle": "Add background music", "icon": "library_music", "field": None, "action": "CONTINUE"},
-    11: {"title": "Render", "subtitle": "Final video with VFX", "icon": "movie", "field": None, "action": "DOWNLOAD"},
+    11: {"title": "Render", "subtitle": "Final video with VFX", "icon": "movie", "field": None, "action": "CONTINUE"},
+    12: {"title": "Publish", "subtitle": "Push to CMS", "icon": "publish", "field": None, "action": "PUBLISH"},
 }
 
 class State:
@@ -61,7 +62,10 @@ class State:
         # Load secrets with environment fallbacks
         self.secrets = self._load_json(self.secrets_file, {
             "google_api_key": os.getenv("GOOGLE_API_KEY", ""),
-            "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", "")
+            "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
+            "cms_url": "http://localhost:9006/api",
+            "cms_email": "",
+            "cms_password": ""
         }) # Changed default to empty dict
         
         # Job History
@@ -91,7 +95,10 @@ class State:
         
         # Check in reverse order (highest step first)
         if (outputs / f"{slug}_final.mp4").exists():
-            self.current_step = 11
+            if content.get("cms_post_url"):
+                self.current_step = 12
+            else:
+                self.current_step = 11
         elif (outputs / f"{slug}_mixed.mp4").exists():
             self.current_step = 10
         elif (outputs / f"{slug}_cropped.mp4").exists():
@@ -213,7 +220,9 @@ class State:
                 "youtube_URL": None,
                 "video_file": None,
                 "subtitle_file": f"{slug}_words.json",
-                "output_video": f"{slug}_final.mp4"
+                "subtitle_file": f"{slug}_words.json",
+                "output_video": f"{slug}_final.mp4",
+                "cms_post_url": None
             }
         }
         self.jobs.insert(0, job)
@@ -377,6 +386,22 @@ def settings_drawer(state: State):
             ui.button('Update Keys', on_click=state.save_secrets) \
                 .classes('w-full bg-slate-800 hover:bg-slate-700 text-xs py-2')
 
+            ui.separator().classes('bg-slate-800')
+
+            ui.label('CMS Credentials').classes('text-sm font-semibold text-slate-300')
+            ui.input('CMS API URL', value=state.secrets.get('cms_url', 'http://localhost:9006/api'), 
+                     on_change=lambda e: state.secrets.update({'cms_url': e.value})) \
+                .classes('w-full').props('dark filled dense placeholder="http://localhost:9006/api"')
+            ui.input('Email', value=state.secrets.get('cms_email', ''), 
+                     on_change=lambda e: state.secrets.update({'cms_email': e.value})) \
+                .classes('w-full').props('dark filled dense')
+            ui.input('Password', password=True, value=state.secrets.get('cms_password', ''), 
+                     on_change=lambda e: state.secrets.update({'cms_password': e.value})) \
+                .classes('w-full').props('dark filled dense')
+
+            ui.button('Update CMS Keys', on_click=state.save_secrets) \
+                .classes('w-full bg-slate-800 hover:bg-slate-700 text-xs py-2')
+
         ui.separator().classes('bg-slate-800')
 
         with ui.column().classes('w-full gap-4'):
@@ -410,9 +435,9 @@ def wizard_navigation(state: State, on_new_job):
                 .classes('text-xs font-bold px-2 py-1 rounded-lg hover:bg-amber-500/10 transition-all')
             ui.label(f'Step {state.current_step} of 11').classes('text-[10px] font-bold text-slate-500 uppercase tracking-tighter')
         
-        # Progress Navigation - 11 Steps with Badges
+        # Progress Navigation - 12 Steps with Badges
         with ui.row().classes('w-full justify-center gap-1 flex-wrap bg-slate-900/40 p-2 rounded-2xl border border-slate-800/30'):
-            for step_num in range(1, 12):
+            for step_num in range(1, 13):
                 step_info = STEP_CONFIG[step_num]
                 is_active = state.current_step == step_num
                 is_completed = state.current_step > step_num
@@ -512,7 +537,7 @@ def global_progress_indicator(state: State):
                     
                     ui.linear_progress(value=p_val/100).classes('w-full h-1.5 rounded-full').props(f'color="{state.brand_color}"')
 
-def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_video, on_next_step, on_regenerate, on_download_source=None, on_generate_transcript=None):
+def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_video, on_next_step, on_regenerate, on_download_source=None, on_generate_transcript=None, on_publish=None):
     """11-step content production wizard."""
     config = STEP_CONFIG.get(state.current_step, STEP_CONFIG[1])
     slug = state.content.get("slug", "")
@@ -651,11 +676,27 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                         if final_file.exists():
                             ui.video(f"/outputs/{slug}_final.mp4").classes('w-full max-w-lg rounded-xl shadow-2xl')
                             ui.label('🎬 Final video ready!').classes('text-green-500 font-bold')
-                            # Download link
-                            ui.link('DOWNLOAD VIDEO', f"/outputs/{slug}_final.mp4").classes('px-6 py-3 rounded-xl font-bold').style(f'background: {state.brand_color}; color: black;')
                         else:
                             ui.icon('movie').classes('text-6xl').style(f'color: {state.brand_color}')
                             ui.label('Ready for Final Render').classes('text-slate-500 text-xs')
+
+                # STEP 12: Publish
+                elif state.current_step == 12:
+                    post_url = state.content.get("cms_post_url")
+                    with ui.column().classes('w-full items-center gap-6 py-8'):
+                        ui.icon('publish').classes('text-6xl').style(f'color: {state.brand_color}')
+                        if post_url:
+                            ui.label('✅ Content Published Successfully!').classes('text-green-500 font-bold text-xl')
+                            ui.link('View Post in CMS', post_url, new_tab=True).classes('text-blue-400 hover:text-blue-300 underline')
+                            
+                            # Embed video as well
+                            final_file = outputs_dir / f"{slug}_final.mp4"
+                            if final_file.exists():
+                                 ui.video(f"/outputs/{slug}_final.mp4").classes('w-full max-w-md rounded-xl mt-4 opacity-50')
+                        else:
+                            ui.label('Ready to Publish').classes('text-white text-lg font-bold')
+                            ui.label('Article + Excerpt will be pushed to CMS').classes('text-slate-400 text-sm')
+                            ui.label('Ensure you have entered CMS Credentials in Settings').classes('text-amber-500 text-xs')
         
         # Navigation Buttons
         with ui.row().classes('w-full justify-between items-center mt-2'):
@@ -672,7 +713,7 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                         .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
                 
                 # Dynamic Action Button logic
-                if state.current_step < 11:
+                if state.current_step < 12:
                     action_label = config["action"]
                     
                     if state.current_step == 5:
@@ -730,18 +771,29 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                                 .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
                                 .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
                     
+                    elif state.current_step == 11:
+                        # Logic for Step 11: Render
+                        final_file = outputs_dir / f"{slug}_final.mp4"
+                        if final_file.exists():
+                            ui.button('CONTINUE', icon='arrow_forward', on_click=on_next_step) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
+                        else:
+                             ui.button('FINAL RENDER', icon='movie', on_click=on_generate_video) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
+                                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+
                     else:
                         # Default simple next
                         ui.button(action_label, icon='arrow_forward', on_click=on_next_step) \
                             .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
                 else:
-                    # Step 11: Render or New Job
-                    final_file = outputs_dir / f"{slug}_final.mp4"
-                    if final_file.exists():
+                    # Step 12: Publish or New Job
+                    post_url = state.content.get("cms_post_url")
+                    if post_url:
                         ui.button('NEW JOB', icon='add', on_click=on_back) \
                             .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
                     else:
-                        ui.button('FINAL RENDER', icon='movie', on_click=on_generate_video) \
+                        ui.button('PUBLISH TO CMS', icon='publish', on_click=on_publish) \
                             .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
                             .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
         
