@@ -48,6 +48,7 @@ export const CoachingSessions: CollectionConfig = {
                 const coachProfile = await req.payload.findByID({
                     collection: 'coach-profiles',
                     id: coachId,
+                    req,
                 })
 
                 if (coachProfile) {
@@ -133,6 +134,7 @@ export const CoachingSessions: CollectionConfig = {
                             ]
                         },
                         limit: 50,
+                        req,
                     })
 
                     // Validate Gap: 
