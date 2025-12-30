@@ -59,9 +59,9 @@ Please provide THREE distinct outputs in your response:
 2. EXCERPT: Write a brief 2-3 sentence summary that captures the essence of the blog.
 
 3. SPEECH SCRIPT: Write a compelling 60-second video voiceover script.
-   - Tone: Like a captivating university lecture or TED talk. Authoritative but storytelling-driven.
-   - Content: Tell a short Story or present a Paradox related to the topic.
-   - Goal: Build intense CURIOSITY. Make the listener feel they *need* to know the solution or the deeper insight.
+   - Tone: Storytelling, engaging, personal, and authentic.
+   - Content: Tell a VERY SHORT REAL LIFE STORY related to the topic.
+   - Goal: Build intense CURIOSITY. Start with the story, and lead to a realization or question.
    - Constraint: Do NOT resolve the story fully. Leave a "Curiosity Gap" that implies the answer is in the written text.
    - Constraint: Do NOT explicitly say "Read the blog" or "Link in bio". It must be implied by the cliffhanger.
    - Length: ~150 words.
