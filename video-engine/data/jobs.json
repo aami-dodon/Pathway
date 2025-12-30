@@ -1,5 +1,28 @@
 [
     {
+        "id": "08996988",
+        "topic": "Kolkata Durga Puja",
+        "topic_slug": "kolkata-durga-puja",
+        "status": "failed",
+        "progress": 40,
+        "started_at": "2025-12-30T18:37:23.760222",
+        "completed_at": "2025-12-30T18:37:42.121193",
+        "content": {
+            "topic": "Kolkata Durga Puja",
+            "blog": "**The Unstoppable Heartbeat: Why Kolkata\u2019s Durga Puja is the World\u2019s Biggest Open-Air Art Gallery**\n\nDurga Puja in Kolkata is not merely a religious observance; it is the annual, breathtaking resurrection of an entire metropolis. For five days, from Shashti to Dashami, the City of Joy transforms into the epicenter of global cultural celebration, a vibrant spectacle so unique it earned UNESCO Intangible Cultural Heritage status. This is the ultimate homecoming, when the diaspora returns, and every street corner pulses with renewed energy.\n\nThe heart of the Puja lies in the *pandals*, the temporary thematic structures that house the idols of Goddess Durga. These structures are the main attraction, evolving year by year from simple tents to elaborate, architectural masterpieces designed by leading artists. Forget museum trips; during Pujo, the city itself is an open-air art exhibition. One may encounter a replica of the Louvre one year, or a dystopian cityscape the next\u2014all built entirely for a week\u2019s worship and subsequent immersion.\n\nBeyond the stunning visuals, the atmosphere is intoxicating. Crowds swarm the streets late into the night for 'pandal hopping,' fueled by the rhythmic, thunderous beat of the *dhak* drums and an endless array of street food. From traditional *bhog* (offering) served in community pandals to crispy *telebhaja* enjoyed roadside, the food scene is paramount.\n\nBut the true essence is the spirit of *sharod utsav*\u2014the autumn festival. It is a time when class barriers momentarily dissolve, and the collective joy of community triumphs. When the celebrations conclude on Bijoya Dashami with the emotional immersion of the idols, a profound silence falls over the city, leaving a void that will only be filled when Ma Durga returns the following year. It is a festival of fierce devotion, magnificent art, and unforgettable communal spirit that must be experienced to be believed.",
+            "excerpt": "Kolkata Durga Puja transcends a typical religious festival; it is a profound cultural rejuvenation where the entire city becomes an open-air art gallery, recently recognized by UNESCO. This annual spectacle involves relentless 'pandal hopping' to witness intricate, temporary architectural masterpieces, all while celebrating the Goddess\u2019s victory and the intense, joyous spirit of community homecoming.",
+            "speech": "It was 2 AM, and the crowds were so thick they moved like a single, overwhelming river. I was 16, separated from my group somewhere between College Street and the big Pandal in Mohammad Ali Park. The air was thick with humidity and the smell of fried snacks, and the sound was deafening\u2014a chaotic, beautiful wall of noise.\n\nI started to panic. I was alone in the darkest corner, blinded by the flashing lights of a nearby Ferris wheel. Then, through the chaos, I heard it. A single, distinct *dhak* beat. It wasn't the frantic, celebratory rhythm of the street drummers; this beat was deeper, slower, almost hypnotic. It pulled me toward the nearest community courtyard, a small, unassuming space hidden behind a tall tea stall.\n\nAs I pushed through the last few people, I saw the source: an old man, perhaps eighty, sitting completely alone, playing a drum that looked as ancient as he was. His rhythm cut through the noise, anchoring everything. And when I finally saw the Pandal behind him, I understood something fundamental about Kolkata, about faith, and about why that sound was the key to everything. I realized that the real story of Pujo wasn\u2019t the million-dollar light shows or the celebrity-designed themes... it was right here, in this quiet, relentless rhythm. But what was he playing? And what truth did that solitary drumbeat reveal?",
+            "steps": {},
+            "slug": "kolkata-durga-puja",
+            "voice_file": "kolkata-durga-puja.mp3",
+            "subtitle_file": "kolkata-durga-puja_words.json",
+            "output_video": "kolkata-durga-puja_final.mp4",
+            "voice_id": null,
+            "tts_model": null
+        },
+        "current_step": 5
+    },
+    {
         "id": "a922fa05",
         "topic": "kolkata tram unknown story",
         "topic_slug": "kolkata-tram-unknown-story",
