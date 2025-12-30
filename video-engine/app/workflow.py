@@ -25,40 +25,63 @@ class VideoWorkflow:
     def run(self, input_text: str, yt_url: str, template_name: str = "default"):
         print(f"🚀 Starting workflow for: {input_text}")
         
+        # Load template early to get settings
+        template_path = self.base_dir / "templates" / f"{template_name}.yaml"
+        with open(template_path, "r") as f:
+            template = yaml.safe_load(f)
+
         # 1. Content Generation
-        print("   📝 Generating content with Gemini...")
-        content = self.llm.generate_content(input_text)
-        
-        # Save all three outputs
-        blog_path = self.outputs_dir / "blog.txt"
-        blog_path.write_text(content["blog"])
-        print(f"      ✅ Blog generated: {blog_path.name}")
-        
-        excerpt_path = self.outputs_dir / "excerpt.txt"
-        excerpt_path.write_text(content["excerpt"])
-        print(f"      ✅ Excerpt generated: {excerpt_path.name}")
-        
         speech_script_path = self.outputs_dir / "speech_script.txt"
-        speech_script_path.write_text(content["speech"])
-        print(f"      ✅ Speech script generated: {speech_script_path.name}")
         
-        # 2. Speech Generation (using the speech script, NOT the full blog)
-        print("   🎤 Generating speech with ElevenLabs...")
+        if speech_script_path.exists():
+             print("   ⚠️ Speech script found, skipping Gemini generation...")
+             # We only strictly need the speech script for the video, 
+             # but loading others is good practice if used elsewhere.
+             content = {
+                 "speech": speech_script_path.read_text(),
+                 "blog": "", # placeholders if not needed downstream
+                 "excerpt": ""
+             }
+        else:
+            print("   📝 Generating content with Gemini...")
+            content = self.llm.generate_content(input_text)
+            
+            # Save all three outputs
+            blog_path = self.outputs_dir / "blog.txt"
+            blog_path.write_text(content["blog"])
+            
+            excerpt_path = self.outputs_dir / "excerpt.txt"
+            excerpt_path.write_text(content["excerpt"])
+            
+            speech_script_path.write_text(content["speech"])
+            print(f"      ✅ Content generated.")
+        
+        # 2. Speech Generation
         audio_path = self.outputs_dir / "voice.mp3"
-        self.tts.text_to_speech(content["speech"], audio_path)
-        print(f"      ✅ Audio generated: {audio_path.name}")
+        if audio_path.exists() and audio_path.stat().st_size > 1000:
+             print("   ⚠️ Audio found, skipping ElevenLabs generation...")
+        else:
+            print("   🎤 Generating speech with ElevenLabs...")
+            self.tts.text_to_speech(content["speech"], audio_path)
+            print(f"      ✅ Audio generated: {audio_path.name}")
         
         # 3. Subtitle Generation
         print("   ✍️ Generating subtitles with Whisper...")
-        words = self.stt.transcribe(audio_path)
         ass_path = self.outputs_dir / "captions.ass"
-        # Since the audio is delayed by 3s in the final video, 
-        # we need to offset the subtitle timestamps by 3s.
-        for w in words:
-            w['start'] += 3.0
-            w['end'] += 3.0
-        self.stt.generate_ass(words, ass_path)
-        print(f"      ✅ Subtitles generated: {ass_path.name}")
+        
+        if ass_path.exists():
+             print("   ⚠️ Subtitles found, skipping Whisper generation...")
+        else:
+            words = self.stt.transcribe(audio_path)
+            
+            # Extract font settings from template
+            font_config = template.get('text', {}).get('typography', {})
+            font_name = font_config.get('font', 'Inter-Bold').split('/')[-1].replace('.ttf', '')
+            font_size = font_config.get('size', 110)
+            
+            # Use the new time_offset parameter (4.0s) to sync with audio delay
+            self.stt.generate_ass(words, ass_path, font_name=font_name, font_size=font_size, time_offset=4.0)
+            print(f"      ✅ Subtitles generated: {ass_path.name}")
         
         # 4. Download YouTube Video
         print(f"   📥 Downloading video from {yt_url}...")
@@ -68,20 +91,25 @@ class VideoWorkflow:
         # 5. Video Processing
         print("   🎬 Processing video...")
         audio_duration = self.processor.get_duration(audio_path)
-        total_duration = audio_duration + 6.0 # 3s intro + 3s outro
+        total_duration = audio_duration + 8.0 # 4s intro + 4s outro
         
         processed_source = self.outputs_dir / "processed_source.mp4"
         self.processor.process_source_video(source_path, processed_source, total_duration)
         
+        # Load template to get music file
+        template_path = self.base_dir / "templates" / f"{template_name}.yaml"
+        with open(template_path, "r") as f:
+            template = yaml.safe_load(f)
+            
+        bg_music_path = self.base_dir / "assets" / template['music']['file']
+        
         muxed_path = self.outputs_dir / "muxed.mp4"
-        self.processor.merge_audio_video(processed_source, audio_path, muxed_path, audio_delay=3.0)
+        self.processor.merge_audio_video(processed_source, audio_path, muxed_path, audio_delay=4.0, bg_music_path=bg_music_path)
         print(f"      ✅ Video processed and merged with audio")
         
         # 6. Apply VFX (Overlays, Logos, etc.)
         print("   🎨 Applying VFX overlays...")
-        template_path = self.base_dir / "templates" / f"{template_name}.yaml"
-        with open(template_path, "r") as f:
-            template = yaml.safe_load(f)
+        # Template already loaded above
             
         final_path = self.outputs_dir / "final_video.mp4"
         self.processor.apply_vfx(muxed_path, final_path, ass_path, template, self.base_dir)

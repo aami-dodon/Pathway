@@ -58,13 +58,15 @@ Please provide THREE distinct outputs in your response:
 
 2. EXCERPT: Write a brief 2-3 sentence summary that captures the essence of the blog.
 
-3. SPEECH SCRIPT: Write a compelling 60-second video voiceover script. This should be:
-   - Concise and impactful (approximately 150-160 words for a 60-second read)
-   - Written in a conversational, engaging tone
-   - Structured for spoken delivery (short sentences, natural flow)
-   - Focused on the most compelling points from the blog
-   - DO NOT include timestamps or time markers (like 0:00, 0:15, etc.)
-   - Just pure narrative text that flows naturally
+3. SPEECH SCRIPT: Write a compelling 60-second video voiceover script.
+   - Tone: Like a captivating university lecture or TED talk. Authoritative but storytelling-driven.
+   - Content: Tell a short Story or present a Paradox related to the topic.
+   - Goal: Build intense CURIOSITY. Make the listener feel they *need* to know the solution or the deeper insight.
+   - Constraint: Do NOT resolve the story fully. Leave a "Curiosity Gap" that implies the answer is in the written text.
+   - Constraint: Do NOT explicitly say "Read the blog" or "Link in bio". It must be implied by the cliffhanger.
+   - Length: ~150 words.
+   - NO timestamps.
+
 
 Format your response EXACTLY like this:
 ===BLOG===

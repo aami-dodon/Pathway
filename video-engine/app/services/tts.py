@@ -31,10 +31,34 @@ class ElevenLabsService:
                 pass
 
     def text_to_speech(self, text: str, output_path: Path):
-        audio = generate(
-            text=text,
-            voice=self.voice_id,
-            model=self.model_id
-        )
-        save(audio, str(output_path))
-        return output_path
+        try:
+            audio = generate(
+                text=text,
+                voice=self.voice_id,
+                model=self.model_id
+            )
+            save(audio, str(output_path))
+            return output_path
+        except Exception as e:
+            import sys
+            # Check for RateLimitError (namespaced or string check if import is tricky)
+            error_str = str(e)
+            sys.stderr.write(f"DEBUG: Caught exception: {type(e)}\n")
+            sys.stderr.write(f"DEBUG: Error string: {error_str}\n")
+            sys.stderr.flush()
+            
+            if "quota" in error_str.lower() or "rate limit" in error_str.lower():
+                 backup_key = os.getenv("ELEVENLABS_API_KEY_BACKUP")
+                 print(f"DEBUG: Backup key found? {'Yes' if backup_key else 'No'}")
+                 
+                 if backup_key:
+                     print("   ⚠️ Primary API Key quota exceeded. Switching to BACKUP key...")
+                     set_api_key(backup_key)
+                     audio = generate(
+                        text=text,
+                        voice=self.voice_id,
+                        model=self.model_id
+                     )
+                     save(audio, str(output_path))
+                     return output_path
+            raise e

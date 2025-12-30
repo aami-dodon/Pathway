@@ -5,12 +5,13 @@ import math
 import yaml
 import subprocess
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 # Python Package Imports (Poetry Managed)
 import cairosvg
 from moviepy import ImageClip
 from moviepy.video.fx import FadeIn, FadeOut
+from app.utils.ffmpeg_helper import SimpleFFmpegHelper
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -196,12 +197,31 @@ def generate_gradients():
     
     print("   ✅ Portrait gradients generated (1080x1920)")
 
-def generate_animations(brand_data):
-    """Creates simple, fast intro/outro animations"""
-    print("🎬 Generating animations...")
+def create_glow(image_path: Path, glow_color: str = "#FCC01E", radius: int = 15):
+    """Creates a blurred glow version of the input image."""
+    with Image.open(image_path) as img:
+        # 1. Create solid color version using alpha mask
+        glow = Image.new("RGBA", img.size, glow_color)
+        glow.putalpha(img.getchannel("A"))
+        
+        # 2. Add padding to avoid clipping blur (expand canvas)
+        padding = radius * 3
+        new_size = (img.width + padding*2, img.height + padding*2)
+        padded_glow = Image.new("RGBA", new_size, (0,0,0,0))
+        padded_glow.paste(glow, (padding, padding))
+        
+        # 3. Blur
+        blurred = padded_glow.filter(ImageFilter.GaussianBlur(radius))
+        
+        # 4. Save temp
+        output_path = image_path.parent / f"{image_path.stem}_glow.png"
+        blurred.save(output_path)
+        return output_path, padding
+    """Creates simple, fast intro/outro animations using 2-pass Hybrid approach"""
+    print("🎬 Generating animations (Hybrid: MoviePy Composition -> FFmpeg Encoding)...")
     print("   📦 Importing MoviePy modules...")
     
-    from moviepy import ColorClip, CompositeVideoClip, TextClip
+    from moviepy import ColorClip, CompositeVideoClip
     print("   ✅ MoviePy imported")
     
     # Load settings for website URL
@@ -224,54 +244,124 @@ def generate_animations(brand_data):
 
 
     # --- INTRO: Simple Full Logo Fade ---
-    print("\n   🎬 Creating INTRO animation (full logo)...")
+    print("\n   🎬 Creating INTRO... (Phase 1: Composition)")
     
-    bg_dark = ColorClip(size=(1080, 1920), color=(5, 5, 5)).with_duration(duration)
+    # Generate Glow
+    glow_path, padding = create_glow(full_logo_path, glow_color=brand_data['primary_hex'], radius=50)
     
-    # Full logo centered with fade in only
-    full_logo = ImageClip(str(full_logo_path)).resized(width=700).with_duration(duration)
+    # Transparent Background
+    bg_dark = ColorClip(size=(1080, 1920), color=(0, 0, 0)).with_opacity(0).with_duration(duration)
+    
+    # Original Logo
+    target_width = 700
+    full_logo = ImageClip(str(full_logo_path)).resized(width=target_width).with_duration(duration)
     full_logo = full_logo.with_position(("center", "center")).with_effects([FadeIn(0.8)])
     
-    intro_clip = CompositeVideoClip([bg_dark, full_logo])
+    # Glow Clip (Keep aspect ratio)
+    # Calculate relative scale factor
+    with Image.open(full_logo_path) as img:
+        orig_w = img.width
     
-    print("   📹 Rendering intro animation...")
-    print("      ⏳ Encoding with VP9 codec at 24fps (this takes ~20-30 seconds)...")
-    intro_clip.write_videofile(str(ANIM_DIR / "intro_overlay.webm"), fps=24, codec="libvpx-vp9", audio=False, logger='bar')
+    scale = target_width / orig_w
+    with Image.open(glow_path) as img:
+        glow_width = img.width * scale
+        
+    glow_clip = ImageClip(str(glow_path)).resized(width=glow_width).with_duration(duration)
+    glow_clip = glow_clip.with_position(("center", "center")).with_effects([FadeIn(0.8)])
+    
+    intro_clip = CompositeVideoClip([bg_dark, glow_clip, full_logo])
+    
+    # Phase 1: Render keyframes to intermediate high-quality MOV (ProRes/PNG for Alpha)
+    temp_intro = ANIM_DIR / "temp_intro.mov"
+    final_intro = ANIM_DIR / "intro_overlay.webm"
+    
+    print("      📹 Rendering intermediate mov (Alpha)...")
+    intro_clip.write_videofile(
+        str(temp_intro), 
+        fps=24, 
+        codec="png", # Lossless RGBA
+        audio=False, 
+        logger='bar'
+    )
+    
+    # Phase 2: Encode to optimized VP9 WebM
+    print(f"      ⚙️  Converting to optimized WebM: {final_intro.name}")
+    SimpleFFmpegHelper.encode_vp9(temp_intro, final_intro, crf=32)
+    
+    # Cleanup
+    temp_intro.unlink(missing_ok=True)
+    glow_path.unlink(missing_ok=True) # Cleanup temp glow
     print("      ✅ Intro complete!")
 
 
     # --- OUTRO: Square Logo + Website URL ---
-    print("\n   🎬 Creating OUTRO animation (logo + website)...")
+    print("\n   🎬 Creating OUTRO... (Phase 1: Composition)")
     
-    bg_outro = ColorClip(size=(1080, 1920), color=(5, 5, 5)).with_duration(duration)
+    # Generate Glow
+    glow_path_sq, padding_sq = create_glow(logo_path, glow_color=brand_data['primary_hex'], radius=40)
     
-    # Square logo at top-center - stays visible (only fade in)
-    square_logo = ImageClip(str(logo_path)).resized(height=250).with_duration(duration)
-    square_logo = square_logo.with_position(("center", 700)).with_effects([FadeIn(0.8)])
+    # Transparent Background
+    bg_outro = ColorClip(size=(1080, 1920), color=(0, 0, 0)).with_opacity(0).with_duration(duration)
     
-    # Website URL text below logo using TextClip
-    try:
-        font_file = FONTS_DIR / f"{brand_data['fontFamily']}-Bold.ttf"
-        url_text = TextClip(
-            text=website_url,
-            font_size=50,
-            color='white',
-            font=str(font_file) if font_file.exists() else 'Arial-Bold',
-            duration=duration
-        )
-        url_text = url_text.with_position(("center", 1000)).with_effects([FadeIn(1.0), FadeOut(0.8)])
+    # Square logo
+    target_height = 250
+    square_logo = ImageClip(str(logo_path)).resized(height=target_height).with_duration(duration)
+    logo_y = 700
+    square_logo = square_logo.with_position(("center", logo_y)).with_effects([FadeIn(0.8)])
+    
+    # Glow Clip
+    with Image.open(logo_path) as img:
+        orig_h_sq = img.height
         
-        outro_clip = CompositeVideoClip([bg_outro, square_logo, url_text])
-    except Exception as e:
-        print(f"      ⚠️  TextClip failed: {e}, using logo only")
-        outro_clip = CompositeVideoClip([bg_outro, square_logo])
+    scale_sq = target_height / orig_h_sq
+    with Image.open(glow_path_sq) as img:
+        glow_height = img.height * scale_sq
+        
+    # Center glow Y relative to logo Y
+    # Logo Center Y = logo_y + target_height/2
+    # Glow Top Y = Logo Center Y - glow_height/2
+    logo_sem = logo_y + (target_height/2)
+    glow_y = logo_sem - (glow_height/2)
     
-    print("   📹 Rendering outro animation...")
-    print("      ⏳ Encoding with VP9 codec at 24fps (this takes ~20-30 seconds)...")
-    outro_clip.write_videofile(str(ANIM_DIR / "outro_overlay.webm"), fps=24, codec="libvpx-vp9", audio=False, logger='bar')
+    glow_clip_sq = ImageClip(str(glow_path_sq)).resized(height=glow_height).with_duration(duration)
+    glow_clip_sq = glow_clip_sq.with_position(("center", glow_y)).with_effects([FadeIn(0.8)])
+    
+    # Note: Text is handled by FFmpeg in Phase 3 for reliability
+    outro_clip = CompositeVideoClip([bg_outro, glow_clip_sq, square_logo])
+    
+    temp_outro_base = ANIM_DIR / "temp_outro_base.mov"
+    final_outro = ANIM_DIR / "outro_overlay.webm"
+    
+    print("      📹 Rendering intermediate mov (Alpha)...")
+    outro_clip.write_videofile(
+        str(temp_outro_base), 
+        fps=24, 
+        codec="png", # Lossless RGBA
+        audio=False, 
+        logger='bar'
+    )
+    
+    # Phase 2 & 3: Overlay Text + Encode to VP9
+    print(f"      T   Adding text overlay: '{website_url}'")
+    
+    # We output directly to final webm, letting FFmpeg handle both text overlay and encoding in one pass if possible.
+    # But helpers are separate. `add_text_overlay` outputs VP9 WebM.
+    
+    SimpleFFmpegHelper.add_text_overlay(
+        input_path=temp_outro_base,
+        output_path=final_outro,
+        text=website_url,
+        font_size=50,
+        color="white",
+        y_pos=1000
+    )
+    
+    # Cleanup
+    temp_outro_base.unlink(missing_ok=True)
+    glow_path_sq.unlink(missing_ok=True) # Cleanup temp
     print("      ✅ Outro complete!")
     
-    print("   ✅ Premium 9:16 animations generated")
+    print("   ✅ Premium 9:16 animations generated (Hybrid Pipeline)")
 
 def ensure_fonts(brand_data):
     """Ensures that the required fonts are available"""
