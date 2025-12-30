@@ -612,10 +612,6 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                         with ui.row().classes('w-full max-w-md items-center gap-2'):
                             ui.input('YouTube URL', value=state.content.get("youtube_URL")) \
                                 .classes('flex-1').props('dark dense').bind_value(state.content, "youtube_URL")
-                            if not source_file:
-                                ui.button('DOWNLOAD', icon='download', on_click=on_download_source) \
-                                    .classes('px-4 py-2').style(f'background: {state.brand_color}') \
-                                    .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
                         
                         if source_file:
                             ui.video(f"/outputs/{source_file[0].name}").classes('w-full max-w-md rounded-xl')
@@ -698,6 +694,17 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                                 .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
                         else:
                             ui.button('GENERATE TRANSCRIPT', icon='bolt', on_click=on_generate_transcript) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
+                                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                    
+                    elif state.current_step == 8:
+                        # Logic for Step 8: Source Download
+                        source_file = list(outputs_dir.glob(f"{slug}_source*"))
+                        if source_file:
+                            ui.button('CONTINUE', icon='arrow_forward', on_click=on_next_step) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
+                        else:
+                            ui.button('DOWNLOAD SOURCE', icon='download', on_click=on_download_source) \
                                 .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
                                 .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
                     
