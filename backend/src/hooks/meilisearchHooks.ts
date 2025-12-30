@@ -45,6 +45,8 @@ export const indexPostAfterChange: CollectionAfterChangeHook = async ({
             collection: 'posts',
             id: doc.id,
             depth: 2,
+            req,
+            overrideAccess: true,
         })
 
         const postDoc: PostDocument = {
@@ -110,6 +112,8 @@ export const indexCourseAfterChange: CollectionAfterChangeHook = async ({
             collection: 'courses',
             id: doc.id,
             depth: 2,
+            req,
+            overrideAccess: true,
         })
 
         // Extract plain text from rich text description
@@ -175,6 +179,8 @@ export const indexCoachAfterChange: CollectionAfterChangeHook = async ({
             collection: 'coach-profiles',
             id: doc.id,
             depth: 1,
+            req,
+            overrideAccess: true,
         })
 
         const coachDoc: CoachDocument = {
@@ -226,6 +232,8 @@ export const indexPageAfterChange: CollectionAfterChangeHook = async ({
             collection: 'pages',
             id: doc.id,
             depth: 1,
+            req,
+            overrideAccess: true,
         })
 
         const contentText = extractPlainText(fullDoc.content)
