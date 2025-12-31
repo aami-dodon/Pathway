@@ -18,7 +18,7 @@ import { seedCoachingSessions } from './bookings.js'
 import { seedHomePage } from './home-page.js'
 import { seedSiteContent } from './site-content.js'
 import { seedContactSubmissions } from './contact-submissions.js'
-import { seedEmails } from './emails.js'
+// Email templates now managed in Resend - no seeding needed
 
 async function seed() {
     const nodeEnv = process.env.NODE_ENV || 'development'
@@ -99,10 +99,8 @@ async function seed() {
         const submissions = await seedContactSubmissions(payload)
         console.log('✅ Contact Submissions seeded\n')
 
-        // Phase 10: Seed Email Templates & Layout
-        console.log('📦 Phase 10: Seeding Email Templates & Layout...')
-        await seedEmails(payload)
-        console.log('✅ Email Templates & Layout seeded\n')
+        // Phase 10: Email Templates now managed in Resend
+        console.log('📦 Phase 10: Email templates managed in Resend (skipped)\n')
 
         console.log('🎉 Demo data seeding complete!')
         console.log('\n📊 Summary:')
