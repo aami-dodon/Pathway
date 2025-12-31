@@ -8,7 +8,7 @@ export const manageProfiles: CollectionAfterChangeHook = async ({
 }) => {
     const { payload } = req
     // Only handle create and update operations
-    if (operation !== 'create' && operation !== 'update') {
+    if ((operation !== 'create' && operation !== 'update') || req.context?.skipManageProfiles) {
         return doc
     }
 

@@ -4,6 +4,7 @@ import {
     cleanupProfiles,
     checkUserStatus
 } from './hooks'
+import { ResendContactService } from '../../services/resendContactService'
 
 export const Users: CollectionConfig = {
     slug: 'users',
@@ -65,8 +66,67 @@ export const Users: CollectionConfig = {
     },
     hooks: {
         beforeLogin: [checkUserStatus],
-        afterChange: [manageProfiles],
-        afterDelete: [cleanupProfiles],
+        afterChange: [
+            manageProfiles,
+            async ({ doc, operation, req }) => {
+                if (req.context?.preventResendSync) return
+                try {
+                    // Sync User changes to Resend
+                    const params: any = {
+                        email: doc.email,
+                        // We primarily sync email here. Names come from Profiles.
+                        // We can add role as segment/tag if desired.
+                        data: {
+                            role: doc.role,
+                        }
+                    }
+
+                    // If isActive changed to false, we might ideally unsubscribe them or just track it?
+                    // Implementation plan said: "Update subscription status"
+                    /*
+                       Actually, 'isActive' blocks login. It might not mean 'unsubscribed' from email.
+                       But usually disabled users shouldn't receive emails.
+                       Let's set unsubscribed if isActive is false.
+                   */
+                    if (doc.isActive === false) {
+                        // If account is disabled, we treat as unsubscribed?
+                        // Or just respect 'unsubscribed' field?
+                        // Ideally respect 'unsubscribed'.
+                        // But if blocked, maybe we shouldn't email them?
+                        // Let's rely on 'unsubscribed' field primarily.
+                        // And if isActive is false, maybe Resend handles it, but let's stick to explicit preference.
+                    }
+                    if (doc.unsubscribed) {
+                        params.unsubscribed = true
+                    } else {
+                        params.unsubscribed = false
+                    }
+
+                    const res = await ResendContactService.upsertContact(params)
+
+                    if (res?.id && doc.resendContactId !== res.id) {
+                        await req.payload.update({
+                            collection: 'users',
+                            id: doc.id,
+                            data: { resendContactId: res.id },
+                            req,
+                        })
+                    }
+                } catch (error) {
+                    console.error('Error syncing User to Resend:', error)
+                }
+            }
+        ],
+        afterDelete: [
+            cleanupProfiles,
+            async ({ doc }) => {
+                try {
+                    await ResendContactService.deleteContact(doc.email)
+                } catch (error) {
+                    console.error('Error deleting Resend contact for User:', error)
+                }
+            }
+        ],
     },
     fields: [
         {
@@ -99,11 +159,29 @@ export const Users: CollectionConfig = {
             },
         },
         {
+            name: 'resendContactId',
+            type: 'text',
+            admin: {
+                position: 'sidebar',
+                readOnly: true,
+                description: 'Resend Contact ID for sync tracking',
+            },
+        },
+        {
             name: 'isFirstLogin',
             type: 'checkbox',
             defaultValue: true,
             admin: {
                 hidden: true,
+            },
+        },
+        {
+            name: 'unsubscribed',
+            type: 'checkbox',
+            defaultValue: false,
+            admin: {
+                position: 'sidebar',
+                description: 'User has opted out of marketing emails',
             },
         },
     ],

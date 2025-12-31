@@ -2,6 +2,8 @@ import type { CollectionConfig } from 'payload'
 import { timezoneField } from '../../fields/timezone'
 import { enforceUserOwnership, preventUserChange, setJoinedAt } from '../../hooks'
 import { cleanupUserBeforeDelete, cleanupUserAfterDelete } from './hooks'
+import { ResendContactService } from '../../services/resendContactService'
+import type { User } from '../../payload-types'
 
 export const SubscriberProfile: CollectionConfig = {
     slug: 'subscriber-profiles',
@@ -21,6 +23,45 @@ export const SubscriberProfile: CollectionConfig = {
         afterDelete: [cleanupUserAfterDelete],
         beforeDelete: [cleanupUserBeforeDelete],
         beforeChange: [enforceUserOwnership, preventUserChange, setJoinedAt],
+        afterChange: [
+            async ({ doc, req }) => {
+                try {
+                    // When profile changes, sync name to Resend
+                    if (doc.user && doc.displayName) {
+                        let email: string | undefined
+
+                        if (typeof doc.user === 'object' && doc.user.email) {
+                            email = doc.user.email
+                        } else {
+                            // Fetch user if only ID is present
+                            const user = await req.payload.findByID({
+                                collection: 'users',
+                                id: doc.user as string | number,
+                            })
+                            if (user) email = user.email
+                        }
+
+                        if (email) {
+                            // Split display name for first/last
+                            const parts = doc.displayName.split(' ')
+                            const firstName = parts[0]
+                            const lastName = parts.slice(1).join(' ')
+
+                            await ResendContactService.upsertContact({
+                                email,
+                                firstName,
+                                lastName,
+                                data: {
+                                    source_type: 'subscriber_profile'
+                                }
+                            })
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error syncing SubscriberProfile to Resend:', error)
+                }
+            }
+        ],
     },
     fields: [
         // Required one-to-one relationship with Users

@@ -186,7 +186,15 @@ export interface User {
    * Uncheck to block user login
    */
   isActive?: boolean | null;
+  /**
+   * Resend Contact ID for sync tracking
+   */
+  resendContactId?: string | null;
   isFirstLogin?: boolean | null;
+  /**
+   * User has opted out of marketing emails
+   */
+  unsubscribed?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -2329,6 +2337,10 @@ export interface NewsletterSubscriber {
    * Whether this subscriber is actively receiving emails
    */
   active?: boolean | null;
+  /**
+   * Resend Contact ID for sync tracking
+   */
+  resendContactId?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3002,7 +3014,9 @@ export interface PayloadMigration {
 export interface UsersSelect<T extends boolean = true> {
   role?: T;
   isActive?: T;
+  resendContactId?: T;
   isFirstLogin?: T;
+  unsubscribed?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -3578,6 +3592,7 @@ export interface ContactSubmissionsSelect<T extends boolean = true> {
 export interface NewsletterSubscribersSelect<T extends boolean = true> {
   email?: T;
   active?: T;
+  resendContactId?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -3,6 +3,7 @@ import { timezoneField } from '../../fields/timezone'
 import { enforceUserOwnership, formatSlug, preventUserChange } from '../../hooks'
 import { cleanupUserBeforeDelete, cleanupUserAfterDelete } from './hooks'
 import { indexCoachAfterChange, deleteCoachAfterDelete } from '../../hooks/meilisearchHooks'
+import { ResendContactService } from '../../services/resendContactService'
 
 export const CoachProfile: CollectionConfig = {
     slug: 'coach-profiles',
@@ -21,7 +22,46 @@ export const CoachProfile: CollectionConfig = {
         afterDelete: [cleanupUserAfterDelete, deleteCoachAfterDelete],
         beforeDelete: [cleanupUserBeforeDelete],
         beforeChange: [enforceUserOwnership, preventUserChange],
-        afterChange: [indexCoachAfterChange],
+        afterChange: [
+            indexCoachAfterChange,
+            async ({ doc, req }) => {
+                try {
+                    // When profile changes, sync name to Resend
+                    if (doc.user && doc.displayName) {
+                        let email: string | undefined
+
+                        if (typeof doc.user === 'object' && doc.user.email) {
+                            email = doc.user.email
+                        } else {
+                            // Fetch user if only ID is present
+                            const user = await req.payload.findByID({
+                                collection: 'users',
+                                id: doc.user as string | number,
+                            })
+                            if (user) email = user.email
+                        }
+
+                        if (email) {
+                            const parts = doc.displayName.split(' ')
+                            const firstName = parts[0]
+                            const lastName = parts.slice(1).join(' ')
+
+                            await ResendContactService.upsertContact({
+                                email,
+                                firstName,
+                                lastName,
+                                data: {
+                                    source_type: 'coach_profile',
+                                    role: 'coach'
+                                }
+                            })
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error syncing CoachProfile to Resend:', error)
+                }
+            }
+        ],
     },
     fields: [
         // Required one-to-one relationship with Users

@@ -41,6 +41,47 @@ export const Enrollments: CollectionConfig = {
                 return data
             },
         ],
+        afterChange: [
+            async ({ doc, operation, req }) => {
+                // When a new enrollment is created (or updated to active/completed?)
+                // Tag the user as "isStudent: true" in Resend
+                if (operation === 'create') {
+                    try {
+                        // Find the User associated with the subscriber profile
+                        const subProfile = await req.payload.findByID({
+                            collection: 'subscriber-profiles',
+                            id: doc.subscriber,
+                            req,
+                        })
+
+                        if (subProfile && subProfile.user) {
+                            // subProfile.user can be ID or object depending on depth, usually ID in hooks unless autopopulate
+                            const userId = typeof subProfile.user === 'object' ? subProfile.user.id : subProfile.user
+
+                            const user = await req.payload.findByID({
+                                collection: 'users',
+                                id: String(userId),
+                                req,
+                            })
+
+                            if (user && user.email) {
+                                // Sync to Resend
+                                const { ResendContactService } = await import('../../services/resendContactService')
+                                await ResendContactService.upsertContact({
+                                    email: user.email,
+                                    data: {
+                                        isStudent: true
+                                    }
+                                })
+                                console.log(`🎓 Tagged user ${user.email} as Student in Resend`)
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error syncing enrollment to Resend:', error)
+                    }
+                }
+            }
+        ]
     },
     fields: [
         // Subscriber who enrolled - references Subscriber Profile

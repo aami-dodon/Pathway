@@ -65,6 +65,7 @@ import { translateDatabaseError } from './hooks/errorTranslation'
 import { searchEndpoints } from './endpoints/search'
 import { meilisearchAdminEndpoints } from './endpoints/meilisearch-admin'
 import { initializeMeilisearchIndexes } from './services/meilisearch'
+import { resendWebhookHandler } from './endpoints/resend-webhooks'
 
 // Initialize Meilisearch indexes on startup
 initializeMeilisearchIndexes().catch(console.error)
@@ -176,8 +177,18 @@ export default buildConfig({
     SiteSettings,
     EmailLayout,
 
+    EmailLayout,
+
   ],
-  endpoints: [...searchEndpoints, ...meilisearchAdminEndpoints],
+  endpoints: [
+    ...searchEndpoints,
+    ...meilisearchAdminEndpoints,
+    {
+      path: '/webhooks/resend',
+      method: 'post',
+      handler: resendWebhookHandler,
+    }
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
