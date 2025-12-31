@@ -169,7 +169,7 @@ export async function generateMetadata({ params }: CoursePageProps) {
             title: course.seo?.metaTitle || course.title,
             description: course.seo?.metaDescription || course.shortDescription,
             type: "website",
-            images: course.thumbnail ? [{ url: course.thumbnail.url }] : [],
+            ...(course.thumbnail ? { images: [{ url: course.thumbnail.url }] } : {}),
         },
     };
 }

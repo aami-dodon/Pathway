@@ -2,7 +2,7 @@
  * Design Tokens - Semantic color and spacing tokens
  * 
  * AUTO-GENERATED from theme.css - DO NOT EDIT MANUALLY
- * Generated: 2025-12-31T02:21:55.986Z
+ * Generated: 2025-12-31T21:06:47.732Z
  * 
  * To update: Edit theme.css and run: pnpm generate
  */

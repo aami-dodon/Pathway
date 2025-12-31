@@ -58,6 +58,26 @@ async function getCoachCourses(coachId: string): Promise<Course[]> {
     }
 }
 
+export async function generateMetadata({ params }: PageProps) {
+    const { slug } = await params;
+    const coach = await getCoachBySlug(slug);
+
+    if (!coach) {
+        return { title: "Coach Not Found" };
+    }
+
+    return {
+        title: `${coach.displayName} - Expert Coach at Pathway`,
+        description: coach.bio,
+        openGraph: {
+            title: `${coach.displayName} - Profile`,
+            description: coach.bio,
+            type: "profile",
+            ...(coach.profilePhoto ? { images: [{ url: coach.profilePhoto.url }] } : {}),
+        },
+    };
+}
+
 export default async function CoachProfilePage({ params }: PageProps) {
     const { slug } = await params;
     const coach = await getCoachBySlug(slug);

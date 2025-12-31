@@ -85,9 +85,7 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
             description: post.seo?.metaDescription || post.excerpt,
             type: "article",
             publishedTime: post.publishedAt,
-            images: post.featuredImage
-                ? [{ url: post.featuredImage.url }]
-                : [],
+            ...(post.featuredImage ? { images: [{ url: post.featuredImage.url }] } : {}),
         },
     };
 }

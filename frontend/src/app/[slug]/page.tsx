@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: StaticPageProps) {
             title: page.seo?.metaTitle || page.title,
             description: page.seo?.metaDescription,
             type: "website",
-            images: page.seo?.ogImage ? [{ url: page.seo.ogImage.url }] : [],
+            ...(page.seo?.ogImage ? { images: [{ url: page.seo.ogImage.url }] } : {}),
         },
     };
 }

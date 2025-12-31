@@ -158,7 +158,7 @@ export const getColor = (name: string, mode: 'light' | 'dark' = 'light'): string
 //  GENERATE ASSETS
 // ═══════════════════════════════════════════════════════════════════════════
 
-async function generateAssets(lightVars) {
+async function generateAssets(lightVars, brandName) {
   console.log('\n📦 Generating assets...');
 
   if (!fs.existsSync(ASSETS_DIR)) {
@@ -198,7 +198,7 @@ async function generateAssets(lightVars) {
       ${ICON_PATHS.map(p => `<path d="${p}"/>`).join('\n      ')}
     </svg>
   </g>
-  <text x="${iconSize + gap}" y="${iconSize / 2 + 10}" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="700" fill="${textColor}">Pathway</text>
+  <text x="${iconSize + gap}" y="${iconSize / 2 + 10}" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="700" fill="${textColor}">${brandName}</text>
 </svg>`;
   };
 
@@ -305,6 +305,10 @@ async function generateAssets(lightVars) {
     const ogWidth = 1200;
     const ogHeight = 630;
 
+    // Parse brand metadata for SEO
+    const metadataPath = path.join(BRAND_DIR, 'src/metadata.ts');
+    const metadataContent = fs.readFileSync(metadataPath, 'utf-8');
+
     const escapeXml = (unsafe) => unsafe.replace(/[<>&'"]/g, c => {
       switch (c) {
         case '<': return '&lt;';
@@ -315,8 +319,13 @@ async function generateAssets(lightVars) {
       }
     });
 
-    const title = escapeXml('Pathway');
-    const desc = escapeXml('Empower your learning journey with Pathway. Access high-quality courses, expert coaching, and a supportive community.');
+    const titleMatch = metadataContent.match(/title:\s*'([^']+)'/);
+    const descMatch = metadataContent.match(/description:\s*'([^']+)'/);
+    const nameMatch = metadataContent.match(/name:\s*'([^']+)'/);
+
+    const title = escapeXml(titleMatch ? titleMatch[1] : 'Pathway');
+    const desc = escapeXml(descMatch ? descMatch[1] : 'Empower your learning journey with Pathway.');
+    const brandName = nameMatch ? nameMatch[1] : 'Pathway';
 
     const wrapText = (text, maxChars) => {
       const words = text.split(' ');
@@ -433,8 +442,13 @@ async function main() {
 
   console.log(`\n📖 Parsed ${Object.keys(lightVars).length} light vars, ${Object.keys(darkVars).length} dark vars`);
 
+  const metadataPath = path.join(BRAND_DIR, 'src/metadata.ts');
+  const metadataContent = fs.readFileSync(metadataPath, 'utf-8');
+  const nameMatch = metadataContent.match(/name:\s*'([^']+)'/);
+  const brandName = nameMatch ? nameMatch[1] : 'Pathway';
+
   generateTokensTS(lightVars, darkVars);
-  await generateAssets(lightVars);
+  await generateAssets(lightVars, brandName);
 
   console.log('\n✅ Generation complete!');
 }

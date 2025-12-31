@@ -21,6 +21,7 @@ export const dynamic = 'force-dynamic';
 import { brand } from "@org/brand/metadata";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(brand.metadata.url),
   title: {
     default: brand.metadata.title,
     template: `%s | ${brand.metadata.title}`,
@@ -41,6 +42,13 @@ export const metadata: Metadata = {
         alt: brand.metadata.title,
       },
     ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: brand.metadata.title,
+    description: brand.metadata.description,
+    images: ['/og-image.png'],
+    creator: brand.metadata.author,
   },
   icons: {
     icon: '/favicon.ico',
