@@ -20,6 +20,7 @@ python-dotenv = "^1.0.0"
 nicegui = "^3.4.1"
 openai-whisper = "*"
 setuptools-rust = "*"
+requests = "^2.32.5"
 
 [tool.poetry.scripts]
 init = "app.scripts.init_engine:main"

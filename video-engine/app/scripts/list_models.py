@@ -117,7 +117,28 @@ def list_elevenlabs_resources():
             json.dump(model_data, f, indent=4)
         print(f"✅ Saved {len(model_data)} verified ElevenLabs models to {output_path.name}")
 
+def list_krea_models():
+    print("🎨 Fetching Krea AI models...")
+    from app.services.krea import KreaService
+    
+    api_key = os.getenv("KREA_API_KEY") or "a12ff997-9fb7-4be5-90ce-e8e5e77f841f:2T2F4VWXabLGWm-9A-veTYu9mnJe1L77"
+    krea = KreaService(api_key=api_key)
+    
+    try:
+        model_data = krea.list_models()
+        for m in model_data:
+            print(f"   ✨ Found Krea model: {m['name']} ({m['model_id']})")
+
+        output_path = DATA_DIR / "krea_models.json"
+        with open(output_path, "w") as f:
+            json.dump(model_data, f, indent=4)
+        print(f"✅ Saved {len(model_data)} Krea models to {output_path.name}")
+    except Exception as e:
+        print(f"❌ Error fetching Krea models: {e}")
+
 if __name__ == "__main__":
     list_google_models()
     print("-" * 30)
     list_elevenlabs_resources()
+    print("-" * 30)
+    list_krea_models()

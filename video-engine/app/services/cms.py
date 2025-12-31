@@ -1,5 +1,7 @@
 import requests
+import os
 import json
+import mimetypes
 import logging
 
 logger = logging.getLogger(__name__)
@@ -84,7 +86,7 @@ class CmsService:
             logger.error(f"Failed to fetch coaches: {e}")
             raise
 
-    def create_post(self, title, content_text, excerpt, slug=None, coach_id=None):
+    def create_post(self, title, content_text, excerpt, slug=None, coach_id=None, featured_image_id=None):
         if not self.token:
             self.login()
             
@@ -135,6 +137,9 @@ class CmsService:
         
         if slug:
             payload["slug"] = slug
+            
+        if featured_image_id:
+            payload["featuredImage"] = featured_image_id
 
         try:
             resp = requests.post(
@@ -151,4 +156,47 @@ class CmsService:
             return resp.json()
         except Exception as e:
             logger.error(f"Failed to create post: {e}")
+            raise
+
+    def upload_media(self, file_path, alt_text="Featured Image"):
+        if not self.token:
+            self.login()
+            
+        try:
+            mime_type, _ = mimetypes.guess_type(file_path)
+            mime_type = mime_type or 'image/png'
+            logger.info(f"Uploading media: {file_path} (mime: {mime_type}, alt: {alt_text})")
+            
+            with open(file_path, 'rb') as f:
+                # Payload 3.0 (Next.js) requires metadata in a '_payload' field as a JSON string
+                # when performing multipart/form-data uploads.
+                files = {
+                    'file': (os.path.basename(file_path), f, mime_type)
+                }
+                data = {
+                    '_payload': json.dumps({
+                        'alt': str(alt_text),
+                        'category': 'images'
+                    })
+                }
+                
+                resp = requests.post(
+                    f"{self.api_url}/media",
+                    files=files,
+                    data=data,
+                    headers={"Authorization": f"JWT {self.token}"}
+                )
+                
+                if resp.status_code >= 400:
+                    try:
+                        error_json = resp.json()
+                        error_msg = json.dumps(error_json, indent=2)
+                        logger.error(f"CMS Media Upload Error Detail: {error_msg}")
+                        raise Exception(f"CMS Upload Failed ({resp.status_code}): {error_msg}")
+                    except:
+                        logger.error(f"CMS Media Upload Error Body: {resp.text}")
+                        raise Exception(f"CMS Upload Failed ({resp.status_code}): {resp.text}")
+                return resp.json()
+        except Exception as e:
+            logger.error(f"Failed to upload media: {e}")
             raise

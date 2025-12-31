@@ -25,7 +25,8 @@ STEP_CONFIG = {
     9: {"title": "Crop", "subtitle": "Process video length", "icon": "content_cut", "field": None, "action": "CONTINUE"},
     10: {"title": "Mix", "subtitle": "Add background music", "icon": "library_music", "field": None, "action": "CONTINUE"},
     11: {"title": "Render", "subtitle": "Final video with VFX", "icon": "movie", "field": None, "action": "CONTINUE"},
-    12: {"title": "Publish", "subtitle": "Push to CMS", "icon": "publish", "field": None, "action": "PUBLISH"},
+    12: {"title": "Image", "subtitle": "Generate blog header", "icon": "image", "field": None, "action": "CONTINUE"},
+    13: {"title": "Publish", "subtitle": "Push to CMS", "icon": "publish", "field": None, "action": "PUBLISH"},
 }
 
 class State:
@@ -45,13 +46,16 @@ class State:
         # Load available voices and models
         voices_file = data_dir / "elevenlabs_voices.json"
         tts_models_file = data_dir / "elevenlabs_models.json"
+        krea_models_file = data_dir / "krea_models.json"
         
         self.voices = self._load_json(voices_file, [])
         self.tts_models = self._load_json(tts_models_file, [])
+        self.krea_models = self._load_json(krea_models_file, [])
         
         # Map voice/model names for UI: {value: label}
         self.voice_options = {v["voice_id"]: v["name"] for v in self.voices}
         self.tts_model_options = {m["model_id"]: m["name"] for m in self.tts_models}
+        self.krea_model_options = {m["model_id"]: m["name"] for m in self.krea_models}
         
         # Load Brand Identity
         self.brand_color = "#3b82f6" # Default primary
@@ -67,6 +71,7 @@ class State:
         self.secrets = {
             "google_api_key": os.getenv("GOOGLE_API_KEY", ""),
             "elevenlabs_api_key": os.getenv("ELEVENLABS_API_KEY", ""),
+            "krea_api_key": os.getenv("KREA_API_KEY", ""),
             "cms_url": os.getenv("CMS_API_URL", "https://core.preppathway.com/api"),
             "cms_email": os.getenv("CMS_EMAIL", ""),
             "cms_password": os.getenv("CMS_PASSWORD", "")
@@ -103,9 +108,9 @@ class State:
         # Check in reverse order (highest step first)
         if (outputs / f"{slug}_final.mp4").exists():
             if content.get("cms_post_url"):
-                self.current_step = 12
+                self.current_step = 13
             else:
-                self.current_step = 11
+                self.current_step = 12
         elif (outputs / f"{slug}_mixed.mp4").exists():
             self.current_step = 10
         elif (outputs / f"{slug}_cropped.mp4").exists():
@@ -209,6 +214,7 @@ class State:
             mapping = {
                 "GOOGLE_API_KEY": self.secrets.get("google_api_key"),
                 "ELEVENLABS_API_KEY": self.secrets.get("elevenlabs_api_key"),
+                "KREA_API_KEY": self.secrets.get("krea_api_key"),
                 "CMS_API_URL": self.secrets.get("cms_url"),
                 "CMS_EMAIL": self.secrets.get("cms_email"),
                 "CMS_PASSWORD": self.secrets.get("cms_password"),
@@ -431,6 +437,10 @@ def settings_drawer(state: State):
                      on_change=lambda e: state.secrets.update({'elevenlabs_api_key': e.value})) \
                 .classes('w-full').props('dark filled dense')
             
+            ui.input('Krea API Key', password=True, value=state.secrets['krea_api_key'],
+                     on_change=lambda e: state.secrets.update({'krea_api_key': e.value})) \
+                .classes('w-full').props('dark filled dense')
+            
             async def test_google_key():
                 ui.notify('Testing Google API Key...', type='info')
                 if await asyncio.to_thread(GeminiService.validate_api_key, state.secrets['google_api_key']):
@@ -453,6 +463,19 @@ def settings_drawer(state: State):
                 ui.button('Test Google', on_click=test_google_key) \
                     .classes('flex-1 bg-slate-800 hover:bg-slate-700 text-[10px] py-1')
                 ui.button('Test Eleven', on_click=test_eleven_key) \
+                    .classes('flex-1 bg-slate-800 hover:bg-slate-700 text-[10px] py-1')
+                
+                async def test_krea_key():
+                    ui.notify('Testing Krea API Key...', type='info')
+                    from app.services.krea import KreaService
+                    if await asyncio.to_thread(KreaService.validate_api_key, state.secrets['krea_api_key']):
+                        state.save_secrets()
+                        state.update_env_file()
+                        ui.notify('✅ Krea API Key Valid & Saved!', type='positive')
+                    else:
+                        ui.notify('❌ Invalid Krea API Key', type='negative')
+
+                ui.button('Test Krea', on_click=test_krea_key) \
                     .classes('flex-1 bg-slate-800 hover:bg-slate-700 text-[10px] py-1')
 
             ui.separator().classes('bg-slate-800')
@@ -521,11 +544,11 @@ def wizard_navigation(state: State, on_new_job):
             ui.button('NEW JOB', icon='add', on_click=on_new_job) \
                 .props('flat color=amber') \
                 .classes('text-xs font-bold px-2 py-1 rounded-lg hover:bg-amber-500/10 transition-all')
-            ui.label(f'Step {state.current_step} of 11').classes('text-[10px] font-bold text-slate-500 uppercase tracking-tighter')
+            ui.label(f'Step {state.current_step} of 13').classes('text-[10px] font-bold text-slate-500 uppercase tracking-tighter')
         
-        # Progress Navigation - 12 Steps with Badges
+        # Progress Navigation - 13 Steps with Badges
         with ui.row().classes('w-full justify-center gap-1 flex-wrap bg-slate-900/40 p-2 rounded-2xl border border-slate-800/30'):
-            for step_num in range(1, 13):
+            for step_num in range(1, 14):
                 step_info = STEP_CONFIG[step_num]
                 is_active = state.current_step == step_num
                 is_completed = state.current_step > step_num
@@ -625,7 +648,7 @@ def global_progress_indicator(state: State):
                     
                     ui.linear_progress(value=p_val/100).classes('w-full h-1.5 rounded-full').props(f'color="{state.brand_color}"')
 
-def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_video, on_next_step, on_regenerate, on_download_source=None, on_generate_transcript=None, on_publish=None):
+def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_video, on_next_step, on_regenerate, on_download_source=None, on_generate_transcript=None, on_publish=None, on_generate_images=None):
     """11-step content production wizard."""
     config = STEP_CONFIG.get(state.current_step, STEP_CONFIG[1])
     slug = state.content.get("slug", "")
@@ -768,8 +791,40 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                             ui.icon('movie').classes('text-6xl').style(f'color: {state.brand_color}')
                             ui.label('Ready for Final Render').classes('text-slate-500 text-xs')
 
-                # STEP 12: Publish
+                # STEP 12: Image Generation
                 elif state.current_step == 12:
+                    with ui.column().classes('w-full gap-6 py-4'):
+                        with ui.row().classes('w-full justify-between items-center'):
+                            ui.label('Select Model & Generate Variants').classes('text-sm font-bold text-slate-400')
+                            ui.select(options=state.krea_model_options, label="Krea Model", value=state.content.get("krea_model", "bfl/flux-1-dev")) \
+                                .classes('w-64').props('dark filled dense').bind_value(state.content, "krea_model")
+                        
+                        # Display generated variants
+                        images = state.content.get("generated_images", [])
+                        if images:
+                            with ui.row().classes('w-full gap-4 justify-center'):
+                                for idx, img_url in enumerate(images):
+                                    with ui.column().classes('items-center gap-2'):
+                                        ui.image(img_url).classes('w-64 h-64 rounded-xl shadow-lg cursor-pointer hover:scale-105 transition-all') \
+                                            .on('click', lambda u=img_url: state.content.update({"featured_image_url": u}))
+                                        ui.radio(['Select'], value='Select' if state.content.get("featured_image_url") == img_url else None) \
+                                            .on('click', lambda u=img_url: state.content.update({"featured_image_url": u}))
+                        
+                        else:
+                            with ui.column().classes('w-full items-center p-12 bg-slate-900/30 rounded-2xl border border-dashed border-slate-700'):
+                                ui.icon('image', size='48px').classes('text-slate-600 mb-2')
+                                ui.label('No images generated yet').classes('text-amber-500 mb-4')
+                        
+                        with ui.row().classes('w-full justify-center gap-4'):
+                            ui.button('GENERATE IMAGE', icon='auto_awesome', on_click=on_generate_images) \
+                                .classes('px-6 py-2 rounded-xl').style(f'background: {state.brand_color}') \
+                                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+                            
+                            # Custom Upload
+                            ui.upload(label="Upload Custom Header", on_upload=lambda e: ui.notify(f'Uploaded {e.name}')).classes('w-64').props('dark flat')
+
+                # STEP 13: Publish
+                elif state.current_step == 13:
                     post_url = state.content.get("cms_post_url")
                     with ui.column().classes('w-full items-center gap-6 py-8'):
                         ui.icon('publish').classes('text-6xl').style(f'color: {state.brand_color}')
@@ -848,7 +903,7 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                         .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
                 
                 # Dynamic Action Button logic
-                if state.current_step < 12:
+                if state.current_step < 13:
                     action_label = config["action"]
                     
                     if state.current_step == 5:
@@ -917,12 +972,25 @@ def content_editor_panel(state: State, on_back, on_generate_audio, on_generate_v
                                 .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
                                 .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
 
+                    elif state.current_step == 12:
+                        # Logic for Step 12: Image
+                        if state.content.get("featured_image_url") or state.content.get("featured_image_path"):
+                            ui.button('CONTINUE', icon='arrow_forward', on_click=on_next_step) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
+                        else:
+                            # Use bfl/flux-1-dev as default if not set
+                            if not state.content.get("krea_model"):
+                                state.content["krea_model"] = "bfl/flux-1-dev"
+                            ui.button('GENERATE IMAGES', icon='image', on_click=on_generate_images) \
+                                .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;') \
+                                .bind_enabled_from(state, 'is_processing', backward=lambda x: not x)
+
                     else:
                         # Default simple next
                         ui.button(action_label, icon='arrow_forward', on_click=on_next_step) \
                             .classes('px-6 py-3 font-bold rounded-xl').style(f'background: {state.brand_color}; color: black;')
                 else:
-                    # Step 12: Publish or New Job
+                    # Step 13: Publish or New Job
                     post_url = state.content.get("cms_post_url")
                     if post_url:
                         ui.button('NEW JOB', icon='add', on_click=on_back) \

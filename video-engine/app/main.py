@@ -1,6 +1,7 @@
 import os
 import sys
 import uuid
+import requests
 import asyncio
 import logging
 from pathlib import Path
@@ -9,6 +10,7 @@ from app.ui_components import State, settings_drawer, generator_panel, log_termi
 from app.workflow import VideoWorkflow
 from app.services.llm import GeminiService
 from app.services.tts import ElevenLabsService
+from app.services.krea import KreaService
 from app.services.cms import CmsService
 from app.utils.slug import slugify
 import yaml
@@ -447,6 +449,67 @@ async def start_transcription():
     finally:
         state.is_processing = False
 
+async def start_image_generation():
+    """Generate image variants using Krea."""
+    topic = state.content.get('topic', 'Image')
+    slug = state.content.get('slug', slugify(topic))
+    job_id = state.current_job_id
+    
+    state.is_processing = True
+    state.logs += f"\n🎨 Generating Image variants for: {topic}...\n"
+    
+    # Capture stdout/stderr
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    sys.stdout = NiceGUIOutputWrapper(state)
+    sys.stderr = sys.stdout
+
+    try:
+        krea = KreaService(api_key=state.secrets.get("krea_api_key"))
+        model_id = state.content.get("krea_model", "bfl/flux-1-dev")
+        
+        # Use blog excerpt or topic as prompt
+        prompt = state.content.get("excerpt", topic)
+        state.logs += f"Requesting {model_id} variants...\n"
+        
+        # Generate 16:9 variant
+        variants = await asyncio.to_thread(krea.generate_image, prompt=prompt, model_id=model_id, variants=1, resolution="1440x810")
+        
+        # Download images locally immediately to reduce API usage and guarantee display
+        local_variants = []
+        for idx, remote_url in enumerate(variants):
+            try:
+                state.logs += f"📥 Downloading variant {idx+1}...\n"
+                img_resp = requests.get(remote_url, timeout=30)
+                img_resp.raise_for_status()
+                
+                # Use a specific filename for variants
+                local_name = f"{slug}_header_v{idx+1}.png"
+                local_path = OUTPUTS_DIR / local_name
+                local_path.write_bytes(img_resp.content)
+                local_variants.append(f"/outputs/{local_name}")
+                state.logs += f"✅ Saved locally: {local_name}\n"
+            except Exception as e:
+                logger.error(f"Failed to download variant {idx+1}: {e}")
+                local_variants.append(remote_url) # Fallback to remote if download fails
+
+        state.content["generated_images"] = local_variants
+        if local_variants:
+            state.content["featured_image_url"] = local_variants[0] # Default to first (local URL)
+            
+        state.update_job(job_id, content=state.content, progress=95)
+        state.logs += f"✅ Processed {len(local_variants)} images.\n"
+        ui.notify(f'Generated {len(local_variants)} image variants!', type='positive')
+        ui.navigate.to('/')
+    except Exception as e:
+        logger.error(f"Image generation failed: {e}")
+        state.logs += f"\n❌ IMAGE ERROR: {str(e)}\n"
+        ui.notify(f"Image generation failed: {str(e)}", type='negative')
+    finally:
+        state.is_processing = False
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+
 async def start_cms_publish():
     """Publish content to CMS."""
     topic = state.content.get('topic', 'Content')
@@ -478,6 +541,31 @@ async def start_cms_publish():
         slug = state.content.get("slug")
         coach_id = state.content.get("cms_coach_id")
         
+        featured_image_id = None
+        img_url = state.content.get("featured_image_url") # Could be /outputs/... or a remote URL
+        
+        if img_url:
+            state.logs += f"🖼️ Preparing header image for CMS: {img_url}\n"
+            
+            # Determine correct local file path
+            if img_url.startswith("/outputs/"):
+                img_path = OUTPUTS_DIR / img_url.replace("/outputs/", "")
+            else:
+                # If it's still a remote URL (e.g. from a custom upload or failed download), download it now
+                state.logs += "📥 Downloading image from remote URL...\n"
+                img_resp = requests.get(img_url)
+                img_resp.raise_for_status()
+                img_path = OUTPUTS_DIR / f"{slug}_header_final.jpg"
+                img_path.write_bytes(img_resp.content)
+            
+            if img_path.exists():
+                # Upload to media collection
+                media_res = await asyncio.to_thread(cms.upload_media, str(img_path), alt_text=f"Header for {topic}")
+                featured_image_id = media_res.get("id") or media_res.get("doc", {}).get("id")
+                state.logs += f"✅ Image uploaded to CMS, ID: {featured_image_id}\n"
+            else:
+                state.logs += "⚠️ Header image path not found, skipping upload.\n"
+
         # Run in thread
         res = await asyncio.to_thread(
             cms.create_post, 
@@ -485,7 +573,8 @@ async def start_cms_publish():
             content_text=blog_content, 
             excerpt=excerpt,
             slug=slug,
-            coach_id=coach_id
+            coach_id=coach_id,
+            featured_image_id=featured_image_id
         )
         
         post_id = res.get("id") or res.get("doc", {}).get("id")
@@ -498,7 +587,7 @@ async def start_cms_publish():
         state.content["cms_post_url"] = post_url
         
         state.update_job(job_id, content=state.content)
-        state.current_step = 12
+        state.current_step = 13
         
         state.logs += f"✅ Published successfully! ID: {post_id}\n"
         ui.notify('Published to CMS successfully!', type='positive')
@@ -515,7 +604,7 @@ async def start_cms_publish():
 
 def go_next_step():
     """Advance to next step in the wizard."""
-    if state.current_step < 12:
+    if state.current_step < 13:
         state.current_step += 1
         # Update furthest reached step
         state.max_step = max(state.max_step, state.current_step)
@@ -619,7 +708,8 @@ def index():
                     on_next_step=go_next_step,
                     on_regenerate=regenerate_content,
                     on_generate_transcript=start_transcription,
-                    on_publish=start_cms_publish
+                    on_publish=start_cms_publish,
+                    on_generate_images=start_image_generation
                 )
 
 # Startup check
