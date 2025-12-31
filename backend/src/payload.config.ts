@@ -1,7 +1,7 @@
 // Force rebuild
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import { resendAdapter } from '@payloadcms/email-resend'
 import { s3Storage } from '@payloadcms/storage-s3'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -134,18 +134,10 @@ export default buildConfig({
       }
     },
   },
-  email: nodemailerAdapter({
+  email: resendAdapter({
     defaultFromAddress: process.env.EMAIL_FROM || '',
     defaultFromName: brand.name,
-    transportOptions: {
-      host: process.env.EMAIL_SMTP_HOST,
-      port: Number(process.env.EMAIL_SMTP_PORT) || 465,
-      secure: ['true', '1'].includes((process.env.EMAIL_SMTP_SECURE || '').toLowerCase()),
-      auth: {
-        user: process.env.EMAIL_SMTP_USER,
-        pass: process.env.EMAIL_SMTP_PASS,
-      },
-    },
+    apiKey: process.env.RESEND_API_KEY || '',
   }),
   collections: [
     // Administration

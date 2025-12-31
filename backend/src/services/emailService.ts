@@ -1,4 +1,14 @@
 import { Payload } from 'payload'
+import { Resend } from 'resend'
+
+let _resend: Resend | null = null
+function getResend() {
+    if (!_resend) {
+        _resend = new Resend(process.env.RESEND_API_KEY)
+    }
+    return _resend
+}
+
 
 export interface EmailOptions {
     to: string
@@ -124,7 +134,7 @@ export class EmailService {
                 subject: renderedSubject,
                 html: finalHtml,
                 fromName: options.fromName,
-                fromAddress: options.fromAddress,
+                fromAddress: options.fromAddress || process.env.EMAIL_FROM,
             })
 
             return true
@@ -133,4 +143,31 @@ export class EmailService {
             return false
         }
     }
+
+    /**
+     * Send batch emails using Resend SDK directly
+     */
+    static async sendBatch(emails: { to: string; subject: string; html: string; from?: string }[]): Promise<boolean> {
+        try {
+            const batch = emails.map(email => ({
+                from: email.from || `Anirban <${process.env.EMAIL_FROM}>`,
+                to: [email.to],
+                subject: email.subject,
+                html: email.html,
+            }))
+
+            const { data, error } = await getResend().batch.send(batch)
+
+            if (error) {
+                console.error('Resend batch send error:', error)
+                return false
+            }
+
+            return true
+        } catch (error) {
+            console.error('Failed to send batch emails:', error)
+            return false
+        }
+    }
 }
+
