@@ -394,10 +394,17 @@ export interface SiteSettingsData {
         showNewsletter?: boolean;
     };
     socialLinks?: {
+        facebook?: string;
+        instagram?: string;
         twitter?: string;
         linkedin?: string;
-        instagram?: string;
+        youtube?: string;
+        tiktok?: string;
+        threads?: string;
         github?: string;
+        discord?: string;
+        whatsapp?: string;
+        telegram?: string;
     };
 }
 

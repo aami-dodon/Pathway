@@ -65,14 +65,9 @@ export const SiteSettings: GlobalConfig = {
             label: 'Global Social Links',
             fields: [
                 {
-                    name: 'twitter',
+                    name: 'facebook',
                     type: 'text',
-                    label: 'Twitter URL',
-                },
-                {
-                    name: 'linkedin',
-                    type: 'text',
-                    label: 'LinkedIn URL',
+                    label: 'Facebook URL',
                 },
                 {
                     name: 'instagram',
@@ -80,9 +75,49 @@ export const SiteSettings: GlobalConfig = {
                     label: 'Instagram URL',
                 },
                 {
+                    name: 'twitter',
+                    type: 'text',
+                    label: 'X (formerly Twitter) URL',
+                },
+                {
+                    name: 'linkedin',
+                    type: 'text',
+                    label: 'LinkedIn URL',
+                },
+                {
+                    name: 'youtube',
+                    type: 'text',
+                    label: 'YouTube URL',
+                },
+                {
+                    name: 'tiktok',
+                    type: 'text',
+                    label: 'TikTok URL',
+                },
+                {
+                    name: 'threads',
+                    type: 'text',
+                    label: 'Threads URL',
+                },
+                {
                     name: 'github',
                     type: 'text',
                     label: 'GitHub URL',
+                },
+                {
+                    name: 'discord',
+                    type: 'text',
+                    label: 'Discord URL',
+                },
+                {
+                    name: 'whatsapp',
+                    type: 'text',
+                    label: 'WhatsApp URL',
+                },
+                {
+                    name: 'telegram',
+                    type: 'text',
+                    label: 'Telegram URL',
                 },
             ],
         },

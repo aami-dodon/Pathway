@@ -10,7 +10,7 @@ import sharp from 'sharp'
 import { brand } from '@org/brand/metadata'
 
 // Administration collections
-import { Users, Media } from './collections/administration'
+import { Users, Media, EmailTemplates } from './collections/administration'
 
 // User Profiles - separate from CMS for LMS reuse
 import { CoachProfile, SubscriberProfile } from './collections/user-profiles'
@@ -43,6 +43,7 @@ import { HeaderNav } from './globals/HeaderNav'
 import { FooterContent } from './globals/FooterContent'
 import { MeilisearchAdmin } from './globals/MeilisearchAdmin'
 import { SiteSettings } from './globals/SiteSettings'
+import { EmailLayout } from './globals/EmailLayout'
 
 
 const filename = fileURLToPath(import.meta.url)
@@ -150,6 +151,7 @@ export default buildConfig({
     // Administration
     Users,
     Media,
+    EmailTemplates,
     // User Profiles
     CoachProfile,
     SubscriberProfile,
@@ -180,6 +182,7 @@ export default buildConfig({
     FooterContent,
     MeilisearchAdmin,
     SiteSettings,
+    EmailLayout,
 
   ],
   endpoints: [...searchEndpoints, ...meilisearchAdminEndpoints],

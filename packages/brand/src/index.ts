@@ -15,7 +15,9 @@
 // Re-export everything from submodules
 export * from './tokens.js';
 export * from './metadata.js';
+export * from './utils.js';
 
 // Named exports for convenience
 export { tokens, getColorNames, getColor } from './tokens.js';
 export { brand, brandName, iconName, metadata, typography, iconPaths, generateIconSvg } from './metadata.js';
+export { oklchToHex } from './utils.js';

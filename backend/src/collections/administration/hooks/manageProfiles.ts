@@ -1,4 +1,5 @@
 import type { CollectionAfterChangeHook } from 'payload'
+import { EmailService } from '../../../services/emailService'
 
 export const manageProfiles: CollectionAfterChangeHook = async ({
     doc,
@@ -12,6 +13,18 @@ export const manageProfiles: CollectionAfterChangeHook = async ({
     }
 
     const { id: userId, role, email } = doc
+
+    // 1. Send Welcome Email on Creation
+    if (operation === 'create') {
+        await EmailService.send(payload, {
+            to: email,
+            templateSlug: 'welcome-email',
+            data: {
+                email,
+                role,
+            },
+        })
+    }
 
     // derive default displayName from email
     const displayName = email ? email.split('@')[0] : 'User'

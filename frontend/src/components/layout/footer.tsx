@@ -2,7 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Github, Twitter, Linkedin, Send, Instagram } from "lucide-react";
+import {
+    Github,
+    Twitter,
+    Linkedin,
+    Send,
+    Instagram,
+    Facebook,
+    Youtube,
+    MessageCircle,
+    Music2,
+    AtSign,
+    Disc
+} from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +29,20 @@ interface FooterProps {
     };
     socialLinks?: SiteSettingsData["socialLinks"];
 }
+
+const SOCIAL_PLATFORMS = [
+    { key: 'facebook', icon: Facebook, label: 'Facebook' },
+    { key: 'instagram', icon: Instagram, label: 'Instagram' },
+    { key: 'twitter', icon: Twitter, label: 'X (Twitter)' },
+    { key: 'linkedin', icon: Linkedin, label: 'LinkedIn' },
+    { key: 'youtube', icon: Youtube, label: 'YouTube' },
+    { key: 'tiktok', icon: Music2, label: 'TikTok' },
+    { key: 'threads', icon: AtSign, label: 'Threads' },
+    { key: 'github', icon: Github, label: 'GitHub' },
+    { key: 'discord', icon: Disc, label: 'Discord' },
+    { key: 'whatsapp', icon: MessageCircle, label: 'WhatsApp' },
+    { key: 'telegram', icon: Send, label: 'Telegram' },
+] as const;
 
 export function Footer({ footerData, socialLinks }: FooterProps) {
     const [email, setEmail] = useState("");
@@ -63,51 +89,25 @@ export function Footer({ footerData, socialLinks }: FooterProps) {
                         <p className="mt-4 text-sm text-muted-foreground max-w-xs">
                             {data.description}
                         </p>
-                        <div className="mt-6 flex gap-4">
-                            {socialLinks?.twitter && (
-                                <a
-                                    href={socialLinks.twitter}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Twitter className="h-5 w-5" />
-                                    <span className="sr-only">Twitter</span>
-                                </a>
-                            )}
-                            {socialLinks?.github && (
-                                <a
-                                    href={socialLinks.github}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Github className="h-5 w-5" />
-                                    <span className="sr-only">GitHub</span>
-                                </a>
-                            )}
-                            {socialLinks?.linkedin && (
-                                <a
-                                    href={socialLinks.linkedin}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Linkedin className="h-5 w-5" />
-                                    <span className="sr-only">LinkedIn</span>
-                                </a>
-                            )}
-                            {socialLinks?.instagram && (
-                                <a
-                                    href={socialLinks.instagram}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Instagram className="h-5 w-5" />
-                                    <span className="sr-only">Instagram</span>
-                                </a>
-                            )}
+                        <div className="mt-6 flex flex-wrap gap-4">
+                            {SOCIAL_PLATFORMS.map((platform) => {
+                                const href = socialLinks?.[platform.key as keyof NonNullable<FooterProps["socialLinks"]>];
+                                if (!href) return null;
+
+                                const Icon = platform.icon;
+                                return (
+                                    <a
+                                        key={platform.key}
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        <Icon className="h-5 w-5" />
+                                        <span className="sr-only">{platform.label}</span>
+                                    </a>
+                                );
+                            })}
                         </div>
                     </div>
 

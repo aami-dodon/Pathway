@@ -1,4 +1,5 @@
 import { CollectionConfig, APIError } from 'payload'
+import { EmailService } from '../../services/emailService'
 import { timezoneField } from '../../fields/timezone'
 
 
@@ -197,6 +198,57 @@ export const CoachingSessions: CollectionConfig = {
                 }
 
                 return data
+            },
+        ],
+        afterChange: [
+            async ({ doc, operation, req, previousDoc }) => {
+                // 1. New Booking Notification
+                if (operation === 'create') {
+                    // Get coach name
+                    let coachName = 'Your Coach'
+                    if (doc.coach) {
+                        const coachId = typeof doc.coach === 'object' ? doc.coach.id : doc.coach
+                        const coachProfile = await req.payload.findByID({
+                            collection: 'coach-profiles',
+                            id: coachId,
+                            req,
+                        })
+                        if (coachProfile) {
+                            coachName = (coachProfile as any).name || coachName
+                        }
+                    }
+
+                    // To Student
+                    await EmailService.send(req.payload, {
+                        to: doc.bookerEmail,
+                        templateSlug: 'booking-confirmation',
+                        data: {
+                            bookerName: doc.bookerName,
+                            sessionTitle: doc.sessionTitle,
+                            scheduledAt: new Date(doc.scheduledAt).toLocaleString(),
+                            duration: doc.duration,
+                            topic: doc.topic,
+                            coachName: coachName,
+                        },
+                    })
+
+                    // To Coach (if coach has an email in profile or user)
+                    // For now assuming we can find coach email
+                }
+
+                // 2. Booking Confirmed (Status change to confirmed)
+                if (operation === 'update' && doc.status === 'confirmed' && previousDoc.status !== 'confirmed') {
+                    await EmailService.send(req.payload, {
+                        to: doc.bookerEmail,
+                        templateSlug: 'booking-confirmed',
+                        data: {
+                            bookerName: doc.bookerName,
+                            sessionTitle: doc.sessionTitle,
+                            scheduledAt: new Date(doc.scheduledAt).toLocaleString(),
+                            meetingLink: doc.meetingLink,
+                        },
+                    })
+                }
             },
         ],
     },

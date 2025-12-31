@@ -19,9 +19,9 @@
     "stop": "lsof -t -i :9006 | xargs kill -9 || true"
   },
   "dependencies": {
-    "@org/brand": "workspace:*",
     "@aws-sdk/client-s3": "^3.958.0",
     "@aws-sdk/s3-request-presigner": "^3.958.0",
+    "@org/brand": "workspace:*",
     "@payloadcms/db-postgres": "3.69.0",
     "@payloadcms/email-nodemailer": "^3.69.0",
     "@payloadcms/next": "3.69.0",
@@ -50,6 +50,7 @@
     "eslint-config-next": "15.4.7",
     "jsdom": "26.1.0",
     "prettier": "^3.4.2",
+    "tsx": "^4.21.0",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "5.1.4",
     "vitest": "3.2.3"

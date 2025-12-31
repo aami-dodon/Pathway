@@ -18,6 +18,7 @@ import { seedCoachingSessions } from './bookings.js'
 import { seedHomePage } from './home-page.js'
 import { seedSiteContent } from './site-content.js'
 import { seedContactSubmissions } from './contact-submissions.js'
+import { seedEmails } from './emails.js'
 
 async function seed() {
     const nodeEnv = process.env.NODE_ENV || 'development'
@@ -95,9 +96,13 @@ async function seed() {
         console.log('✅ Site Content seeded\n')
 
         // Phase 9: Seed Contact Submissions
-        console.log('📦 Phase 9: Seeding Contact Submissions...')
         const submissions = await seedContactSubmissions(payload)
         console.log('✅ Contact Submissions seeded\n')
+
+        // Phase 10: Seed Email Templates & Layout
+        console.log('📦 Phase 10: Seeding Email Templates & Layout...')
+        await seedEmails(payload)
+        console.log('✅ Email Templates & Layout seeded\n')
 
         console.log('🎉 Demo data seeding complete!')
         console.log('\n📊 Summary:')
