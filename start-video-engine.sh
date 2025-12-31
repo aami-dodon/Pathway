@@ -12,6 +12,10 @@ NC='\033[0m'
 
 echo -e "${BLUE}🚀 Starting Pathway Video Engine Setup...${NC}"
 
+# 0. Update Codebase
+echo -e "${BLUE}📡 Pulling latest changes from git...${NC}"
+git pull || echo -e "${YELLOW}⚠️ Git pull failed, proceeding with current version.${NC}"
+
 # 1. Environment & Path Setup
 export PATH="$HOME/.local/bin:$PATH"
 
