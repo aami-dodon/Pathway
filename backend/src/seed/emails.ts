@@ -161,6 +161,62 @@ export const seedEmails = async (payload: Payload) => {
         <p><strong>Meeting Link:</strong> <a href="{meetingLink}" class="primary-color">{meetingLink}</a></p>
         <a href="{meetingLink}" class="button">Join Call</a>
       `.trim(),
+    },
+    {
+      slug: 'booking-coach-notification',
+      name: 'New Booking Request (Coach)',
+      subject: 'New Booking Request: {sessionTitle}',
+      body: `
+        <h2>New Session Request</h2>
+        <p>Hi {coachName},</p>
+        <p>You have a new booking request from <strong>{bookerName}</strong>.</p>
+        <div style="background: ${mutedBackgroundColor}; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid ${borderColor};">
+          <p><strong>Session:</strong> {sessionTitle}</p>
+          <p><strong>Time:</strong> {scheduledAt}</p>
+          <p><strong>Topic:</strong> {topic}</p>
+        </div>
+        <p>Please log in to your dashboard to accept or decline this request.</p>
+        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/coaching" class="button">Manage Sessions</a>
+      `.trim(),
+    },
+    {
+      slug: 'booking-cancellation',
+      name: 'Booking Cancelled',
+      subject: 'Cancelled: {sessionTitle}',
+      body: `
+        <h2>Session Cancelled</h2>
+        <p>Hi {recipientName},</p>
+        <p>The session <strong>{sessionTitle}</strong> scheduled for <strong>{scheduledAt}</strong> has been cancelled.</p>
+        <div style="background: ${mutedBackgroundColor}; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid ${borderColor};">
+          <h4 style="margin-top: 0;">Reason:</h4>
+          <p style="margin-bottom: 0;">{reason}</p>
+        </div>
+        <p>If you have any questions, please contact support.</p>
+      `.trim(),
+    },
+    {
+      slug: 'course-enrollment',
+      name: 'Course Enrollment',
+      subject: 'Welcome to {courseTitle}!',
+      body: `
+        <h2>Welcome to the Course!</h2>
+        <p>Hi {subscriberName},</p>
+        <p>You have successfully enrolled in <strong>{courseTitle}</strong>.</p>
+        <p>We're excited to help you learn and grow.</p>
+        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/courses/{courseSlug}" class="button">Start Learning</a>
+      `.trim(),
+    },
+    {
+      slug: 'course-completion',
+      name: 'Course Completion',
+      subject: 'Congratulations! You completed {courseTitle}',
+      body: `
+        <h2>Congratulations! 🎉</h2>
+        <p>Hi {subscriberName},</p>
+        <p>You have successfully completed <strong>{courseTitle}</strong>.</p>
+        <p>We hope you enjoyed the journey. Be sure to check out your certificate if applicable.</p>
+        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/learning" class="button">View Dashboard</a>
+      `.trim(),
     }
   ]
 

@@ -17,6 +17,13 @@ export interface EmailOptions {
     data: Record<string, any>
     fromName?: string
     fromAddress?: string
+    attachments?: {
+        filename: string
+        content?: string | Buffer
+        path?: string
+        contentType?: string
+        encoding?: string
+    }[]
 }
 
 export class EmailService {
@@ -135,6 +142,7 @@ export class EmailService {
                 html: finalHtml,
                 fromName: options.fromName,
                 fromAddress: options.fromAddress || process.env.EMAIL_FROM,
+                attachments: options.attachments,
             })
 
             return true

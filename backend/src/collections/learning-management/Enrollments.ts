@@ -42,22 +42,67 @@ export const Enrollments: CollectionConfig = {
             },
         ],
         afterChange: [
-            async ({ doc, operation, req }) => {
-                // When a new enrollment is created (or updated to active/completed?)
-                // Tag the user as "isStudent: true" in Resend
+            async ({ doc, operation, req, previousDoc }) => {
+                const { EmailService } = await import('../../services/emailService')
+
+                // Helper to get user email from subscriber
+                const getUserEmailAndName = async (subscriberId: string | any) => {
+                    let email = ''
+                    let name = 'Learner'
+                    try {
+                        const id = typeof subscriberId === 'object' ? subscriberId.id : subscriberId
+                        const subProfile = await req.payload.findByID({
+                            collection: 'subscriber-profiles',
+                            id,
+                            req,
+                        })
+
+                        if (subProfile) {
+                            name = subProfile.displayName || 'Learner'
+                            if (subProfile.user) {
+                                const userId = typeof subProfile.user === 'object' ? subProfile.user.id : subProfile.user
+                                const user = await req.payload.findByID({
+                                    collection: 'users',
+                                    id: String(userId),
+                                    req,
+                                })
+                                if (user) email = user.email
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error fetching user email', e)
+                    }
+                    return { email, name }
+                }
+
+                // Helper to get course title
+                const getCourseTitleAndSlug = async (courseId: string | any) => {
+                    try {
+                        const id = typeof courseId === 'object' ? courseId.id : courseId
+                        const course = await req.payload.findByID({
+                            collection: 'courses',
+                            id,
+                            req,
+                        })
+                        return { title: course?.title || 'Course', slug: course?.slug || '#' }
+                    } catch (e) {
+                        return { title: 'Course', slug: '#' }
+                    }
+                }
+
+                // 1. Course Enrollment (Create)
                 if (operation === 'create') {
+                    // Existing Resend Logic
                     try {
                         // Find the User associated with the subscriber profile
                         const subProfile = await req.payload.findByID({
                             collection: 'subscriber-profiles',
-                            id: doc.subscriber,
+                            id: typeof doc.subscriber === 'object' ? doc.subscriber.id : doc.subscriber,
                             req,
                         })
 
                         if (subProfile && subProfile.user) {
-                            // subProfile.user can be ID or object depending on depth, usually ID in hooks unless autopopulate
                             const userId = typeof subProfile.user === 'object' ? subProfile.user.id : subProfile.user
-
                             const user = await req.payload.findByID({
                                 collection: 'users',
                                 id: String(userId),
@@ -78,6 +123,47 @@ export const Enrollments: CollectionConfig = {
                         }
                     } catch (error) {
                         console.error('Error syncing enrollment to Resend:', error)
+                    }
+
+                    // Email Notification Logic
+                    try {
+                        const { email, name } = await getUserEmailAndName(doc.subscriber)
+                        const { title, slug } = await getCourseTitleAndSlug(doc.course)
+
+                        if (email) {
+                            await EmailService.send(req.payload, {
+                                to: email,
+                                templateSlug: 'course-enrollment',
+                                data: {
+                                    subscriberName: name,
+                                    courseTitle: title,
+                                    courseSlug: slug
+                                }
+                            })
+                        }
+                    } catch (error) {
+                        console.error('Error sending enrollment email:', error)
+                    }
+                }
+
+                // 2. Course Completion
+                if (operation === 'update' && doc.status === 'completed' && previousDoc.status !== 'completed') {
+                    try {
+                        const { email, name } = await getUserEmailAndName(doc.subscriber)
+                        const { title } = await getCourseTitleAndSlug(doc.course)
+
+                        if (email) {
+                            await EmailService.send(req.payload, {
+                                to: email,
+                                templateSlug: 'course-completion',
+                                data: {
+                                    subscriberName: name,
+                                    courseTitle: title
+                                }
+                            })
+                        }
+                    } catch (error) {
+                        console.error('Error sending completion email:', error)
                     }
                 }
             }

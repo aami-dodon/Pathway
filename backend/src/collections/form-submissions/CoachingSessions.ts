@@ -233,11 +233,72 @@ export const CoachingSessions: CollectionConfig = {
                     })
 
                     // To Coach (if coach has an email in profile or user)
-                    // For now assuming we can find coach email
+                    if (doc.coach) {
+                        try {
+                            const coachId = typeof doc.coach === 'object' ? doc.coach.id : doc.coach
+                            const coachProfile = await req.payload.findByID({
+                                collection: 'coach-profiles',
+                                id: coachId,
+                                req,
+                            })
+
+                            if (coachProfile) {
+                                let coachEmail = ''
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const coachUser = (coachProfile as any).user
+
+                                if (coachUser) {
+                                    if (typeof coachUser === 'object' && coachUser.email) {
+                                        coachEmail = coachUser.email
+                                    } else if (typeof coachUser === 'string' || typeof coachUser === 'number') {
+                                        const userDoc = await req.payload.findByID({
+                                            collection: 'users',
+                                            id: coachUser,
+                                            req,
+                                        })
+                                        if (userDoc) coachEmail = userDoc.email
+                                    }
+                                }
+
+                                if (coachEmail) {
+                                    await EmailService.send(req.payload, {
+                                        to: coachEmail,
+                                        templateSlug: 'booking-coach-notification',
+                                        data: {
+                                            coachName: (coachProfile as any).displayName || 'Coach',
+                                            bookerName: doc.bookerName,
+                                            sessionTitle: doc.sessionTitle,
+                                            scheduledAt: new Date(doc.scheduledAt).toLocaleString(),
+                                            topic: doc.topic || 'No topic provided',
+                                        },
+                                    })
+                                } else {
+                                    console.warn(`Could not find email for coach ${coachId}`)
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Error sending booking notification to coach:', err)
+                        }
+                    }
                 }
 
                 // 2. Booking Confirmed (Status change to confirmed)
                 if (operation === 'update' && doc.status === 'confirmed' && previousDoc.status !== 'confirmed') {
+                    // Generate ICS
+                    const { generateICS } = await import('../../services/ics')
+                    const icsContent = generateICS({
+                        title: doc.sessionTitle,
+                        description: `Topic: ${doc.topic || 'Coaching Session'}\nZoom: ${doc.meetingLink}`,
+                        start: new Date(doc.scheduledAt),
+                        duration: doc.duration || 30,
+                        url: doc.meetingLink,
+                        location: doc.meetingLink,
+                        organizer: {
+                            name: 'Pathway',
+                            email: process.env.EMAIL_FROM || 'no-reply@pathway.com'
+                        }
+                    })
+
                     await EmailService.send(req.payload, {
                         to: doc.bookerEmail,
                         templateSlug: 'booking-confirmed',
@@ -247,7 +308,77 @@ export const CoachingSessions: CollectionConfig = {
                             scheduledAt: new Date(doc.scheduledAt).toLocaleString(),
                             meetingLink: doc.meetingLink,
                         },
+                        attachments: [
+                            {
+                                filename: 'invite.ics',
+                                content: Buffer.from(icsContent),
+                                contentType: 'text/calendar'
+                            }
+                        ]
                     })
+                }
+
+                // 3. Booking Cancelled
+                if (operation === 'update' && doc.status === 'cancelled' && previousDoc.status !== 'cancelled') {
+                    const cancellationReason = doc.cancellationReason || 'No reason provided'
+
+                    // Notify Student
+                    await EmailService.send(req.payload, {
+                        to: doc.bookerEmail,
+                        templateSlug: 'booking-cancellation',
+                        data: {
+                            recipientName: doc.bookerName,
+                            sessionTitle: doc.sessionTitle,
+                            scheduledAt: new Date(doc.scheduledAt).toLocaleString(),
+                            reason: cancellationReason
+                        }
+                    })
+
+                    // Notify Coach
+                    if (doc.coach) {
+                        try {
+                            const coachId = typeof doc.coach === 'object' ? doc.coach.id : doc.coach
+                            const coachProfile = await req.payload.findByID({
+                                collection: 'coach-profiles',
+                                id: coachId,
+                                req,
+                            })
+
+                            if (coachProfile) {
+                                let coachEmail = ''
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const coachUser = (coachProfile as any).user
+
+                                if (coachUser) {
+                                    if (typeof coachUser === 'object' && coachUser.email) {
+                                        coachEmail = coachUser.email
+                                    } else if (typeof coachUser === 'string' || typeof coachUser === 'number') {
+                                        const userDoc = await req.payload.findByID({
+                                            collection: 'users',
+                                            id: coachUser,
+                                            req,
+                                        })
+                                        if (userDoc) coachEmail = userDoc.email
+                                    }
+                                }
+
+                                if (coachEmail) {
+                                    await EmailService.send(req.payload, {
+                                        to: coachEmail,
+                                        templateSlug: 'booking-cancellation',
+                                        data: {
+                                            recipientName: (coachProfile as any).displayName || 'Coach',
+                                            sessionTitle: doc.sessionTitle,
+                                            scheduledAt: new Date(doc.scheduledAt).toLocaleString(),
+                                            reason: cancellationReason
+                                        },
+                                    })
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Error sending cancellation to coach:', err)
+                        }
+                    }
                 }
             },
         ],

@@ -1,6 +1,15 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let _resend: Resend | null = null
+function getResend() {
+    if (!_resend) {
+        if (!process.env.RESEND_API_KEY) {
+            console.warn('RESEND_API_KEY is missing. Resend operations will fail.')
+        }
+        _resend = new Resend(process.env.RESEND_API_KEY)
+    }
+    return _resend
+}
 
 // The ID of the audience to sync contacts to.
 const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || '2754c70c-775f-4bb1-bee5-04629d8c0cac'
@@ -46,7 +55,7 @@ export class ResendContactService {
             }
 
             // First, try to create the contact
-            const { data: result, error } = await resend.contacts.create(payload)
+            const { data: result, error } = await getResend().contacts.create(payload)
 
             if (error) {
                 // If the contact already exists or conflict, try update.
@@ -85,7 +94,7 @@ export class ResendContactService {
                 payload.audienceId = activeAudienceId
             }
 
-            const { data: result, error } = await resend.contacts.update(payload)
+            const { data: result, error } = await getResend().contacts.update(payload)
 
             if (error) {
                 console.error('Failed to update Resend contact. Payload:', JSON.stringify(payload), 'Error:', error)
@@ -109,7 +118,7 @@ export class ResendContactService {
                 payload.audienceId = activeAudienceId
             }
 
-            const { error } = await resend.contacts.remove(payload)
+            const { error } = await getResend().contacts.remove(payload)
 
             if (error) {
                 console.error('Failed to delete Resend contact:', error)

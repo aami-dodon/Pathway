@@ -13,8 +13,6 @@ type LearningPace = 'self-paced' | 'scheduled' | 'intensive'
 const usersData: { email: string; password: string; role: UserRole }[] = [
     // Coaches
     { email: 'sarah.johnson@pathway.dev', password: 'Demo123!', role: 'coach' },
-    // Creators
-    { email: 'alex.writer@pathway.dev', password: 'Demo123!', role: 'creator' },
     // Subscribers
     { email: 'john.doe@example.com', password: 'Demo123!', role: 'subscriber' },
 ]

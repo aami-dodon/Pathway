@@ -41,7 +41,7 @@ export async function seedCoachingSessions(payload: Payload, coachProfiles: any[
     const subscriberUsers = users.filter(u => u.role === 'subscriber')
 
     // Create various sessions across different time periods
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 1; i++) {
         const coach = coachProfiles[i % coachProfiles.length]
         const booker = subscriberUsers[i % subscriberUsers.length]
 

@@ -48,12 +48,11 @@ const quizzesData = [
 const lessonsData = [
     // Leadership Course Lessons
     { title: 'What is Leadership?', slug: 'what-is-leadership', type: 'video', order: 1, duration: { hours: 0, minutes: 15 }, isFree: true },
-    { title: 'Leadership vs Management', slug: 'leadership-vs-management', type: 'video', order: 2, duration: { hours: 0, minutes: 20 } },
 ]
 
 const modulesData = [
     // Leadership Course Modules
-    { title: 'Understanding Leadership', slug: 'understanding-leadership', order: 1, lessonRange: [0, 2], quizIndex: 0 },
+    { title: 'Understanding Leadership', slug: 'understanding-leadership', order: 1, lessonRange: [0, 1], quizIndex: 0 },
 ]
 
 const coursesData = [
