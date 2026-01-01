@@ -10,10 +10,13 @@ import { MeiliSearch } from 'meilisearch'
 import { getPayload } from 'payload'
 import config from '../payload.config'
 
+// Get prefix from environment for dev/prod separation
+const getPrefix = (): string => process.env.MEILISEARCH_INDEX_PREFIX || ''
+
 const INDEXES = {
-    POSTS: 'posts',
-    COURSES: 'courses',
-    COACHES: 'coaches',
+    POSTS: `${getPrefix()}posts`,
+    COURSES: `${getPrefix()}courses`,
+    COACHES: `${getPrefix()}coaches`,
 }
 
 async function syncMeilisearch() {

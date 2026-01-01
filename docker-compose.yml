@@ -7,7 +7,7 @@ services:
       dockerfile: backend/Dockerfile
     container_name: pathway-backend
     ports:
-      - "9006:9006"
+      - "9008:9006"
     env_file:
       - ./backend/.env
     environment:
@@ -36,7 +36,7 @@ services:
         INTERNAL_API_URL: ${INTERNAL_API_URL:-http://backend:9006}
     container_name: pathway-frontend
     ports:
-      - "9007:9007"
+      - "9009:9007"
     env_file:
       - ./frontend/.env
     environment:

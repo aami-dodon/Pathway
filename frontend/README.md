@@ -1,84 +1,104 @@
 # Pathway Frontend
 
-This is the public-facing frontend for the Pathway application, built with **Next.js 16**, **Tailwind CSS 4**, and **shadcn/ui** components.
+The public-facing web application for the Pathway learning platform.
 
-## Tech Stack
+## Prerequisites
 
-- **Framework**: [Next.js 16](https://nextjs.org) (App Router)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com) with Typography plugin
-- **Components**: [shadcn/ui](https://ui.shadcn.com) with Lucide icons
-- **Package Manager**: pnpm
+- Node.js 18+
+- pnpm
+- Backend service running (for API access)
 
 ## Getting Started
 
-1. **Install dependencies**:
-   ```bash
-   pnpm install
-   ```
+### 1. Install Dependencies
 
-2. **Setup Environment**:
-   Create a `.env.local` file with:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:3000
-   ```
+```bash
+pnpm install
+```
 
-3. **Run Development Server**:
-   ```bash
-   pnpm dev --port 3001
-   ```
-   The frontend will start at `http://localhost:3001`.
+### 2. Configure Environment
 
-## Pages
+Create a `.env.local` file with your configuration:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:9006
+```
+
+### 3. Run Development Server
+
+```bash
+pnpm dev
+```
+
+The frontend starts at `http://localhost:3001`.
+
+## Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
+| `pnpm lint` | Run ESLint |
+
+## Pages Overview
 
 | Route | Description |
 |-------|-------------|
-| `/` | Homepage with hero, features, and CTA |
-| `/blog` | Blog posts listing (fetches from CMS) |
-| `/courses` | Courses catalog (fetches from LMS) |
-| `/coaches` | Coach profiles directory |
+| `/` | Homepage with features and CTAs |
+| `/blog` | Blog posts and articles |
+| `/courses` | Course catalog |
+| `/coaches` | Coach directory and profiles |
 | `/login` | User sign in |
-| `/register` | User registration |
+| `/register` | New user registration |
 | `/profile` | User profile management |
+| `/my-courses` | Enrolled courses dashboard |
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── blog/              # Blog listing
-│   ├── coaches/           # Coaches directory
-│   ├── courses/           # Courses catalog
-│   ├── login/             # Login page
-│   ├── profile/           # User profile
-│   ├── register/          # Registration
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Homepage
+├── app/                 # Next.js App Router pages
+│   ├── blog/           # Blog pages
+│   ├── coaches/        # Coach directory
+│   ├── courses/        # Course catalog
+│   ├── login/          # Authentication
+│   ├── register/       # Registration
+│   ├── profile/        # User profile
+│   └── my-courses/     # Learning dashboard
 ├── components/
-│   ├── layout/            # Header, Footer
-│   ├── providers/         # Auth, Theme providers
-│   └── ui/                # shadcn/ui components
-├── hooks/                 # Custom React hooks
+│   ├── layout/         # Header, Footer
+│   ├── providers/      # Auth, Theme providers
+│   ├── ui/             # Reusable UI components
+│   ├── blog/           # Blog-specific components
+│   ├── courses/        # Course-specific components
+│   └── home/           # Homepage components
+├── hooks/              # Custom React hooks
 └── lib/
-    ├── api.ts            # Backend API client
-    └── utils.ts          # Utility functions
+    ├── api.ts          # Backend API client
+    └── utils.ts        # Utility functions
 ```
 
-## API Integration
+## Development Workflow
 
-The frontend connects to the Payload CMS backend at the URL specified in `NEXT_PUBLIC_API_URL`. The API client in `src/lib/api.ts` provides typed methods for:
-
-- **Authentication**: Login, logout, get current user
-- **Users**: Fetch, update user profiles
-- **Coach Profiles**: Public coach directory
-- **Subscriber Profiles**: User profile management
-- **Posts**: Blog content from CMS
-- **Categories & Tags**: Content categorization
+1. **Start the backend** - Ensure the backend is running at the configured API URL
+2. **Run the frontend** - Start with `pnpm dev`
+3. **Make changes** - Edit files in `src/` with hot reload
+4. **Test** - Preview changes at `http://localhost:3001`
 
 ## Features
 
-- 🌙 **Dark/Light Mode**: Automatic theme switching with system preference detection
-- 📱 **Responsive Design**: Mobile-first approach with adaptive layouts
-- 🔐 **Authentication**: Session-based auth with the backend
-- 🎨 **Modern UI**: Glassmorphism, gradients, and micro-animations
-- 📊 **Loading States**: Skeleton loaders for async content
-- 🔗 **SEO Ready**: Meta tags, Open Graph support
+- 🌙 **Dark/Light Mode** - Automatic theme switching
+- 📱 **Responsive Design** - Mobile-first layouts
+- 🔐 **Authentication** - Session-based auth
+- 🎨 **Modern UI** - Sleek design with animations
+- 📊 **Loading States** - Skeleton loaders for async content
+- 🔗 **SEO Optimized** - Meta tags and Open Graph support
+
+## Docker
+
+Run using Docker Compose from the project root:
+
+```bash
+docker compose up frontend
+```

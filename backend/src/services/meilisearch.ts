@@ -19,13 +19,26 @@ export function getMeilisearchClient(): MeiliSearch | null {
     return client
 }
 
-// Index names
-export const INDEXES = {
+// Index name helpers - supports environment-based prefixing for dev/prod separation
+const getPrefix = (): string => process.env.MEILISEARCH_INDEX_PREFIX || ''
+
+export const getIndexName = (baseName: string): string => `${getPrefix()}${baseName}`
+
+// Base index names (without prefix)
+const BASE_INDEXES = {
     POSTS: 'posts',
     COURSES: 'courses',
     COACHES: 'coaches',
     PAGES: 'pages',
 } as const
+
+// Prefixed index names for use throughout the app
+export const INDEXES = {
+    get POSTS() { return getIndexName(BASE_INDEXES.POSTS) },
+    get COURSES() { return getIndexName(BASE_INDEXES.COURSES) },
+    get COACHES() { return getIndexName(BASE_INDEXES.COACHES) },
+    get PAGES() { return getIndexName(BASE_INDEXES.PAGES) },
+}
 
 // Document types for indexing
 export interface PostDocument {
