@@ -105,13 +105,13 @@ Have questions or need assistance? Use the contact form on our website to reach 
 
 Use these credentials to explore the platform:
 
-**Admin Panel** (Backend - `http://localhost:9006/admin`)
+**Admin Panel** (Backend - `https://core-pathway.dodon.in/`)
 | Field | Value |
 |-------|-------|
 | Email | `admin@example.com` |
 | Password | `YkWVELw9qN8kN7W` |
 
-**User Account** (Frontend - `http://localhost:3001`)
+**User Account** (Frontend - `https://pathway.dodon.in/`)
 | Field | Value |
 |-------|-------|
 | Email | `user@example.com` |
