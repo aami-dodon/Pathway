@@ -69,7 +69,6 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
-    'email-templates': EmailTemplate;
     'coach-profiles': CoachProfile;
     'subscriber-profiles': SubscriberProfile;
     categories: Category;
@@ -95,7 +94,6 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
-    'email-templates': EmailTemplatesSelect<false> | EmailTemplatesSelect<true>;
     'coach-profiles': CoachProfilesSelect<false> | CoachProfilesSelect<true>;
     'subscriber-profiles': SubscriberProfilesSelect<false> | SubscriberProfilesSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
@@ -130,7 +128,6 @@ export interface Config {
     'footer-content': FooterContent;
     'meilisearch-admin': MeilisearchAdmin;
     'site-settings': SiteSetting;
-    'email-layout': EmailLayout;
   };
   globalsSelect: {
     'home-page': HomePageSelect<false> | HomePageSelect<true>;
@@ -141,7 +138,6 @@ export interface Config {
     'footer-content': FooterContentSelect<false> | FooterContentSelect<true>;
     'meilisearch-admin': MeilisearchAdminSelect<false> | MeilisearchAdminSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    'email-layout': EmailLayoutSelect<false> | EmailLayoutSelect<true>;
   };
   locale: null;
   user: User & {
@@ -274,41 +270,6 @@ export interface Media {
       filename?: string | null;
     };
   };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "email-templates".
- */
-export interface EmailTemplate {
-  id: number;
-  /**
-   * Descriptive name for the notification
-   */
-  name: string;
-  /**
-   * Unique identifier used in code (e.g., booking-confirmation)
-   */
-  slug: string;
-  /**
-   * Email subject line. Can use placeholders like {name}
-   */
-  subject: string;
-  /**
-   * Email body content. Use {body} in the master template to place this. Can use placeholders.
-   */
-  body: string;
-  /**
-   * Reference list of placeholders available for this template
-   */
-  placeholders?:
-    | {
-        key?: string | null;
-        description?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * Public and professional coach information for content authoring and LMS
@@ -2898,10 +2859,6 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
-        relationTo: 'email-templates';
-        value: number | EmailTemplate;
-      } | null)
-    | ({
         relationTo: 'coach-profiles';
         value: number | CoachProfile;
       } | null)
@@ -3088,25 +3045,6 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "email-templates_select".
- */
-export interface EmailTemplatesSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  subject?: T;
-  body?: T;
-  placeholders?:
-    | T
-    | {
-        key?: T;
-        description?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3892,31 +3830,6 @@ export interface SiteSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "email-layout".
- */
-export interface EmailLayout {
-  id: number;
-  /**
-   * HTML/Text for the header of all emails.
-   */
-  headerHTML?: string | null;
-  /**
-   * HTML/Text for the footer of all emails. Use {socialLinks} to insert dynamic social links from Site Settings.
-   */
-  footerHTML?: string | null;
-  /**
-   * The master HTML structure. Must include {body}, and optionally {header} and {footer}.
-   */
-  masterTemplate: string;
-  /**
-   * Brand logo to be used in emails.
-   */
-  logo?: (number | null) | Media;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home-page_select".
  */
 export interface HomePageSelect<T extends boolean = true> {
@@ -4114,19 +4027,6 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         whatsapp?: T;
         telegram?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "email-layout_select".
- */
-export interface EmailLayoutSelect<T extends boolean = true> {
-  headerHTML?: T;
-  footerHTML?: T;
-  masterTemplate?: T;
-  logo?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
