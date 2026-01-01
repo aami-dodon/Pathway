@@ -124,7 +124,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <div className="container mx-auto px-4 pt-18 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-border/40 bg-card shadow-sm">
                     {/* Hero Section (Top of Card) */}
-                    <div className="relative min-h-[400px] sm:min-h-[500px] flex items-end justify-center text-center">
+                    <div className="relative min-h-[600px] sm:min-h-[700px] flex flex-col justify-end text-center">
                         {/* Background Image */}
                         {post.featuredImage && (
                             <>
@@ -133,8 +133,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                                     alt=""
                                     className="absolute inset-0 w-full h-full object-cover"
                                 />
-                                {/* Gradient Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
+                                {/* Gradient Overlay - covers lower portion only */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-card from-40% via-card/60 via-60% to-transparent" />
                             </>
                         )}
 
@@ -143,8 +143,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                             <div className="absolute inset-0 bg-gradient-to-b from-muted/50 to-background" />
                         )}
 
-                        {/* Hero Content */}
-                        <div className="relative z-10 w-full px-6 py-12">
+                        {/* Hero Content - at bottom with explicit margin from top */}
+                        <div className="relative z-10 w-full px-6 pb-10 sm:pb-12 mt-[300px] sm:mt-[400px]">
                             {/* Category Badge */}
                             {category && (
                                 <Badge variant="secondary" className="mb-4">

@@ -95,36 +95,9 @@ class CmsService:
              coach = self.get_coach_profile()
              coach_id = coach.get("id")
 
-        # Create basic Lexical JSON structure with the content as one paragraph
-        lexical_content = {
-            "root": {
-                "type": "root",
-                "format": "",
-                "indent": 0,
-                "version": 1,
-                "children": [
-                    {
-                        "type": "paragraph",
-                        "format": "",
-                        "indent": 0,
-                        "version": 1,
-                        "children": [
-                            {
-                                "type": "text",
-                                "detail": 0,
-                                "format": 0,
-                                "mode": "normal",
-                                "style": "",
-                                "text": content_text or "",
-                                "version": 1
-                            }
-                        ],
-                        "direction": "ltr"
-                    }
-                ],
-                "direction": "ltr"
-            }
-        }
+        # Convert Markdown content to Lexical JSON format for Payload CMS
+        from app.services.markdown_to_lexical import markdown_to_lexical
+        lexical_content = markdown_to_lexical(content_text or "")
 
         payload = {
             "title": title,
