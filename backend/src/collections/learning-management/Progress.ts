@@ -1,4 +1,5 @@
 import type { CollectionConfig, Access } from 'payload'
+import { isAdmin, isAuthenticated, isAdminOrProgressOwner } from '../../access'
 
 
 
@@ -11,10 +12,10 @@ export const Progress: CollectionConfig = {
         defaultColumns: ['enrollment', 'lesson', 'status', 'completedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isAdminOrProgressOwner,  // Admin or progress owner
+        create: isAuthenticated,        // System creates on lesson access
+        update: isAdminOrProgressOwner, // Admin or owner
+        delete: isAdmin,                // Only admins
     },
     fields: [
         // Link to enrollment

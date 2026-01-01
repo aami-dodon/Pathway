@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { formatSlug } from '../../hooks'
+import { isAdmin, isAdminOrCreator } from '../../access'
 export const Modules: CollectionConfig = {
     slug: 'modules',
     admin: {
@@ -9,10 +10,10 @@ export const Modules: CollectionConfig = {
         defaultColumns: ['title', 'order', 'isPublished', 'updatedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: () => true,         // Structure visible (content via enrollment)
+        create: isAdminOrCreator, // Admin or coach/creator
+        update: isAdminOrCreator, // Admin or coach/creator
+        delete: isAdmin,          // Only admins
     },
     fields: [
         {

@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { EmailService } from '../../services/emailService'
+import { isAdmin } from '../../access'
 
 export const ContactSubmissions: CollectionConfig = {
     slug: 'contact-submissions',
@@ -42,10 +43,10 @@ export const ContactSubmissions: CollectionConfig = {
         ],
     },
     access: {
-        create: () => true, // Anyone can submit a contact form
-        read: ({ req: { user } }) => !!user, // Only logged-in users (admins) can read
-        update: ({ req: { user } }) => !!user,
-        delete: ({ req: { user } }) => !!user,
+        create: () => true,  // Anyone can submit a contact form
+        read: isAdmin,       // Only admins can read submissions
+        update: isAdmin,     // Only admins can update
+        delete: isAdmin,     // Only admins can delete
     },
     fields: [
         {

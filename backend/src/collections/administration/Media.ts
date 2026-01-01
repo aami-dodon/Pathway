@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { populateCreatedBy } from '../../hooks'
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { isAdmin, isAuthenticated, isAdminOrUploader } from '../../access'
 
 // Separate client for signing URLs that points to the Public CDN
 // This ensures the signature matches the Host header ('cdn.dodon.in')
@@ -65,10 +66,10 @@ export const Media: CollectionConfig = {
         defaultColumns: ['filename', 'mimeType', 'isSubscriberOnly', 'category'],
     },
     access: {
-        read: () => true, // Access allowed to doc, file access via signed URL
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: () => true,           // Public (signed URLs protect actual content)
+        create: isAuthenticated,    // Must be logged in to upload
+        update: isAdminOrUploader,  // Admin or original uploader
+        delete: isAdmin,            // Only admins can delete
     },
     hooks: {
         beforeChange: [

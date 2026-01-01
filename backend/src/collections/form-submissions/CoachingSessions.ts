@@ -1,6 +1,7 @@
 import { CollectionConfig, APIError } from 'payload'
 import { EmailService } from '../../services/emailService'
 import { timezoneField } from '../../fields/timezone'
+import { isAdmin, isAdminOrSessionParticipant, isAdminOrCoach } from '../../access'
 
 
 
@@ -14,10 +15,10 @@ export const CoachingSessions: CollectionConfig = {
         defaultColumns: ['sessionTitle', 'coach', 'bookerName', 'scheduledAt', 'status'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isAdminOrSessionParticipant, // Admin, coach, or booker
+        create: () => true,                 // Public booking
+        update: isAdminOrCoach,             // Admin or assigned coach
+        delete: isAdmin,                    // Only admins
     },
     hooks: {
         beforeChange: [

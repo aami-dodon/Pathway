@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { formatSlug, setPublishedAt } from '../../hooks'
 import { indexPostAfterChange, deletePostAfterDelete } from '../../hooks/meilisearchHooks'
+import { isAdmin, isAdminOrCreator, isAdminOrAuthor, isPublishedOrAdmin } from '../../access'
 
 export const Posts: CollectionConfig = {
     slug: 'posts',
@@ -11,10 +12,10 @@ export const Posts: CollectionConfig = {
         defaultColumns: ['title', 'author', 'isPublished', 'isSubscriberOnly', 'updatedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isPublishedOrAdmin, // Published = public, drafts = admin only
+        create: isAdminOrCreator, // Admin or coach/creator role
+        update: isAdminOrAuthor,  // Admin or post author
+        delete: isAdmin,          // Only admins
     },
     hooks: {
         beforeChange: [setPublishedAt],

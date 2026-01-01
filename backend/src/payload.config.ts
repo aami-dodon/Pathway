@@ -100,7 +100,7 @@ export default buildConfig({
   },
   cookiePrefix: brand.name.toLowerCase(),
   cors: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim()) : [],
-  csrf: [], // explicitly disable csrf
+  // CSRF protection enabled by default (removed explicit disable)
   routes: {
     admin: '/',
   },

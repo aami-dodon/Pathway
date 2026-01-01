@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { formatSlug, setPublishedAt } from '../../hooks'
 import { indexCourseAfterChange, deleteCourseAfterDelete } from '../../hooks/meilisearchHooks'
+import { isAdmin, isAdminOrCreator, isAdminOrInstructor, isPublishedOrAdmin } from '../../access'
 
 export const Courses: CollectionConfig = {
     slug: 'courses',
@@ -11,10 +12,10 @@ export const Courses: CollectionConfig = {
         defaultColumns: ['title', 'instructor', 'isPublished', 'updatedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isPublishedOrAdmin,   // Published = public, drafts = admin only
+        create: isAdminOrCreator,   // Admin or coach/creator role
+        update: isAdminOrInstructor,// Admin or course instructor
+        delete: isAdmin,            // Only admins
     },
     hooks: {
         beforeChange: [setPublishedAt],

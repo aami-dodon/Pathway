@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { quizDeliveryHandler } from '../../endpoints/quiz-delivery'
+import { isAdmin, isAdminOrCreator } from '../../access'
 
 export const Quizzes: CollectionConfig = {
     slug: 'quizzes',
@@ -10,10 +11,10 @@ export const Quizzes: CollectionConfig = {
         defaultColumns: ['title', 'settings.passingScore', 'isPublished', 'updatedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isAdminOrCreator,   // Answers are sensitive - only admin/creator direct access
+        create: isAdminOrCreator, // Admin or coach/creator
+        update: isAdminOrCreator, // Admin or coach/creator
+        delete: isAdmin,          // Only admins
     },
     endpoints: [
         {

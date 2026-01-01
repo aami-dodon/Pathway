@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { formatSlug, setPublishedAt } from '../../hooks'
 import { indexPageAfterChange, deletePageAfterDelete } from '../../hooks/meilisearchHooks'
+import { isAdmin, isPublishedOrAdmin } from '../../access'
 
 export const Pages: CollectionConfig = {
     slug: 'pages',
@@ -11,10 +12,10 @@ export const Pages: CollectionConfig = {
         defaultColumns: ['title', 'slug', 'isPublished', 'updatedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isPublishedOrAdmin, // Published = public, drafts = admin only
+        create: isAdmin,          // Admin-only for CMS pages
+        update: isAdmin,          // Admin-only
+        delete: isAdmin,          // Admin-only
     },
     hooks: {
         beforeChange: [setPublishedAt],

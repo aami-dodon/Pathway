@@ -4,6 +4,7 @@ import { enforceUserOwnership, formatSlug, preventUserChange } from '../../hooks
 import { cleanupUserBeforeDelete, cleanupUserAfterDelete } from './hooks'
 import { indexCoachAfterChange, deleteCoachAfterDelete } from '../../hooks/meilisearchHooks'
 import { ResendContactService } from '../../services/resendContactService'
+import { isAdmin, isAdminOrOwner } from '../../access'
 
 export const CoachProfile: CollectionConfig = {
     slug: 'coach-profiles',
@@ -13,10 +14,10 @@ export const CoachProfile: CollectionConfig = {
         description: 'Public and professional coach information for content authoring and LMS',
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: () => true,        // Public profiles for course/blog display
+        create: isAdmin,         // Only admins create coach profiles
+        update: isAdminOrOwner,  // Admin or profile owner
+        delete: isAdmin,         // Only admins delete
     },
     hooks: {
         afterDelete: [cleanupUserAfterDelete, deleteCoachAfterDelete],

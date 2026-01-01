@@ -1,4 +1,5 @@
 import type { CollectionConfig, Access } from 'payload'
+import { isAdmin, isAuthenticated, isAdminOrProgressOwner } from '../../access'
 
 
 
@@ -11,10 +12,10 @@ export const QuizAttempts: CollectionConfig = {
         defaultColumns: ['enrollment', 'quiz', 'score.percentage', 'passed', 'submittedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isAdminOrProgressOwner,  // Admin or attempt owner (via enrollment)
+        create: isAuthenticated,        // System creates on quiz start
+        update: isAdminOrProgressOwner, // Admin or owner
+        delete: isAdmin,                // Only admins
     },
     fields: [
         // Link to enrollment

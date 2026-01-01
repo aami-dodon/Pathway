@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { formatSlug } from '../../hooks'
+import { isAdmin, isAdminOrCreator } from '../../access'
 
 export const Categories: CollectionConfig = {
     slug: 'categories',
@@ -10,10 +11,10 @@ export const Categories: CollectionConfig = {
         defaultColumns: ['name', 'slug', 'isPublished', 'updatedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: () => true,         // Public for filtering
+        create: isAdminOrCreator, // Admin or coach/creator
+        update: isAdminOrCreator, // Admin or coach/creator
+        delete: isAdmin,          // Only admins
     },
     fields: [
         {

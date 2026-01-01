@@ -4,6 +4,7 @@ import { enforceUserOwnership, preventUserChange, setJoinedAt } from '../../hook
 import { cleanupUserBeforeDelete, cleanupUserAfterDelete } from './hooks'
 import { ResendContactService } from '../../services/resendContactService'
 import type { User } from '../../payload-types'
+import { isAdmin, isAdminOrOwner } from '../../access'
 
 export const SubscriberProfile: CollectionConfig = {
     slug: 'subscriber-profiles',
@@ -14,10 +15,10 @@ export const SubscriberProfile: CollectionConfig = {
         defaultColumns: ['displayName', 'user', 'isActive', 'metadata.joinedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isAdminOrOwner,    // Private profile data
+        create: isAdmin,         // System/admin creates on registration
+        update: isAdminOrOwner,  // Admin or owner
+        delete: isAdmin,         // Only admins
     },
     hooks: {
         afterDelete: [cleanupUserAfterDelete],

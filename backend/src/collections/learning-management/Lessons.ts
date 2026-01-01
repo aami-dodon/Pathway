@@ -1,6 +1,7 @@
 import type { CollectionConfig, Where } from 'payload'
 import { formatSlug } from '../../hooks'
 import { lessonContentHandler } from '../../endpoints/lesson-content'
+import { isAdmin, isAdminOrCreator } from '../../access'
 export const Lessons: CollectionConfig = {
     slug: 'lessons',
     admin: {
@@ -10,10 +11,10 @@ export const Lessons: CollectionConfig = {
         defaultColumns: ['title', 'type', 'order', 'isFree', 'isPublished', 'updatedAt'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: () => true,         // Structure visible (content via enrollment)
+        create: isAdminOrCreator, // Admin or coach/creator
+        update: isAdminOrCreator, // Admin or coach/creator
+        delete: isAdmin,          // Only admins
     },
     endpoints: [
         {

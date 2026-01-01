@@ -1,5 +1,6 @@
 import type { CollectionConfig, Access } from 'payload'
 import { setEnrolledAt } from '../../hooks'
+import { isAdmin, isAuthenticated, isAdminOrEnrollee } from '../../access'
 
 
 
@@ -12,10 +13,10 @@ export const Enrollments: CollectionConfig = {
         defaultColumns: ['subscriber', 'course', 'status', 'enrolledAt', 'progress.percentComplete'],
     },
     access: {
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isAdminOrEnrollee,  // Admin or enrollment owner
+        create: isAuthenticated,   // Any logged-in user can enroll
+        update: isAdminOrEnrollee, // Admin or enrollee (limited fields)
+        delete: isAdmin,           // Only admins
     },
     hooks: {
         beforeChange: [

@@ -5,6 +5,7 @@ import {
     checkUserStatus
 } from './hooks'
 import { ResendContactService } from '../../services/resendContactService'
+import { isAdmin, isAdminOrSelf, adminOnlyField } from '../../access'
 
 export const Users: CollectionConfig = {
     slug: 'users',
@@ -59,10 +60,10 @@ export const Users: CollectionConfig = {
     ],
     access: {
         admin: ({ req: { user } }) => Boolean(user),
-        read: () => true,
-        create: () => true,
-        update: () => true,
-        delete: () => true,
+        read: isAdminOrSelf,
+        create: () => true,  // Public registration allowed
+        update: isAdminOrSelf,
+        delete: isAdmin,
     },
     hooks: {
         beforeLogin: [checkUserStatus],
@@ -141,8 +142,8 @@ export const Users: CollectionConfig = {
                 { label: 'Admin', value: 'admin' },
             ],
             access: {
-                create: () => true,
-                update: () => true,
+                create: adminOnlyField,
+                update: adminOnlyField,
             },
             admin: {
                 position: 'sidebar',

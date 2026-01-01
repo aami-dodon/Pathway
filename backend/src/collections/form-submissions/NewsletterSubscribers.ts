@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { EmailService } from '../../services/emailService'
 import { ResendContactService } from '../../services/resendContactService'
+import { isAdmin } from '../../access'
 
 export const NewsletterSubscribers: CollectionConfig = {
     slug: 'newsletter-subscribers',
@@ -71,10 +72,10 @@ export const NewsletterSubscribers: CollectionConfig = {
         ]
     },
     access: {
-        create: () => true, // Anyone can subscribe
-        read: ({ req: { user } }) => !!user, // Only logged-in users (admins) can read
-        update: ({ req: { user } }) => !!user,
-        delete: ({ req: { user } }) => !!user,
+        create: () => true,  // Anyone can subscribe
+        read: isAdmin,       // Only admins can read subscriber list
+        update: isAdmin,     // Only admins can update
+        delete: isAdmin,     // Only admins can delete
     },
     fields: [
         {
