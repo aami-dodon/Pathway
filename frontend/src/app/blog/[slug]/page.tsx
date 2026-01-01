@@ -87,6 +87,12 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
             publishedTime: post.publishedAt,
             ...(post.featuredImage ? { images: [{ url: post.featuredImage.url }] } : {}),
         },
+        twitter: {
+            card: 'summary_large_image',
+            title: post.seo?.metaTitle || post.title,
+            description: post.seo?.metaDescription || post.excerpt,
+            ...(post.featuredImage ? { images: [post.featuredImage.url] } : {}),
+        },
     };
 }
 

@@ -171,6 +171,12 @@ export async function generateMetadata({ params }: CoursePageProps) {
             type: "website",
             ...(course.thumbnail ? { images: [{ url: course.thumbnail.url }] } : {}),
         },
+        twitter: {
+            card: 'summary_large_image',
+            title: course.seo?.metaTitle || course.title,
+            description: course.seo?.metaDescription || course.shortDescription,
+            ...(course.thumbnail ? { images: [course.thumbnail.url] } : {}),
+        },
     };
 }
 

@@ -75,6 +75,12 @@ export async function generateMetadata({ params }: PageProps) {
             type: "profile",
             ...(coach.profilePhoto ? { images: [{ url: coach.profilePhoto.url }] } : {}),
         },
+        twitter: {
+            card: 'summary_large_image',
+            title: `${coach.displayName} - Profile`,
+            description: coach.bio,
+            ...(coach.profilePhoto ? { images: [coach.profilePhoto.url] } : {}),
+        },
     };
 }
 
