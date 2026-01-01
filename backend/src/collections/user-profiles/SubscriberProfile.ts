@@ -165,7 +165,6 @@ export const SubscriberProfile: CollectionConfig = {
                         { label: 'Video', value: 'video' },
                         { label: 'Text', value: 'text' },
                         { label: 'Audio', value: 'audio' },
-                        { label: 'Interactive', value: 'interactive' },
                     ],
                 },
                 {

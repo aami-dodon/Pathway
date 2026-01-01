@@ -71,11 +71,7 @@ export const Lessons: CollectionConfig = {
                 { label: 'Video', value: 'video' },
                 { label: 'Text/Article', value: 'text' },
                 { label: 'Audio', value: 'audio' },
-                { label: 'Interactive', value: 'interactive' },
-                { label: 'Assignment', value: 'assignment' },
                 { label: 'Quiz', value: 'quiz' },
-                { label: 'Live Session', value: 'live' },
-                { label: 'Download', value: 'download' },
             ],
             admin: {
                 description: 'Primary content type for this lesson',
@@ -132,7 +128,7 @@ export const Lessons: CollectionConfig = {
             type: 'richText',
             admin: {
                 description: 'Text-based lesson content',
-                condition: (data) => data.type === 'text' || data.type === 'interactive',
+                condition: (data) => data.type === 'text',
             },
             access: {
                 read: () => true,
@@ -164,52 +160,7 @@ export const Lessons: CollectionConfig = {
                 },
             ],
         },
-        // Assignment Content
-        {
-            name: 'assignmentContent',
-            type: 'group',
-            admin: {
-                description: 'Assignment details',
-                condition: (data) => data.type === 'assignment',
-            },
-            access: {
-                read: () => true,
-            },
-            fields: [
-                {
-                    name: 'instructions',
-                    type: 'richText',
-                    admin: {
-                        description: 'Assignment instructions and requirements',
-                    },
-                },
-                {
-                    name: 'dueInDays',
-                    type: 'number',
-                    min: 0,
-                    admin: {
-                        description: 'Days allowed to complete after starting',
-                    },
-                },
-                {
-                    name: 'submissionType',
-                    type: 'select',
-                    options: [
-                        { label: 'File Upload', value: 'file' },
-                        { label: 'Text Submission', value: 'text' },
-                        { label: 'Link/URL', value: 'link' },
-                    ],
-                },
-                {
-                    name: 'maxPoints',
-                    type: 'number',
-                    min: 0,
-                    admin: {
-                        description: 'Maximum points for this assignment',
-                    },
-                },
-            ],
-        },
+
         // Quiz reference
         {
             name: 'quiz',
@@ -224,44 +175,7 @@ export const Lessons: CollectionConfig = {
                 read: () => true,
             },
         },
-        // Live Session Details
-        {
-            name: 'liveSession',
-            type: 'group',
-            admin: {
-                description: 'Live session details',
-                condition: (data) => data.type === 'live',
-            },
-            access: {
-                read: () => true,
-            },
-            fields: [
-                {
-                    name: 'scheduledAt',
-                    type: 'date',
-                    admin: {
-                        description: 'Scheduled date and time',
-                        date: {
-                            pickerAppearance: 'dayAndTime',
-                        },
-                    },
-                },
-                {
-                    name: 'meetingUrl',
-                    type: 'text',
-                    admin: {
-                        description: 'Meeting/webinar URL',
-                    },
-                },
-                {
-                    name: 'recordingUrl',
-                    type: 'text',
-                    admin: {
-                        description: 'Recording URL (after session)',
-                    },
-                },
-            ],
-        },
+
         // Downloadable Resources
         {
             name: 'resources',
@@ -332,7 +246,6 @@ export const Lessons: CollectionConfig = {
                 { label: 'View/Access', value: 'view' },
                 { label: 'Complete Video', value: 'video-complete' },
                 { label: 'Pass Quiz', value: 'quiz-pass' },
-                { label: 'Submit Assignment', value: 'assignment-submit' },
                 { label: 'Manual Completion', value: 'manual' },
             ],
             admin: {

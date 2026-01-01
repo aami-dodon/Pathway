@@ -139,7 +139,7 @@ export async function seedLessons(payload: Payload, _quizzes: any[]) {
                 duration: lessonData.duration,
                 isFree: lessonData.isFree || false,
                 isPublished: true,
-                completionCriteria: lessonData.type === 'quiz' ? 'quiz-pass' : lessonData.type === 'assignment' ? 'assignment-submit' : 'view',
+                completionCriteria: lessonData.type === 'quiz' ? 'quiz-pass' : 'view',
             }
 
             // Add type-specific content
@@ -147,14 +147,7 @@ export async function seedLessons(payload: Payload, _quizzes: any[]) {
                 data.textContent = createRichText(`This is the content for the lesson "${lessonData.title}". It provides comprehensive coverage of the topic with practical examples and exercises.`)
             }
 
-            if (lessonData.type === 'assignment') {
-                data.assignmentContent = {
-                    instructions: createRichText(`Complete this assignment demonstrating your understanding of ${lessonData.title}.`),
-                    dueInDays: 7,
-                    submissionType: 'text',
-                    maxPoints: 100,
-                }
-            }
+
 
             if (existing.docs.length === 0) {
                 const lesson = await payload.create({

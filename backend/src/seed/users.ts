@@ -6,7 +6,7 @@ import type { Payload } from 'payload'
 // Type definitions
 type UserRole = 'admin' | 'coach' | 'creator' | 'subscriber'
 type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
-type PreferredFormat = 'video' | 'text' | 'audio' | 'interactive'
+type PreferredFormat = 'video' | 'text' | 'audio'
 type LearningPace = 'self-paced' | 'scheduled' | 'intensive'
 
 // User data with roles

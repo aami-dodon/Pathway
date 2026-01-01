@@ -1247,7 +1247,7 @@ export interface SubscriberProfile {
    * Learning style and delivery preferences
    */
   learningPreferences?: {
-    preferredFormat?: ('video' | 'text' | 'audio' | 'interactive') | null;
+    preferredFormat?: ('video' | 'text' | 'audio') | null;
     pace?: ('self-paced' | 'scheduled' | 'intensive') | null;
   };
   /**
@@ -1684,7 +1684,7 @@ export interface Lesson {
   /**
    * Primary content type for this lesson
    */
-  type: 'video' | 'text' | 'audio' | 'interactive' | 'assignment' | 'quiz' | 'live' | 'download';
+  type: 'video' | 'text' | 'audio' | 'quiz';
   /**
    * Video lesson content
    */
@@ -1763,58 +1763,9 @@ export interface Lesson {
     } | null;
   };
   /**
-   * Assignment details
-   */
-  assignmentContent?: {
-    /**
-     * Assignment instructions and requirements
-     */
-    instructions?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    /**
-     * Days allowed to complete after starting
-     */
-    dueInDays?: number | null;
-    submissionType?: ('file' | 'text' | 'link') | null;
-    /**
-     * Maximum points for this assignment
-     */
-    maxPoints?: number | null;
-  };
-  /**
    * Associated quiz for this lesson
    */
   quiz?: (number | null) | Quiz;
-  /**
-   * Live session details
-   */
-  liveSession?: {
-    /**
-     * Scheduled date and time
-     */
-    scheduledAt?: string | null;
-    /**
-     * Meeting/webinar URL
-     */
-    meetingUrl?: string | null;
-    /**
-     * Recording URL (after session)
-     */
-    recordingUrl?: string | null;
-  };
   /**
    * Downloadable resources and materials
    */
@@ -1840,7 +1791,7 @@ export interface Lesson {
   /**
    * How is this lesson marked as complete
    */
-  completionCriteria?: ('view' | 'video-complete' | 'quiz-pass' | 'assignment-submit' | 'manual') | null;
+  completionCriteria?: ('view' | 'video-complete' | 'quiz-pass' | 'manual') | null;
   /**
    * Whether this lesson is visible to learners
    */
@@ -3312,22 +3263,7 @@ export interface LessonsSelect<T extends boolean = true> {
         audioFile?: T;
         transcript?: T;
       };
-  assignmentContent?:
-    | T
-    | {
-        instructions?: T;
-        dueInDays?: T;
-        submissionType?: T;
-        maxPoints?: T;
-      };
   quiz?: T;
-  liveSession?:
-    | T
-    | {
-        scheduledAt?: T;
-        meetingUrl?: T;
-        recordingUrl?: T;
-      };
   resources?:
     | T
     | {
